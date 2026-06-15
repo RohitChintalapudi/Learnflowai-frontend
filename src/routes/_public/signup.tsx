@@ -60,17 +60,17 @@ function SignupPage() {
   }
 
   return (
-    <div className="flex-grow flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8 relative bg-[url('/brown_background.png')] dark:bg-[url('/background_dark.png')] bg-cover bg-[50%_90%] bg-no-repeat">
+    <div className="flex-grow flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8 relative bg-[url('/background.png')] dark:bg-[url('/background_dark.png')] bg-cover bg-[50%_90%] bg-no-repeat">
       {/* Container Card with light/dark glassmorphism */}
       <div className="w-full max-w-[480px] bg-white/95 dark:bg-stone-950/95 backdrop-blur-md rounded-2xl border border-brown-200/60 dark:border-stone-800/60 p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.10)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] hover:shadow-[0_30px_80px_rgba(0,0,0,0.12)] transition-all duration-300 transform hover:-translate-y-0.5">
         
         {/* Header */}
         <div className="text-center mb-6">
-          <h2 className="text-3xl font-extrabold tracking-tight text-brown-900 dark:text-white">
+          <h2 className="text-3xl font-extrabold tracking-tight text-stone-900 dark:text-white">
             Create Your Account
           </h2>
-          <p className="mt-2 text-sm text-brown-600 dark:text-stone-400">
-            Join <span className="font-semibold text-brown-600 dark:text-orange-400">LearnFlow AI</span> and start your learning journey
+          <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
+            Join <span className="font-semibold text-orange-500 dark:text-orange-400">LearnFlow AI</span> and start your learning journey
           </p>
         </div>
 
@@ -86,12 +86,12 @@ function SignupPage() {
           {/* First Name & Last Name (Side by Side) */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="firstName" className="block text-xs font-semibold text-brown-600 dark:text-stone-400 uppercase tracking-wider">
+              <label htmlFor="firstName" className="block text-xs font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider">
                 First Name
               </label>
               <div className="relative mt-1.5">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-4.5 w-4.5 text-brown-400 dark:text-stone-500" />
+                  <User className="h-4.5 w-4.5 text-stone-400 dark:text-stone-500" />
                 </div>
                 <input
                   id="firstName"
@@ -99,19 +99,19 @@ function SignupPage() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="First name"
-                  className="w-full pl-10 pr-3 py-2.5 bg-brown-50/50 dark:bg-stone-900/50 hover:bg-brown-50 dark:hover:bg-stone-900 border border-brown-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-brown-900 dark:text-white placeholder:text-brown-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-brown-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-brown-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
+                  className="w-full pl-10 pr-3 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="lastName" className="block text-xs font-semibold text-brown-600 dark:text-stone-400 uppercase tracking-wider">
+              <label htmlFor="lastName" className="block text-xs font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider">
                 Last Name
               </label>
               <div className="relative mt-1.5">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-4.5 w-4.5 text-brown-400 dark:text-stone-500" />
+                  <User className="h-4.5 w-4.5 text-stone-400 dark:text-stone-500" />
                 </div>
                 <input
                   id="lastName"
@@ -119,7 +119,7 @@ function SignupPage() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Last name"
-                  className="w-full pl-10 pr-3 py-2.5 bg-brown-50/50 dark:bg-stone-900/50 hover:bg-brown-50 dark:hover:bg-stone-900 border border-brown-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-brown-900 dark:text-white placeholder:text-brown-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-brown-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-brown-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
+                  className="w-full pl-10 pr-3 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                   required
                 />
               </div>
@@ -128,12 +128,12 @@ function SignupPage() {
 
           {/* Email field */}
           <div>
-            <label htmlFor="email" className="block text-xs font-semibold text-brown-600 dark:text-stone-400 uppercase tracking-wider">
+            <label htmlFor="email" className="block text-xs font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider">
               Email
             </label>
             <div className="relative mt-1.5">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-4.5 w-4.5 text-brown-400 dark:text-stone-500" />
+                <Mail className="h-4.5 w-4.5 text-stone-400 dark:text-stone-500" />
               </div>
               <input
                 id="email"
@@ -141,7 +141,7 @@ function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="w-full pl-10 pr-4 py-2.5 bg-brown-50/50 dark:bg-stone-900/50 hover:bg-brown-50 dark:hover:bg-stone-900 border border-brown-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-brown-900 dark:text-white placeholder:text-brown-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-brown-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-brown-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
+                className="w-full pl-10 pr-4 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                 required
               />
             </div>
@@ -149,12 +149,12 @@ function SignupPage() {
 
           {/* Password field */}
           <div>
-            <label htmlFor="password" className="block text-xs font-semibold text-brown-600 dark:text-stone-400 uppercase tracking-wider">
+            <label htmlFor="password" className="block text-xs font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider">
               Password
             </label>
             <div className="relative mt-1.5">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-4.5 w-4.5 text-brown-400 dark:text-stone-500" />
+                <Lock className="h-4.5 w-4.5 text-stone-400 dark:text-stone-500" />
               </div>
               <input
                 id="password"
@@ -162,13 +162,13 @@ function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a password"
-                className="w-full pl-10 pr-10 py-2.5 bg-brown-50/50 dark:bg-stone-900/50 hover:bg-brown-50 dark:hover:bg-stone-900 border border-brown-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-brown-900 dark:text-white placeholder:text-brown-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-brown-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-brown-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
+                className="w-full pl-10 pr-10 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-brown-400 hover:text-brown-600 dark:text-stone-500 dark:hover:text-orange-400 focus:outline-none transition-colors duration-200"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-400 focus:outline-none transition-colors duration-200"
               >
                 {showPassword ? (
                   <EyeOff className="h-4.5 w-4.5" />
@@ -181,12 +181,12 @@ function SignupPage() {
 
           {/* Confirm Password field */}
           <div>
-            <label htmlFor="confirmPassword" className="block text-xs font-semibold text-brown-600 dark:text-stone-400 uppercase tracking-wider">
+            <label htmlFor="confirmPassword" className="block text-xs font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider">
               Confirm Password
             </label>
             <div className="relative mt-1.5">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-4.5 w-4.5 text-brown-400 dark:text-stone-500" />
+                <Lock className="h-4.5 w-4.5 text-stone-400 dark:text-stone-500" />
               </div>
               <input
                 id="confirmPassword"
@@ -194,13 +194,13 @@ function SignupPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your password"
-                className="w-full pl-10 pr-10 py-2.5 bg-brown-50/50 dark:bg-stone-900/50 hover:bg-brown-50 dark:hover:bg-stone-900 border border-brown-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-brown-900 dark:text-white placeholder:text-brown-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-brown-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-brown-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
+                className="w-full pl-10 pr-10 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-brown-400 hover:text-brown-600 dark:text-stone-500 dark:hover:text-orange-400 focus:outline-none transition-colors duration-200"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-400 focus:outline-none transition-colors duration-200"
               >
                 {showConfirmPassword ? (
                   <EyeOff className="h-4.5 w-4.5" />
@@ -215,7 +215,7 @@ function SignupPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2.5 px-4 mt-2 bg-gradient-to-r from-brown-600 to-brown-800 hover:from-brown-700 hover:to-brown-900 dark:from-orange-500 dark:to-orange-600 dark:hover:from-orange-400 dark:hover:to-orange-600 text-white font-semibold rounded-lg text-sm transition-all duration-200 shadow-sm shadow-brown-600/25 hover:shadow-md hover:shadow-brown-600/35 active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-2.5 px-4 mt-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-500 dark:to-orange-600 dark:hover:from-orange-400 dark:hover:to-orange-600 text-white font-semibold rounded-lg text-sm transition-all duration-200 shadow-sm shadow-orange-500/25 hover:shadow-md hover:shadow-orange-500/35 active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
@@ -232,11 +232,11 @@ function SignupPage() {
         </form>
 
         {/* Footer */}
-        <div className="mt-6 text-center text-sm text-brown-600 dark:text-stone-400">
+        <div className="mt-6 text-center text-sm text-stone-500 dark:text-stone-400">
           Already have an account?{' '}
           <Link
             to="/login"
-            className="font-semibold text-brown-600 dark:text-orange-400 hover:text-brown-800 dark:hover:text-orange-300 hover:underline transition-colors"
+            className="font-semibold text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white hover:underline transition-colors"
           >
             Log In
           </Link>

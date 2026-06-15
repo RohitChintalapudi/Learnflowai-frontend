@@ -17,7 +17,6 @@ import { Route as PublicLoginRouteImport } from './routes/_public/login'
 import { Route as PublicHome_cleanRouteImport } from './routes/_public/home_clean'
 import { Route as PublicHomeRouteImport } from './routes/_public/home'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthLoginIndexRouteImport } from './routes/auth/login/index'
 
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
@@ -57,11 +56,6 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthLoginIndexRoute = AuthLoginIndexRouteImport.update({
-  id: '/auth/login/',
-  path: '/auth/login/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -70,7 +64,6 @@ export interface FileRoutesByFullPath {
   '/home_clean': typeof PublicHome_cleanRoute
   '/login': typeof PublicLoginRoute
   '/signup': typeof PublicSignupRoute
-  '/auth/login/': typeof AuthLoginIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -79,7 +72,6 @@ export interface FileRoutesByTo {
   '/home_clean': typeof PublicHome_cleanRoute
   '/login': typeof PublicLoginRoute
   '/signup': typeof PublicSignupRoute
-  '/auth/login': typeof AuthLoginIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -91,27 +83,12 @@ export interface FileRoutesById {
   '/_public/home_clean': typeof PublicHome_cleanRoute
   '/_public/login': typeof PublicLoginRoute
   '/_public/signup': typeof PublicSignupRoute
-  '/auth/login/': typeof AuthLoginIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/dashboard'
-    | '/home'
-    | '/home_clean'
-    | '/login'
-    | '/signup'
-    | '/auth/login/'
+  fullPaths: '/' | '/dashboard' | '/home' | '/home_clean' | '/login' | '/signup'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/dashboard'
-    | '/home'
-    | '/home_clean'
-    | '/login'
-    | '/signup'
-    | '/auth/login'
+  to: '/' | '/dashboard' | '/home' | '/home_clean' | '/login' | '/signup'
   id:
     | '__root__'
     | '/'
@@ -122,14 +99,12 @@ export interface FileRouteTypes {
     | '/_public/home_clean'
     | '/_public/login'
     | '/_public/signup'
-    | '/auth/login/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
-  AuthLoginIndexRoute: typeof AuthLoginIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -190,13 +165,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/auth/login/': {
-      id: '/auth/login/'
-      path: '/auth/login'
-      fullPath: '/auth/login/'
-      preLoaderRoute: typeof AuthLoginIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -233,7 +201,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
-  AuthLoginIndexRoute: AuthLoginIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
