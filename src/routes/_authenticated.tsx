@@ -8,7 +8,7 @@ export const Route = createFileRoute('/_authenticated')({
 
     if (!isAuthenticated) {
       throw redirect({
-        to: '/auth/login',
+        to: '/login',
         // Preserve the attempted URL so we can redirect back after login.
         // TODO: Read `search.redirect` in the login page and navigate there on success.
         search: { redirect: location.href },

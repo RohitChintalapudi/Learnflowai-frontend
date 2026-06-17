@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PublicSignupRouteImport } from './routes/_public/signup'
+import { Route as PublicLoginRouteImport } from './routes/_public/login'
+import { Route as PublicHome_cleanRouteImport } from './routes/_public/home_clean'
 import { Route as PublicHomeRouteImport } from './routes/_public/home'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthLoginIndexRouteImport } from './routes/auth/login/index'
 
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
@@ -29,6 +31,21 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicSignupRoute = PublicSignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicLoginRoute = PublicLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicHome_cleanRoute = PublicHome_cleanRouteImport.update({
+  id: '/home_clean',
+  path: '/home_clean',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicHomeRoute = PublicHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -39,23 +56,22 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthLoginIndexRoute = AuthLoginIndexRouteImport.update({
-  id: '/auth/login/',
-  path: '/auth/login/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/home': typeof PublicHomeRoute
-  '/auth/login/': typeof AuthLoginIndexRoute
+  '/home_clean': typeof PublicHome_cleanRoute
+  '/login': typeof PublicLoginRoute
+  '/signup': typeof PublicSignupRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/home': typeof PublicHomeRoute
-  '/auth/login': typeof AuthLoginIndexRoute
+  '/home_clean': typeof PublicHome_cleanRoute
+  '/login': typeof PublicLoginRoute
+  '/signup': typeof PublicSignupRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -64,13 +80,15 @@ export interface FileRoutesById {
   '/_public': typeof PublicRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_public/home': typeof PublicHomeRoute
-  '/auth/login/': typeof AuthLoginIndexRoute
+  '/_public/home_clean': typeof PublicHome_cleanRoute
+  '/_public/login': typeof PublicLoginRoute
+  '/_public/signup': typeof PublicSignupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/home' | '/auth/login/'
+  fullPaths: '/' | '/dashboard' | '/home' | '/home_clean' | '/login' | '/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/home' | '/auth/login'
+  to: '/' | '/dashboard' | '/home' | '/home_clean' | '/login' | '/signup'
   id:
     | '__root__'
     | '/'
@@ -78,14 +96,15 @@ export interface FileRouteTypes {
     | '/_public'
     | '/_authenticated/dashboard'
     | '/_public/home'
-    | '/auth/login/'
+    | '/_public/home_clean'
+    | '/_public/login'
+    | '/_public/signup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
-  AuthLoginIndexRoute: typeof AuthLoginIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -111,6 +130,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_public/signup': {
+      id: '/_public/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof PublicSignupRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/login': {
+      id: '/_public/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof PublicLoginRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/home_clean': {
+      id: '/_public/home_clean'
+      path: '/home_clean'
+      fullPath: '/home_clean'
+      preLoaderRoute: typeof PublicHome_cleanRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/home': {
       id: '/_public/home'
       path: '/home'
@@ -124,13 +164,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
-    }
-    '/auth/login/': {
-      id: '/auth/login/'
-      path: '/auth/login'
-      fullPath: '/auth/login/'
-      preLoaderRoute: typeof AuthLoginIndexRouteImport
-      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -149,10 +182,16 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 interface PublicRouteChildren {
   PublicHomeRoute: typeof PublicHomeRoute
+  PublicHome_cleanRoute: typeof PublicHome_cleanRoute
+  PublicLoginRoute: typeof PublicLoginRoute
+  PublicSignupRoute: typeof PublicSignupRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
   PublicHomeRoute: PublicHomeRoute,
+  PublicHome_cleanRoute: PublicHome_cleanRoute,
+  PublicLoginRoute: PublicLoginRoute,
+  PublicSignupRoute: PublicSignupRoute,
 }
 
 const PublicRouteWithChildren =
@@ -162,7 +201,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
-  AuthLoginIndexRoute: AuthLoginIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
