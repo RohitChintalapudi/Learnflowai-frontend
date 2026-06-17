@@ -2,11 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/png" href="/favicon_dark.png" media="(prefers-color-scheme: dark)" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LearnFlow AI</title>
+    <script>
+      (function() {
+        try {
+          var savedTheme = localStorage.getItem("theme");
+          var systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          if (savedTheme === "dark" || (!savedTheme && systemPrefersDark)) {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body>
+  <body class="bg-white dark:bg-[#0c0a09]">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
