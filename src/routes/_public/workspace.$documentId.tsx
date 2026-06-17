@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { useState, useRef } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
@@ -15,7 +15,6 @@ import {
   GitMerge,
   Gamepad2,
   Sparkles,
-  ArrowRight,
   CheckCircle2,
   X,
   FileText
@@ -39,8 +38,6 @@ const features = [
 ] as const;
 
 function WorkspacePage() {
-  const { documentId } = Route.useParams();
-  
   const [activeFeature, setActiveFeature] = useState<FeatureType>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);

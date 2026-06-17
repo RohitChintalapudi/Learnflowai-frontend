@@ -6,7 +6,6 @@ import {
   useLocation,
 } from "@tanstack/react-router";
 import { Sun, Moon, Send } from "lucide-react";
-import bgImage from "../assets/design.png";
 
 export const Route = createFileRoute("/_public")({
   component: PublicLayout,

@@ -91,7 +91,7 @@ function DashboardHomePage() {
                   <Upload className="h-4 w-4" /> Upload Document
                 </button>
                 <button 
-                  onClick={() => navigate({ to: "/workspace/demo-doc-123" })}
+                  onClick={() => navigate({ to: "/workspace/$documentId", params: { documentId: "demo-doc-123" } })}
                   className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-[var(--lf-text-secondary)] text-[var(--lf-text-primary)] text-sm font-semibold transition-all hover:bg-[var(--lf-bg)]"
                 >
                   Open Workspace <ArrowRight className="h-4 w-4" />
@@ -210,7 +210,7 @@ function DashboardHomePage() {
                   ].map((doc, i) => (
                     <div
                       key={i}
-                      onClick={() => navigate({ to: "/workspace/demo-doc-123" })}
+                      onClick={() => navigate({ to: "/workspace/$documentId", params: { documentId: "demo-doc-123" } })}
                       className="group p-4 rounded-2xl bg-[var(--lf-card)] border border-[var(--lf-border)] hover:border-orange-500/40 card-shadow card-shadow-hover transition-all cursor-pointer flex items-center gap-4"
                     >
                       <div
