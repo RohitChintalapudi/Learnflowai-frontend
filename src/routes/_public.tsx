@@ -14,6 +14,9 @@ export const Route = createFileRoute("/_public")({
 function PublicLayout() {
   const [isLoading, setIsLoading] = useState(() => {
     if (typeof window !== "undefined") {
+      if (window.location.pathname === "/") {
+        return true;
+      }
       return !sessionStorage.getItem("hasSeenSplash");
     }
     return true;
