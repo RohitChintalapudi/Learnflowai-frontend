@@ -5,7 +5,7 @@ import {
   Link,
   useLocation,
 } from "@tanstack/react-router";
-import { Sun, Moon, Send } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 
 export const Route = createFileRoute("/_public")({
   component: PublicLayout,
@@ -195,196 +195,39 @@ function PublicLayout() {
         <footer className="w-full border-t border-stone-200 dark:border-stone-800 bg-white dark:bg-[#0c0a09] pt-16 pb-8 mt-auto relative z-10 transition-colors duration-300">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             {/* Main Footer Content */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 mb-12">
-              {/* Brand & Newsletter */}
-              <div className="lg:col-span-5 flex flex-col items-start">
-                <div className="flex items-center gap-2.5 mb-4">
-                  <div className="flex items-center justify-center">
-                    <img
-                      src="/logo.png"
-                      className="block dark:hidden h-7 w-auto object-contain"
-                      alt="Learnflow AI Logo"
-                    />
-                    <img
-                      src="/logo_dark.png"
-                      className="hidden dark:block h-7 w-auto object-contain"
-                      alt="Learnflow AI Logo"
-                    />
-                  </div>
-                  <span className="text-lg font-extrabold tracking-tight text-stone-900 dark:text-white">
-                    Learnflow{" "}
-                    <span className="text-orange-500 dark:text-orange-400">
-                      AI
-                    </span>
+            <div className="flex flex-col items-center justify-center text-center mb-8">
+              {/* Brand */}
+              <div className="flex items-center justify-center gap-2.5 mb-4">
+                <img
+                  src="/logo.png"
+                  className="block dark:hidden h-8 w-auto object-contain"
+                  alt="Learnflow AI Logo"
+                />
+                <img
+                  src="/logo_dark.png"
+                  className="hidden dark:block h-8 w-auto object-contain"
+                  alt="Learnflow AI Logo"
+                />
+                <span className="text-xl font-extrabold tracking-tight text-stone-900 dark:text-white">
+                  Learnflow{" "}
+                  <span className="text-orange-500 dark:text-orange-400">
+                    AI
                   </span>
-                </div>
-                <p className="text-sm text-stone-500 dark:text-stone-400 leading-relaxed mb-6 max-w-sm">
-                  Transform the way you learn Computer Science. Our AI-powered
-                  tools provide instant interactive simulations and structured
-                  paths to master complex topics.
-                </p>
-
-                {/* Newsletter */}
-                <div className="w-full max-w-sm">
-                  <p className="text-xs font-semibold text-stone-900 dark:text-white mb-2 uppercase tracking-wider">
-                    Subscribe to updates
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <input
-                        type="email"
-                        placeholder="Enter your email"
-                        className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/50 text-sm focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 transition-colors placeholder:text-stone-400"
-                      />
-                      <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-stone-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/30 transition-colors">
-                        <Send className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                </span>
               </div>
-
-              {/* Links Columns */}
-              <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8">
-                {/* Product */}
-                <div className="flex flex-col gap-3">
-                  <h4 className="text-sm font-bold text-stone-900 dark:text-white mb-1">
-                    Product
-                  </h4>
-                  <a
-                    href="#features"
-                    className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    Features
-                  </a>
-                  <a
-                    href="#simulations"
-                    className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    Simulations
-                  </a>
-                  <a
-                    href="#pricing"
-                    className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    Pricing
-                  </a>
-                  <Link
-                    to="/home"
-                    className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    Changelog
-                  </Link>
-                </div>
-
-                {/* Resources */}
-                <div className="flex flex-col gap-3">
-                  <h4 className="text-sm font-bold text-stone-900 dark:text-white mb-1">
-                    Resources
-                  </h4>
-                  <Link
-                    to="/home"
-                    className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    Documentation
-                  </Link>
-                  <Link
-                    to="/home"
-                    className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    API Reference
-                  </Link>
-                  <Link
-                    to="/home"
-                    className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    Community Forum
-                  </Link>
-                  <Link
-                    to="/home"
-                    className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    Study Guides
-                  </Link>
-                </div>
-
-                {/* Company */}
-                <div className="flex flex-col gap-3">
-                  <h4 className="text-sm font-bold text-stone-900 dark:text-white mb-1">
-                    Company
-                  </h4>
-                  <Link
-                    to="/home"
-                    className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    About Us
-                  </Link>
-                  <Link
-                    to="/home"
-                    className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    Careers
-                  </Link>
-                  <Link
-                    to="/home"
-                    className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    Blog
-                  </Link>
-                  <Link
-                    to="/home"
-                    className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    Contact
-                  </Link>
-                </div>
-              </div>
+              <p className="text-sm text-stone-500 dark:text-stone-400 leading-relaxed max-w-md">
+                Transform the way you learn Computer Science. Our AI-powered
+                tools provide instant interactive simulations and structured
+                paths to master complex topics.
+              </p>
             </div>
 
             {/* Divider & Bottom Section */}
-            <div className="pt-8 border-t border-stone-200 dark:border-stone-800/60 flex flex-col md:flex-row items-center justify-between gap-4">
-              <p className="text-xs text-stone-400 dark:text-stone-500">
-                © {new Date().getFullYear()} Learnflow AI. All rights reserved.
+            <div className="pt-8 border-t border-stone-200 dark:border-stone-800/60 flex flex-col items-center justify-center gap-4">
+              <p className="text-xs text-stone-400 dark:text-stone-500 text-center">
+                © {new Date().getFullYear()} Learnflow AI. All rights reserved.<br/>
                 Built for learners.
               </p>
-
-              <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                <div className="flex items-center gap-4 text-xs font-semibold text-stone-400 dark:text-stone-500">
-                  <a
-                    href="#"
-                    className="hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    Twitter
-                  </a>
-                  <a
-                    href="#"
-                    className="hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    GitHub
-                  </a>
-                  <a
-                    href="#"
-                    className="hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
-                  >
-                    LinkedIn
-                  </a>
-                </div>
-                <div className="h-3 w-px bg-stone-300 dark:bg-stone-700 hidden sm:block"></div>
-                <div className="flex items-center gap-4 text-xs font-medium text-stone-400 dark:text-stone-500">
-                  <a
-                    href="#"
-                    className="hover:text-stone-900 dark:hover:text-white transition-colors"
-                  >
-                    Privacy
-                  </a>
-                  <a
-                    href="#"
-                    className="hover:text-stone-900 dark:hover:text-white transition-colors"
-                  >
-                    Terms
-                  </a>
-                </div>
-              </div>
             </div>
           </div>
         </footer>
