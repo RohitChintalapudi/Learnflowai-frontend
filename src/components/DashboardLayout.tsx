@@ -24,14 +24,14 @@ const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/home" },
   { icon: FileText, label: "Documents", to: "/documents" },
   { icon: Brain, label: "AI Workspace", to: "/workspace" },
-  { icon: StickyNote, label: "Notes", to: "#" },
+  { icon: StickyNote, label: "Notes", to: "/notes" },
   { icon: HelpCircle, label: "Quizzes", to: "#" },
   { icon: BarChart3, label: "Analytics", to: "#" },
   { icon: History, label: "Learning History", to: "#" },
   { icon: Settings, label: "Settings", to: "#" },
 ];
 
-export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit" }: { children: React.ReactNode, headerTitle?: React.ReactNode }) {
+export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit", hideHeader = false }: { children: React.ReactNode, headerTitle?: React.ReactNode, hideHeader?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -190,68 +190,70 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit" 
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_80%,_var(--tw-gradient-stops))] from-orange-500/10 via-transparent to-transparent dark:from-orange-500/[0.02] pointer-events-none z-0" />
 
         {/* Top Header */}
-        <header className="h-16 px-8 flex items-center justify-between border-b border-[var(--lf-border)] bg-white/60 dark:bg-black/60 backdrop-blur-md sticky top-0 z-30">
-          <div className="flex items-center gap-2">
-            {typeof headerTitle === "string" ? (
-              <h2 className="text-lg font-bold">
-                {headerTitle}
-              </h2>
-            ) : (
-              headerTitle
-            )}
-          </div>
-
-          <div className="flex items-center gap-5">
-            <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--lf-text-secondary)] group-focus-within:text-[var(--lf-accent)] transition-colors" />
-              <input
-                type="text"
-                placeholder="Search documents, notes, quizzes..."
-                className="w-[280px] h-[36px] pl-9 pr-4 rounded-full bg-[var(--lf-surface)] border border-[var(--lf-border)] text-[13px] outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all placeholder:text-[var(--lf-text-secondary)] text-[var(--lf-text-primary)]"
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
-                <kbd className="text-[9px] font-mono font-bold text-[var(--lf-text-secondary)] bg-[var(--lf-bg)] px-1.5 py-0.5 rounded border border-[var(--lf-border)]">
-                  ⌘
-                </kbd>
-                <kbd className="text-[9px] font-mono font-bold text-[var(--lf-text-secondary)] bg-[var(--lf-bg)] px-1.5 py-0.5 rounded border border-[var(--lf-border)]">
-                  K
-                </kbd>
-              </div>
+        {!hideHeader && (
+          <header className="h-16 px-8 flex items-center justify-between border-b border-[var(--lf-border)] bg-white/60 dark:bg-black/60 backdrop-blur-md sticky top-0 z-30">
+            <div className="flex items-center gap-2">
+              {typeof headerTitle === "string" ? (
+                <h2 className="text-lg font-bold">
+                  {headerTitle}
+                </h2>
+              ) : (
+                headerTitle
+              )}
             </div>
 
-            <button
-              onClick={toggleTheme}
-              className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
-            >
-              {theme === "light" ? (
-                <Moon className="h-5 w-5" />
-              ) : (
-                <Sun className="h-5 w-5" />
-              )}
-            </button>
+            <div className="flex items-center gap-5">
+              <div className="relative group">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--lf-text-secondary)] group-focus-within:text-[var(--lf-accent)] transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search documents, notes, quizzes..."
+                  className="w-[280px] h-[36px] pl-9 pr-4 rounded-full bg-[var(--lf-surface)] border border-[var(--lf-border)] text-[13px] outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all placeholder:text-[var(--lf-text-secondary)] text-[var(--lf-text-primary)]"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
+                  <kbd className="text-[9px] font-mono font-bold text-[var(--lf-text-secondary)] bg-[var(--lf-bg)] px-1.5 py-0.5 rounded border border-[var(--lf-border)]">
+                    ⌘
+                  </kbd>
+                  <kbd className="text-[9px] font-mono font-bold text-[var(--lf-text-secondary)] bg-[var(--lf-bg)] px-1.5 py-0.5 rounded border border-[var(--lf-border)]">
+                    K
+                  </kbd>
+                </div>
+              </div>
 
-            <button className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500 border-2 border-[var(--lf-bg)]" />
-            </button>
+              <button
+                onClick={toggleTheme}
+                className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
+              >
+                {theme === "light" ? (
+                  <Moon className="h-5 w-5" />
+                ) : (
+                  <Sun className="h-5 w-5" />
+                )}
+              </button>
 
-            <button className="h-8 w-8 rounded-full border border-[var(--lf-border)] overflow-hidden cursor-pointer hover:ring-2 ring-orange-500/50 transition-all shrink-0">
-              <img
-                src="https://api.dicebear.com/7.x/notionists/svg?seed=Rohit&backgroundColor=FF7A18"
-                alt="Profile"
-                className="h-full w-full object-cover"
-              />
-            </button>
+              <button className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]">
+                <Bell className="h-5 w-5" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500 border-2 border-[var(--lf-bg)]" />
+              </button>
 
-            <button
-              onClick={handleLogout}
-              className="relative p-2 rounded-full hover:bg-red-500/10 transition-colors text-[var(--lf-text-secondary)] hover:text-red-500 group shrink-0"
-              title="Logout"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </header>
+              <button className="h-8 w-8 rounded-full border border-[var(--lf-border)] overflow-hidden cursor-pointer hover:ring-2 ring-orange-500/50 transition-all shrink-0">
+                <img
+                  src="https://api.dicebear.com/7.x/notionists/svg?seed=Rohit&backgroundColor=FF7A18"
+                  alt="Profile"
+                  className="h-full w-full object-cover"
+                />
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="relative p-2 rounded-full hover:bg-red-500/10 transition-colors text-[var(--lf-text-secondary)] hover:text-red-500 group shrink-0"
+                title="Logout"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            </div>
+          </header>
+        )}
 
         {/* Scrollable / Container Content */}
         {children}

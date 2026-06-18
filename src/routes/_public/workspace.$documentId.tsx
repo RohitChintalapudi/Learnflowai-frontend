@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -8,7 +8,6 @@ import {
   Search,
   ChevronRight,
   Brain,
-  StickyNote,
   HelpCircle,
   Globe,
   Briefcase,
@@ -18,15 +17,21 @@ import {
   CheckCircle2,
   X,
   FileText,
-  Copy
+  Copy,
+  Notebook,
+  Download,
+  Lightbulb,
+  GraduationCap,
+  BookOpen
 } from "lucide-react";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import ReactMarkdown from "react-markdown";
 import toast from "react-hot-toast";
-import { WorkflowAPI, DocumentAPI, type DocumentMetadata } from "../../lib/api";
+import { WorkflowAPI, DocumentAPI, type DocumentMetadata, type GeneratedNotes } from "../../lib/api";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
+import { useReactToPrint } from "react-to-print";
 
 // Configure PDF.js worker using unpkg to strictly match the react-pdf internal version
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -39,7 +44,7 @@ type FeatureType = "explain" | "notes" | "quiz" | "analogy" | "interview" | "min
 
 const features = [
   { id: "explain", label: "Explain", icon: Sparkles },
-  { id: "notes", label: "Notes", icon: StickyNote },
+  { id: "notes", label: "Generate Notes", icon: Notebook },
   { id: "quiz", label: "Quiz", icon: HelpCircle },
   { id: "analogy", label: "Analogy", icon: Globe },
   { id: "interview", label: "Interview Qs", icon: Briefcase },
@@ -99,6 +104,7 @@ function WorkspacePage() {
   const [explanationContent, setExplanationContent] = useState<string>("");
   const [interviewQuestionsContent, setInterviewQuestionsContent] = useState<any>(null);
   const [quizContent, setQuizContent] = useState<any>(null);
+  const [notesContent, setNotesContent] = useState<GeneratedNotes | null>(null);
 
   const handleFeatureClick = async (featureId: FeatureType) => {
     setIsMenuOpen(false);
@@ -128,6 +134,48 @@ function WorkspacePage() {
         toast.success("Explanation generated successfully!");
       } catch (error: any) {
         toast.error(error.message || "Failed to generate explanation");
+        setActiveFeature(null);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (featureId === "notes") {
+      if (highlightedText.trim().length < 5) {
+        toast.error("Please highlight at least 5 characters to generate notes.");
+        setActiveFeature(null);
+        return;
+      }
+      if (highlightedText.trim().length > 5000) {
+        toast.error("Highlighted text is too long (max 5000 characters).");
+        setActiveFeature(null);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const urlParts = window.location.pathname.split("/");
+        const docId = urlParts[urlParts.length - 1];
+        
+        const res = await WorkflowAPI.generateNotes(docId, highlightedText);
+        setNotesContent(res.notes);
+        
+        // Save to localStorage
+        try {
+          const notesStr = localStorage.getItem("recent_ai_notes");
+          const savedNotes = notesStr ? JSON.parse(notesStr) : [];
+          savedNotes.unshift({
+            id: crypto.randomUUID(),
+            documentId: docId,
+            createdAt: new Date().toISOString(),
+            data: res.notes
+          });
+          localStorage.setItem("recent_ai_notes", JSON.stringify(savedNotes));
+        } catch (e) {
+          console.error("Failed to save note to local storage", e);
+        }
+
+        toast.success("Notes generated successfully!");
+      } catch (error: any) {
+        toast.error(error.message || "Failed to generate notes");
         setActiveFeature(null);
       } finally {
         setIsLoading(false);
@@ -426,7 +474,7 @@ function WorkspacePage() {
 
                   {/* Feature Content */}
                   {activeFeature === "explain" && <FeatureExplain content={explanationContent} />}
-                  {activeFeature === "notes" && <FeatureNotes />}
+                  {activeFeature === "notes" && <FeatureNotes notes={notesContent} loading={isLoading} />}
                   {activeFeature === "quiz" && <FeatureQuiz quiz={quizContent} />}
                   {activeFeature === "analogy" && <FeatureAnalogy />}
                   {activeFeature === "interview" && <FeatureInterview questions={interviewQuestionsContent} />}
@@ -534,37 +582,142 @@ function FeatureExplain({ content }: { content: string }) {
   );
 }
 
-function FeatureNotes() {
+function FeatureNotes({
+  notes,
+  loading,
+}: {
+  notes: GeneratedNotes | null;
+  loading: boolean;
+}) {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadPDF = useReactToPrint({
+    contentRef,
+    documentTitle: notes?.title ? `${notes.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_notes` : "Study_Notes",
+    onAfterPrint: () => toast.success("PDF saved successfully!", { id: "pdf-toast" }),
+    onPrintError: () => toast.error("Failed to generate PDF.", { id: "pdf-toast" }),
+  });
+
+  const handleDownload = () => {
+    toast.loading("Opening Print Dialog (Save as PDF)...", { id: "pdf-toast", duration: 2000 });
+    handleDownloadPDF();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-60">
+        <Notebook className="h-16 w-16 mb-4 text-[var(--lf-text-secondary)] animate-pulse" />
+        <p className="text-lg font-medium text-[var(--lf-text-secondary)]">Generating your notes...</p>
+      </div>
+    );
+  }
+
+  if (!notes) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-60">
+        <Notebook className="h-16 w-16 mb-4 text-[var(--lf-text-secondary)]" />
+        <p className="text-lg font-medium text-[var(--lf-text-secondary)]">Highlight text and click Generate Notes to see them here.</p>
+      </div>
+    );
+  }
+
+  const printStyle: React.CSSProperties = { WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between border-b border-[var(--lf-border)] pb-4">
         <div className="flex items-center gap-3">
-          <StickyNote className="h-6 w-6 text-[var(--lf-accent)]" />
-          <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Smart Notes</h2>
+          <Notebook className="h-6 w-6 text-[var(--lf-accent)]" />
+          <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Generated Notes</h2>
         </div>
-        <button className="text-[12px] font-bold text-[var(--lf-accent)] hover:underline">Save Note</button>
+        <button 
+          onClick={handleDownload}
+          className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-lg text-[13px] font-bold transition-colors"
+        >
+          <Download className="h-4 w-4" /> Download
+        </button>
       </div>
 
-      <div className="prose prose-sm dark:prose-invert max-w-none prose-orange">
-        <h3>Topic Summary</h3>
-        <ul>
-          <li>Dynamic Programming optimizes recursive solutions.</li>
-          <li>Uses memoization (top-down) or tabulation (bottom-up).</li>
-          <li>Commonly used in optimization problems like shortest path or knapsack.</li>
-        </ul>
-        
-        <h3>Key Formula Concepts</h3>
-        <ul>
-          <li><strong>State:</strong> What subproblem are we solving?</li>
-          <li><strong>Transition:</strong> How does one subproblem relate to another?</li>
-          <li><strong>Base Case:</strong> What is the simplest subproblem?</li>
-        </ul>
+      <div 
+        ref={contentRef} 
+        id="pdf-content-workspace" 
+        className="p-6 md:p-10 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow-lg space-y-8 relative print:shadow-none print:border-none print:p-12 print:w-full print:max-w-none print:m-0 print:block"
+        style={printStyle}
+      >
+        {/* Watermark - Shows up on every printed page */}
+        <div className="hidden print:flex fixed inset-0 w-full h-full items-center justify-center pointer-events-none opacity-[0.05] z-0">
+          <img src="/logo.png" className="w-[80%] max-w-[600px] object-contain" alt="Learnflow AI Watermark" />
+        </div>
+
+        <div className="relative z-10 space-y-8">
+          <div className="text-center pb-6 border-b border-[var(--lf-border)]">
+          <h1 className="text-3xl font-extrabold text-[var(--lf-text-primary)] mb-4">{notes.title}</h1>
+          <p className="text-[15px] leading-relaxed text-[var(--lf-text-secondary)] max-w-2xl mx-auto italic">
+            "{notes.summary}"
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-1 print:gap-10">
+          <div className="space-y-4 p-5 rounded-2xl bg-amber-500/5 border border-amber-500/10 transition-colors print:break-inside-avoid print:p-6">
+            <h3 className="text-[16px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2">
+              <Lightbulb className="h-5 w-5" /> Key Points
+            </h3>
+            <ul className="space-y-2">
+              {notes.keyPoints.map((point, i) => (
+                <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
+                  <span className="text-amber-500 mt-0.5">•</span> {point}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-4 p-5 rounded-2xl bg-blue-500/5 border border-blue-500/10 transition-colors print:break-inside-avoid print:p-6">
+            <h3 className="text-[16px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
+              <BookOpen className="h-5 w-5" /> Important Concepts
+            </h3>
+            <ul className="space-y-2">
+              {notes.importantConcepts.map((concept, i) => (
+                <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
+                  <span className="text-blue-500 mt-0.5">•</span> {concept}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-4 p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 transition-colors print:break-inside-avoid print:p-6">
+            <h3 className="text-[16px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+              <GraduationCap className="h-5 w-5" /> Exam Tips
+            </h3>
+            <ul className="space-y-2">
+              {notes.examTips.map((tip, i) => (
+                <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
+                  <span className="text-emerald-500 mt-0.5">•</span> {tip}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-4 p-5 rounded-2xl bg-purple-500/5 border border-purple-500/10 transition-colors print:break-inside-avoid print:p-6">
+            <h3 className="text-[16px] font-bold text-purple-600 dark:text-purple-400 flex items-center gap-2">
+              <FileText className="h-5 w-5" /> Revision Notes
+            </h3>
+            <ul className="space-y-2">
+              {notes.revisionNotes.map((note, i) => (
+                <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
+                  <span className="text-purple-500 mt-0.5">•</span> {note}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
+    </div>
     </div>
   );
 }
 
-function FeatureQuiz({ quiz }: { quiz: any }) {
+function FeatureQuiz(props: { quiz: any }) {
+  const { quiz } = props;
   const [mcqAnswers, setMcqAnswers] = useState<Record<number, string>>({});
   const [tfAnswers, setTfAnswers] = useState<Record<number, boolean>>({});
   const [shortAnswers, setShortAnswers] = useState<Record<number, string>>({});

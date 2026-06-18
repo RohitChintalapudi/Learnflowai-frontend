@@ -75,7 +75,7 @@ function PublicLayout() {
   };
 
   const location = useLocation();
-  const isAppRoute = location.pathname === "/home" || location.pathname === "/documents" || location.pathname.startsWith("/workspace");
+  const isAppRoute = location.pathname === "/home" || location.pathname === "/documents" || location.pathname.startsWith("/workspace") || location.pathname.startsWith("/notes");
   const isLanding = location.pathname === "/";
 
   if (isLoading) {

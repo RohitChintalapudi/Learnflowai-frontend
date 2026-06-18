@@ -9,6 +9,15 @@ export interface DocumentMetadata {
   fileUrl?: string;
 }
 
+export interface GeneratedNotes {
+  title: string;
+  summary: string;
+  keyPoints: string[];
+  importantConcepts: string[];
+  examTips: string[];
+  revisionNotes: string[];
+}
+
 export const DocumentAPI = {
   /**
    * Upload a new document
@@ -156,4 +165,26 @@ export const WorkflowAPI = {
 
     return response.json();
   },
+
+  /**
+   * Generate AI notes for highlighted text
+   */
+  async generateNotes(documentId: string, highlightedText: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/notes`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate notes");
+    }
+
+    return response.json();
+  },
 };
+
