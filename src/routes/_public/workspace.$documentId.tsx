@@ -17,7 +17,8 @@ import {
   Sparkles,
   CheckCircle2,
   X,
-  FileText
+  FileText,
+  Copy
 } from "lucide-react";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import ReactMarkdown from "react-markdown";
@@ -96,6 +97,7 @@ function WorkspacePage() {
   };
 
   const [explanationContent, setExplanationContent] = useState<string>("");
+  const [interviewQuestionsContent, setInterviewQuestionsContent] = useState<any>(null);
 
   const handleFeatureClick = async (featureId: FeatureType) => {
     setIsMenuOpen(false);
@@ -125,6 +127,32 @@ function WorkspacePage() {
         toast.success("Explanation generated successfully!");
       } catch (error: any) {
         toast.error(error.message || "Failed to generate explanation");
+        setActiveFeature(null);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (featureId === "interview") {
+      if (highlightedText.trim().length < 5) {
+        toast.error("Please highlight at least 5 characters to generate questions.");
+        setActiveFeature(null);
+        return;
+      }
+      if (highlightedText.trim().length > 5000) {
+        toast.error("Highlighted text is too long (max 5000 characters).");
+        setActiveFeature(null);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const urlParts = window.location.pathname.split("/");
+        const docId = urlParts[urlParts.length - 1];
+        
+        const res = await WorkflowAPI.generateInterviewQuestions(docId, highlightedText);
+        setInterviewQuestionsContent(res.questions);
+        toast.success("Interview questions generated successfully!");
+      } catch (error: any) {
+        toast.error(error.message || "Failed to generate interview questions");
         setActiveFeature(null);
       } finally {
         setIsLoading(false);
@@ -189,7 +217,7 @@ function WorkspacePage() {
                       ? "text-orange-600 dark:text-orange-400"
                       : "text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)]"
                   }`}>
-                    {feature.id === "explain" ? "✨ Explain Concept" : feature.label}
+                    {feature.id === "explain" ? "Explain Concept" : feature.label}
                   </span>
                 </button>
               ))}
@@ -374,7 +402,7 @@ function WorkspacePage() {
                   {activeFeature === "notes" && <FeatureNotes />}
                   {activeFeature === "quiz" && <FeatureQuiz />}
                   {activeFeature === "analogy" && <FeatureAnalogy />}
-                  {activeFeature === "interview" && <FeatureInterview />}
+                  {activeFeature === "interview" && <FeatureInterview questions={interviewQuestionsContent} />}
                   {activeFeature === "mindmap" && <FeatureMindMap />}
                   {activeFeature === "simulation" && <FeatureSimulation />}
 
@@ -605,7 +633,28 @@ function FeatureAnalogy() {
   );
 }
 
-function FeatureInterview() {
+function FeatureInterview({ questions }: { questions: any }) {
+  const [activeTab, setActiveTab] = useState<"basic" | "intermediate" | "advanced">("basic");
+  
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Copied to clipboard!");
+  };
+
+  if (!questions) {
+    return (
+      <div className="text-[14px] text-[var(--lf-text-secondary)] italic">
+        No questions generated yet.
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: "basic", label: "Basic" },
+    { id: "intermediate", label: "Intermediate" },
+    { id: "advanced", label: "Advanced" },
+  ] as const;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 mb-4">
@@ -613,22 +662,50 @@ function FeatureInterview() {
         <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Interview Questions</h2>
       </div>
 
+      <div className="flex gap-2 p-1 bg-[var(--lf-surface)] border border-[var(--lf-border)] rounded-xl">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+              activeTab === tab.id
+                ? "bg-[var(--lf-bg)] text-[var(--lf-text-primary)] shadow-sm border border-[var(--lf-border)]"
+                : "text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)] hover:bg-[var(--lf-surface)]"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="space-y-4">
-        {[
-          { q: "What is Dynamic Programming?", a: "DP is a method for solving complex problems by breaking them down into simpler subproblems and storing the results to avoid duplicate work." },
-          { q: "Difference between Memoization and Tabulation?", a: "Memoization is top-down recursion with caching. Tabulation is bottom-up iteration building a table of solutions." },
-          { q: "When should DP be preferred over Greedy?", a: "When the problem requires finding a global optimum and greedy choices might only yield a local optimum (e.g., 0/1 Knapsack problem)." },
-        ].map((item, i) => (
-          <details key={i} className="group p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] cursor-pointer">
-            <summary className="text-[15px] font-bold text-[var(--lf-text-primary)] list-none flex items-center justify-between">
-              <span className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded bg-orange-500/10 text-[var(--lf-accent)] text-[12px]">{i+1}</span>
-                {item.q}
-              </span>
-              <ChevronRight className="h-5 w-5 text-[var(--lf-text-secondary)] group-open:rotate-90 transition-transform" />
+        {questions[activeTab]?.map((item: { q: string; a: string }, i: number) => (
+          <details key={i} className="group p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/50 transition-all card-shadow">
+            <summary className="flex items-start justify-between gap-4 cursor-pointer list-none">
+              <div className="flex items-start gap-3">
+                <span className="flex items-center justify-center w-6 h-6 rounded bg-orange-500/10 text-[var(--lf-accent)] text-[12px] font-bold shrink-0 mt-0.5">
+                  Q{i+1}
+                </span>
+                <p className="text-[14px] leading-relaxed text-[var(--lf-text-primary)] font-medium">
+                  {item.q}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={(e) => { e.preventDefault(); handleCopy(item.q + "\n\nAnswer:\n" + item.a); }}
+                  className="p-2 rounded-lg bg-[var(--lf-bg)] border border-[var(--lf-border)] text-[var(--lf-text-secondary)] hover:text-[var(--lf-accent)] hover:border-[var(--lf-accent)] opacity-0 group-hover:opacity-100 transition-all"
+                  title="Copy Q&A"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+                <ChevronRight className="h-5 w-5 text-[var(--lf-text-secondary)] group-open:rotate-90 transition-transform shrink-0" />
+              </div>
             </summary>
-            <div className="pt-4 mt-4 border-t border-[var(--lf-border)] text-[14px] leading-relaxed text-[var(--lf-text-secondary)]">
-              {item.a}
+            <div className="pt-4 mt-4 border-t border-[var(--lf-border)] pl-9">
+              <p className="text-[13px] leading-relaxed text-[var(--lf-text-secondary)]">
+                <span className="font-bold text-[var(--lf-text-primary)] mb-1 block">Answer:</span>
+                {item.a}
+              </p>
             </div>
           </details>
         ))}

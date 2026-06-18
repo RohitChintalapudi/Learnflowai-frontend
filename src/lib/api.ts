@@ -114,5 +114,26 @@ export const WorkflowAPI = {
 
     return response.json();
   },
+
+  /**
+   * Generate AI interview questions for highlighted text
+   */
+  async generateInterviewQuestions(documentId: string, highlightedText: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/interview-questions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate interview questions");
+    }
+
+    return response.json();
+  },
 };
 
