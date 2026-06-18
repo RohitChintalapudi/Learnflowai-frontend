@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "../../components/DashboardLayout";
-import { type GeneratedNotes } from "../../lib/api";
+import { type GeneratedNotes, WorkflowAPI } from "../../lib/api";
 import { Notebook, Download, Clock, ChevronRight, FileText, Lightbulb, BookOpen, GraduationCap, ArrowLeft, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -48,8 +48,16 @@ function NotesPage() {
     handleDownloadPDF();
   };
 
-  const deleteNote = (e: React.MouseEvent, id: string) => {
+  const deleteNote = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
+    
+    // Call backend to delete permanently
+    try {
+      await WorkflowAPI.deleteNote(id);
+    } catch (err) {
+      console.error("Failed to delete from backend", err);
+    }
+
     const updated = savedNotes.filter(n => n.id !== id);
     setSavedNotes(updated);
     localStorage.setItem("recent_ai_notes", JSON.stringify(updated));

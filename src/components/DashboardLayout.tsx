@@ -97,8 +97,8 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit",
         <div className="h-16 flex items-center justify-center border-b border-[var(--lf-border)] transition-all">
           <Link to="/home" className={`flex items-center gap-3 hover:opacity-80 transition-opacity w-full px-6 ${isCollapsed ? "justify-center px-0" : ""}`}>
             <div className="flex items-center justify-center shrink-0">
-              <img src="/logo.png" className="block dark:hidden h-7 w-auto object-contain" alt="Learnflow AI Logo" />
-              <img src="/logo_dark.png" className="hidden dark:block h-7 w-auto object-contain" alt="Learnflow AI Logo" />
+              <img src="/logo.png" className="block dark:hidden h-6 w-auto object-contain" alt="Learnflow AI Logo" />
+              <img src="/logo_dark.png" className="hidden dark:block h-6 w-auto object-contain" alt="Learnflow AI Logo" />
             </div>
             {!isCollapsed && (
               <span className="text-[17px] font-extrabold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">

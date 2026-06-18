@@ -1,20 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion, type Variants } from "framer-motion";
+import { useEffect, useState } from "react";
+import { DocumentAPI, type DashboardSummary } from "../../lib/api";
 import {
   FileText,
   Brain,
   StickyNote,
-  HelpCircle,
   History,
   Upload,
   ArrowRight,
-  Flame,
-  BookOpen,
-  LayoutDashboard,
   ChevronRight,
   PlayCircle,
-  Zap,
-  BarChart3,
 } from "lucide-react";
 import { DashboardLayout } from "../../components/DashboardLayout";
 
@@ -42,11 +38,27 @@ const itemVariants: Variants = {
 
 function DashboardHomePage() {
   const navigate = useNavigate();
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const data = await DocumentAPI.getDashboardSummary();
+        setSummary(data);
+      } catch (error) {
+        console.error("Failed to load dashboard summary:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSummary();
+  }, []);
 
   return (
     <DashboardLayout headerTitle={
       <>
-        Welcome back, Rohit{" "}
+        Welcome back, {summary?.user?.name || ""} {" "}
         <span className="inline-block hover:animate-bounce cursor-pointer origin-bottom-right">
           👋
         </span>
@@ -108,7 +120,7 @@ function DashboardHomePage() {
             {[
               {
                 title: "Documents Uploaded",
-                value: "24",
+                value: summary?.stats.documentsCount ?? 0,
                 icon: FileText,
                 color: "text-orange-400",
                 bg: "bg-orange-500/10",
@@ -116,7 +128,7 @@ function DashboardHomePage() {
               },
               {
                 title: "AI Explanations",
-                value: "1,492",
+                value: summary?.stats.explanationsCount ?? 0,
                 icon: Brain,
                 color: "text-[var(--lf-accent)]",
                 bg: "bg-[var(--lf-accent)]/10",
@@ -124,17 +136,9 @@ function DashboardHomePage() {
               },
               {
                 title: "Notes Created",
-                value: "86",
+                value: summary?.stats.notesCount ?? 0,
                 icon: StickyNote,
                 color: "text-orange-400",
-                bg: "bg-orange-500/10",
-                border: "border-orange-500/20",
-              },
-              {
-                title: "Learning Streak",
-                value: "12 Days",
-                icon: Flame,
-                color: "text-orange-500",
                 bg: "bg-orange-500/10",
                 border: "border-orange-500/20",
               },
@@ -152,9 +156,13 @@ function DashboardHomePage() {
                   >
                     <stat.icon className={`h-4.5 w-4.5 ${stat.color}`} />
                   </div>
-                  <p className="text-[28px] font-bold text-[var(--lf-text-primary)] mb-1 leading-none">
-                    {stat.value}
-                  </p>
+                  {loading ? (
+                    <div className="h-7 w-16 bg-stone-200 dark:bg-stone-800 animate-pulse rounded mb-1"></div>
+                  ) : (
+                    <p className="text-[28px] font-bold text-[var(--lf-text-primary)] mb-1 leading-none">
+                      {stat.value}
+                    </p>
+                  )}
                   <p className="text-[12px] font-medium text-[var(--lf-text-secondary)]">
                     {stat.title}
                   </p>
@@ -163,9 +171,9 @@ function DashboardHomePage() {
             ))}
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* LEFT COLUMN (Recent Documents & Recommendations) */}
-            <div className="lg:col-span-8 space-y-8">
+          <div className="grid grid-cols-1 gap-8">
+            {/* FULL COLUMN (Recent Documents & Recommendations) */}
+            <div className="space-y-8">
               {/* Recent Documents */}
               <motion.div variants={itemVariants}>
                 <div className="flex items-center justify-between mb-4">
@@ -178,245 +186,86 @@ function DashboardHomePage() {
                   </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    {
-                      name: "DSA Notes.pdf",
-                      time: "2 hours ago",
-                      icon: FileText,
-                      color: "text-orange-400",
-                      bg: "bg-orange-500/10",
-                    },
-                    {
-                      name: "DBMS Unit 3.pdf",
-                      time: "Yesterday",
-                      icon: FileText,
-                      color: "text-[var(--lf-accent)]",
-                      bg: "bg-[var(--lf-accent)]/10",
-                    },
-                    {
-                      name: "Operating Systems.pdf",
-                      time: "3 days ago",
-                      icon: BookOpen,
-                      color: "text-orange-500",
-                      bg: "bg-orange-500/10",
-                    },
-                    {
-                      name: "Computer Networks.ppt",
-                      time: "1 week ago",
-                      icon: LayoutDashboard,
-                      color: "text-[var(--lf-accent)]",
-                      bg: "bg-[var(--lf-accent)]/10",
-                    },
-                  ].map((doc, i) => (
-                    <div
-                      key={i}
-                      onClick={() => navigate({ to: "/workspace/$documentId", params: { documentId: "demo-doc-123" } })}
-                      className="group p-4 rounded-2xl bg-[var(--lf-card)] border border-[var(--lf-border)] hover:border-orange-500/40 card-shadow card-shadow-hover transition-all cursor-pointer flex items-center gap-4"
-                    >
-                      <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${doc.bg} group-hover:scale-110 transition-transform`}
-                      >
-                        <doc.icon className={`h-5 w-5 ${doc.color}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[14px] font-bold text-[var(--lf-text-primary)] truncate">
-                          {doc.name}
-                        </p>
-                        <p className="text-[11px] text-[var(--lf-text-secondary)] mt-0.5">
-                          {doc.time}
-                        </p>
-                      </div>
-                      <button className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--lf-surface)] border border-[var(--lf-border)] group-hover:bg-[var(--lf-accent)] group-hover:border-[var(--lf-accent)] group-hover:text-white transition-colors">
-                        <PlayCircle className="h-4 w-4" />
-                      </button>
+                  {loading ? (
+                    Array(4).fill(0).map((_, i) => (
+                      <div key={i} className="h-20 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl animate-pulse"></div>
+                    ))
+                  ) : summary?.recentDocuments.length === 0 ? (
+                    <div className="col-span-2 text-center py-6 text-[14px] text-[var(--lf-text-secondary)] italic">
+                      No documents uploaded yet.
                     </div>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* AI Recommendations */}
-              <motion.div variants={itemVariants}>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-[16px] font-bold text-[var(--lf-text-primary)] flex items-center gap-2">
-                    <Brain className="h-4.5 w-4.5 text-[var(--lf-accent)]" />{" "}
-                    AI Recommendations
-                  </h3>
-                </div>
-                <div className="flex flex-col gap-3">
-                  {[
-                    {
-                      action: "Revise",
-                      target: "Dynamic Programming",
-                      type: "Notes",
-                      icon: StickyNote,
-                      color: "text-orange-400",
-                    },
-                    {
-                      action: "Take",
-                      target: "Graph Algorithms Quiz",
-                      type: "Quiz",
-                      icon: HelpCircle,
-                      color: "text-[var(--lf-accent)]",
-                    },
-                    {
-                      action: "Review",
-                      target: "DBMS Normalization",
-                      type: "Simulations",
-                      icon: Zap,
-                      color: "text-orange-500",
-                    },
-                  ].map((rec, i) => (
-                    <div
-                      key={i}
-                      className="group flex items-center justify-between p-4 rounded-2xl bg-[var(--lf-card)] border border-[var(--lf-border)] hover:bg-[var(--lf-surface)] hover:border-orange-500/30 card-shadow card-shadow-hover transition-all cursor-pointer"
-                    >
-                      <div className="flex items-center gap-4">
+                  ) : (
+                    summary?.recentDocuments.map((doc, i) => (
+                      <div
+                        key={i}
+                        onClick={() => navigate({ to: "/workspace/$documentId", params: { documentId: String(doc.id) } })}
+                        className="group p-4 rounded-2xl bg-[var(--lf-card)] border border-[var(--lf-border)] hover:border-orange-500/40 card-shadow card-shadow-hover transition-all cursor-pointer flex items-center gap-4"
+                      >
                         <div
-                          className={`w-9 h-9 rounded-full flex items-center justify-center bg-[var(--lf-surface)] border border-[var(--lf-border)] group-hover:scale-110 transition-transform`}
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-orange-500/10 group-hover:scale-110 transition-transform`}
                         >
-                          <rec.icon className={`h-4 w-4 ${rec.color}`} />
+                          <FileText className={`h-5 w-5 text-orange-400`} />
                         </div>
-                        <div>
-                          <p className="text-[14px] font-medium text-[var(--lf-text-primary)]">
-                            <span className="text-[var(--lf-text-secondary)]">
-                              {rec.action}
-                            </span>{" "}
-                            <span className="font-bold">{rec.target}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[14px] font-bold text-[var(--lf-text-primary)] truncate" title={doc.title}>
+                            {doc.title}
                           </p>
                           <p className="text-[11px] text-[var(--lf-text-secondary)] mt-0.5">
-                            Based on your recent mistakes
+                            {new Date(doc.createdAt!).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </p>
+                        </div>
+                        <button className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--lf-surface)] border border-[var(--lf-border)] group-hover:bg-[var(--lf-accent)] group-hover:border-[var(--lf-accent)] group-hover:text-white transition-colors">
+                          <PlayCircle className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Recent Activity (Horizontal) */}
+              <motion.div variants={itemVariants} className="pt-2">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-[16px] font-bold text-[var(--lf-text-primary)] flex items-center gap-2">
+                    <History className="h-4.5 w-4.5 text-[var(--lf-text-secondary)]" />{" "}
+                    Recent Activity
+                  </h3>
+                </div>
+                <div className="flex overflow-x-auto no-scrollbar gap-4 pb-4 snap-x">
+                  {loading ? (
+                    Array(4).fill(0).map((_, i) => (
+                      <div key={i} className="min-w-[240px] h-24 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl animate-pulse snap-start"></div>
+                    ))
+                  ) : summary?.recentActivity.length === 0 ? (
+                    <div className="text-[13px] text-[var(--lf-text-secondary)] italic">
+                      No recent activity found.
+                    </div>
+                  ) : (
+                    summary?.recentActivity.map((act, i) => (
+                      <div
+                        key={i}
+                        className="min-w-[240px] max-w-[280px] p-4 rounded-2xl bg-[var(--lf-card)] border border-[var(--lf-border)] hover:border-orange-500/40 card-shadow card-shadow-hover transition-all cursor-pointer snap-start flex flex-col justify-between group"
+                      >
+                        <div className="flex items-center gap-3 mb-2">
+                           <div className="w-8 h-8 rounded-full bg-[var(--lf-surface)] flex items-center justify-center shrink-0 border border-[var(--lf-border)] group-hover:border-[var(--lf-text-secondary)] transition-colors">
+                             <div className="w-2 h-2 rounded-full bg-[var(--lf-text-secondary)] group-hover:bg-[var(--lf-accent)] transition-colors" />
+                           </div>
+                           <p className="text-[11px] text-[var(--lf-text-secondary)]">
+                             {new Date(act.time).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                           </p>
+                        </div>
+                        <div>
+                          <p className="text-[13px] font-medium text-[var(--lf-text-primary)] line-clamp-2">
+                            {act.action}{" "}
+                            <span className="font-bold" title={act.target}>{act.target}</span>
                           </p>
                         </div>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-text-primary)] group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-
-            {/* RIGHT COLUMN (Progress & Timeline) */}
-            <div className="lg:col-span-4 space-y-8">
-              {/* Learning Progress */}
-              <motion.div
-                variants={itemVariants}
-                className="p-6 rounded-3xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow-lg relative overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-orange-500/10 to-transparent blur-[60px] rounded-full pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-28 h-28 bg-gradient-to-tr from-orange-500/8 to-transparent blur-[50px] rounded-full pointer-events-none" />
-                <h3 className="text-[16px] font-bold text-[var(--lf-text-primary)] mb-5 flex items-center gap-2">
-                  <BarChart3 className="h-4.5 w-4.5 text-[var(--lf-text-secondary)]" />{" "}
-                  Learning Progress
-                </h3>
-                <div className="space-y-5">
-                  {[
-                    {
-                      subject: "Data Structures & Algorithms",
-                      progress: 78,
-                      color: "bg-orange-400",
-                    },
-                    {
-                      subject: "Database Management Systems",
-                      progress: 45,
-                      color: "bg-[var(--lf-accent)]",
-                    },
-                    {
-                      subject: "Operating Systems",
-                      progress: 92,
-                      color: "bg-orange-500",
-                    },
-                  ].map((prog, i) => (
-                    <div key={i}>
-                      <div className="flex justify-between items-end mb-2">
-                        <span className="text-[13px] font-bold text-[var(--lf-text-primary)] truncate pr-4">
-                          {prog.subject}
-                        </span>
-                        <span className="text-[11px] font-bold text-[var(--lf-text-secondary)]">
-                          {prog.progress}%
-                        </span>
-                      </div>
-                      <div className="h-2 w-full bg-[var(--lf-surface)] rounded-full overflow-hidden border border-[var(--lf-border)]">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${prog.progress}%` }}
-                          transition={{
-                            duration: 1,
-                            ease: "easeOut",
-                            delay: 0.2 + i * 0.1,
-                          }}
-                          className={`h-full ${prog.color} rounded-full`}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </motion.div>
 
-              {/* Activity Timeline */}
-              <motion.div
-                variants={itemVariants}
-                className="p-6 rounded-3xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow-lg relative overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-orange-500/10 to-transparent blur-[50px] rounded-full pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-500/8 to-transparent blur-[40px] rounded-full pointer-events-none" />
-                <h3 className="text-[16px] font-bold text-[var(--lf-text-primary)] mb-5 flex items-center gap-2">
-                  <History className="h-4.5 w-4.5 text-[var(--lf-text-secondary)]" />{" "}
-                  Recent Activity
-                </h3>
-                <div className="space-y-0 relative pl-2">
-                  {[
-                    {
-                      action: "Generated Notes",
-                      target: "for OS Deadlocks",
-                      time: "2h ago",
-                      icon: FileText,
-                    },
-                    {
-                      action: "Asked AI",
-                      target: '"Explain TCP Handshake"',
-                      time: "4h ago",
-                      icon: Brain,
-                    },
-                    {
-                      action: "Completed Quiz",
-                      target: "DBMS Normalization",
-                      time: "Yesterday",
-                      icon: HelpCircle,
-                    },
-                    {
-                      action: "Uploaded",
-                      target: "Computer Networks.pdf",
-                      time: "2 days ago",
-                      icon: Upload,
-                    },
-                  ].map((act, i, arr) => (
-                    <div
-                      key={i}
-                      className="flex gap-4 relative group cursor-pointer"
-                    >
-                      {/* Timeline Line */}
-                      {i !== arr.length - 1 && (
-                        <div className="absolute left-[11px] top-7 bottom-0 w-px bg-[var(--lf-border)]" />
-                      )}
-                      <div className="relative z-10 w-6 h-6 rounded-full bg-[var(--lf-surface)] border border-[var(--lf-border)] flex items-center justify-center shrink-0 mt-0.5 group-hover:border-[var(--lf-text-secondary)] transition-colors">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--lf-text-secondary)] group-hover:bg-[var(--lf-accent)] transition-colors" />
-                      </div>
-                      <div className="pb-6 pt-0.5">
-                        <p className="text-[13px] font-medium text-[var(--lf-text-primary)]">
-                          {act.action}{" "}
-                          <span className="font-bold">{act.target}</span>
-                        </p>
-                        <p className="text-[11px] text-[var(--lf-text-secondary)] mt-0.5">
-                          {act.time}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button className="w-full py-2.5 mt-2 rounded-xl border border-[var(--lf-border)] text-[12px] font-semibold text-[var(--lf-text-primary)] hover:bg-[var(--lf-surface)] hover:text-[var(--lf-accent)] transition-colors">
-                  View Full History
-                </button>
-              </motion.div>
             </div>
           </div>
         </motion.div>

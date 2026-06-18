@@ -18,6 +18,27 @@ export interface GeneratedNotes {
   revisionNotes: string[];
 }
 
+export interface DashboardSummary {
+  user: {
+    name: string;
+  };
+  stats: {
+    documentsCount: number;
+    explanationsCount: number;
+    notesCount: number;
+    quizzesCount: number;
+    learningStreak: number;
+  };
+  recentDocuments: DocumentMetadata[];
+  recentActivity: {
+    id: string;
+    action: string;
+    target: string;
+    time: string;
+    type: string;
+  }[];
+}
+
 export const DocumentAPI = {
   /**
    * Upload a new document
@@ -36,6 +57,26 @@ export const DocumentAPI = {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || "Failed to upload document");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get dashboard summary
+   */
+  async getDashboardSummary(): Promise<DashboardSummary> {
+    const response = await fetch(`${API_BASE_URL}/dashboard/summary`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch dashboard summary");
     }
 
     return response.json();
@@ -186,5 +227,24 @@ export const WorkflowAPI = {
 
     return response.json();
   },
-};
 
+  /**
+   * Delete an AI generated note
+   */
+  async deleteNote(noteId: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/notes/${noteId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to delete note");
+    }
+
+    return response.json();
+  },
+};
