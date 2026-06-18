@@ -23,7 +23,7 @@ import toast from "react-hot-toast";
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/home" },
   { icon: FileText, label: "Documents", to: "/documents" },
-  { icon: Brain, label: "AI Workspace", to: "/workspace/demo-doc-123" },
+  { icon: Brain, label: "AI Workspace", to: "/workspace" },
   { icon: StickyNote, label: "Notes", to: "#" },
   { icon: HelpCircle, label: "Quizzes", to: "#" },
   { icon: BarChart3, label: "Analytics", to: "#" },

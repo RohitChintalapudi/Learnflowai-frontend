@@ -92,3 +92,27 @@ export const DocumentAPI = {
     return response.json();
   },
 };
+
+export const WorkflowAPI = {
+  /**
+   * Generate an AI explanation for highlighted text
+   */
+  async generateExplanation(documentId: string, highlightedText: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/explanation`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate explanation");
+    }
+
+    return response.json();
+  },
+};
+

@@ -343,7 +343,7 @@ function DocumentsPage() {
 
                     <div className="p-3 border-t border-[var(--lf-border)] flex items-center gap-2 relative z-10">
                       <button
-                        onClick={() => navigate({ to: `/workspace/${doc.id}` })}
+                        onClick={() => navigate({ to: "/workspace/$documentId", params: { documentId: String(doc.id) } })}
                         className="flex-1 py-2 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:bg-[var(--lf-accent)] hover:border-[var(--lf-accent)] hover:text-white text-[13px] font-bold text-[var(--lf-text-primary)] transition-all group/btn flex items-center justify-center gap-2"
                       >
                         Open Document <PlayCircle className="h-4 w-4" />

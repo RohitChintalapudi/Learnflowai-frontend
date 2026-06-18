@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -20,6 +20,15 @@ import {
   FileText
 } from "lucide-react";
 import { DashboardLayout } from "../../components/DashboardLayout";
+import ReactMarkdown from "react-markdown";
+import toast from "react-hot-toast";
+import { WorkflowAPI, DocumentAPI, type DocumentMetadata } from "../../lib/api";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+
+// Configure PDF.js worker using unpkg to strictly match the react-pdf internal version
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export const Route = createFileRoute("/_public/workspace/$documentId")({
   component: WorkspacePage,
@@ -43,12 +52,35 @@ function WorkspacePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [highlightedText, setHighlightedText] = useState("");
-  const textRef = useRef<HTMLParagraphElement>(null);
+  const [documentMetadata, setDocumentMetadata] = useState<DocumentMetadata | null>(null);
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [zoom, setZoom] = useState(1.0);
 
-  // Mock text selection
+  // Memoize the file configuration to prevent react-pdf from refreshing endlessly on re-renders
+  const pdfFile = useMemo(() => {
+    if (!documentMetadata?.fileUrl) return null;
+    return {
+      url: documentMetadata.fileUrl.startsWith('http') ? documentMetadata.fileUrl : `http://localhost:3000${documentMetadata.fileUrl}`,
+      withCredentials: true
+    };
+  }, [documentMetadata?.fileUrl]);
+
+  // Fetch document metadata on mount
+  useEffect(() => {
+    const urlParts = window.location.pathname.split("/");
+    const docId = urlParts[urlParts.length - 1];
+    
+    if (docId) {
+      DocumentAPI.getDocument(docId)
+        .then(doc => setDocumentMetadata(doc))
+        .catch(err => toast.error("Failed to load document: " + err.message));
+    }
+  }, []);
+
+  // Handle text selection
   const handleTextSelect = () => {
     const selection = window.getSelection();
-    if (selection && selection.toString().length > 0 && textRef.current?.contains(selection.anchorNode)) {
+    if (selection && selection.toString().trim().length > 0) {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       
@@ -63,15 +95,47 @@ function WorkspacePage() {
     }
   };
 
-  const handleFeatureClick = (featureId: FeatureType) => {
+  const [explanationContent, setExplanationContent] = useState<string>("");
+
+  const handleFeatureClick = async (featureId: FeatureType) => {
     setIsMenuOpen(false);
     setActiveFeature(featureId);
-    setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
+    if (featureId === "explain") {
+      if (highlightedText.trim().length < 5) {
+        toast.error("Please highlight at least 5 characters to explain.");
+        setActiveFeature(null);
+        return;
+      }
+      if (highlightedText.trim().length > 5000) {
+        toast.error("Highlighted text is too long (max 5000 characters).");
+        setActiveFeature(null);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        // We can extract documentId from the route path in a real scenario
+        // Assuming Route.useParams() provides it:
+        const urlParts = window.location.pathname.split("/");
+        const docId = urlParts[urlParts.length - 1];
+        
+        const res = await WorkflowAPI.generateExplanation(docId, highlightedText);
+        setExplanationContent(res.explanation);
+        toast.success("Explanation generated successfully!");
+      } catch (error: any) {
+        toast.error(error.message || "Failed to generate explanation");
+        setActiveFeature(null);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Mock for other features
+      setIsLoading(true);
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 300);
+    }
   };
 
   return (
@@ -80,7 +144,9 @@ function WorkspacePage() {
         <div className="flex items-center gap-2 text-[var(--lf-text-secondary)] text-sm font-medium">
           <Link to="/documents" className="hover:text-[var(--lf-text-primary)] transition-colors">Documents</Link>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-[var(--lf-text-primary)] font-bold truncate max-w-[200px]">Data Structures Notes.pdf</span>
+          <span className="text-[var(--lf-text-primary)] font-bold truncate max-w-[200px]">
+            {documentMetadata ? documentMetadata.title : "Loading Document..."}
+          </span>
         </div>
       }
     >
@@ -107,11 +173,23 @@ function WorkspacePage() {
                 <button
                   key={feature.id}
                   onClick={() => handleFeatureClick(feature.id)}
-                  className="flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-orange-500/10 hover:text-[var(--lf-accent)] transition-all group min-w-[70px]"
+                  className={`flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl transition-all group min-w-[70px] ${
+                    feature.id === "explain"
+                      ? "hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 hover:shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                      : "hover:bg-orange-500/10 hover:text-[var(--lf-accent)] text-[var(--lf-text-secondary)]"
+                  }`}
                 >
-                  <feature.icon className="h-4 w-4 text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-colors" />
-                  <span className="text-[10px] font-bold text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-colors">
-                    {feature.label}
+                  <feature.icon className={`h-4 w-4 transition-colors ${
+                    feature.id === "explain"
+                      ? "text-orange-500 animate-pulse"
+                      : "text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)]"
+                  }`} />
+                  <span className={`text-[10px] font-bold transition-colors ${
+                    feature.id === "explain"
+                      ? "text-orange-600 dark:text-orange-400"
+                      : "text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)]"
+                  }`}>
+                    {feature.id === "explain" ? "✨ Explain Concept" : feature.label}
                   </span>
                 </button>
               ))}
@@ -144,52 +222,70 @@ function WorkspacePage() {
               <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="text-xs font-medium text-[var(--lf-text-primary)] min-w-[40px] text-center">1 / 52</span>
+              <span className="text-xs font-medium text-[var(--lf-text-primary)] min-w-[60px] text-center">
+                Total: {numPages || "-"}
+              </span>
               <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
+              <button 
+                onClick={() => setZoom(z => Math.max(0.5, z - 0.2))}
+                className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)] active:scale-95 transition-transform"
+              >
                 <ZoomOut className="h-4 w-4" />
               </button>
-              <span className="text-xs font-medium text-[var(--lf-text-primary)]">100%</span>
-              <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
+              <span className="text-xs font-medium text-[var(--lf-text-primary)] w-[40px] text-center">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button 
+                onClick={() => setZoom(z => Math.min(3.0, z + 0.2))}
+                className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)] active:scale-95 transition-transform"
+              >
                 <ZoomIn className="h-4 w-4" />
               </button>
             </div>
           </div>
 
-          {/* PDF Page Mock */}
-          <div className="flex-1 overflow-y-auto p-8 flex justify-center no-scrollbar">
-            <div className="w-[800px] max-w-full bg-white dark:bg-[#1a1a1c] rounded-lg shadow-xl border border-stone-200 dark:border-stone-800 p-12 min-h-[1056px] text-stone-900 dark:text-stone-100">
-              <h1 className="text-3xl font-bold mb-8 font-serif border-b pb-4 dark:border-stone-800">Chapter 4: Advanced Algorithms</h1>
-              
-              <h2 className="text-xl font-bold mb-4 font-serif text-orange-600 dark:text-orange-400">4.1 Dynamic Programming</h2>
-              
-              <p ref={textRef} className="text-base leading-relaxed mb-6 font-serif selection:bg-orange-200 dark:selection:bg-orange-900/50">
-                Dynamic Programming is a problem-solving technique that breaks a larger problem into smaller subproblems and stores previously computed results to avoid redundant calculations. It is commonly used in optimization problems where the solution can be defined recursively.
-              </p>
-
-              <p className="text-base leading-relaxed mb-6 font-serif selection:bg-orange-200 dark:selection:bg-orange-900/50">
-                Unlike greedy algorithms, which make locally optimal choices at each step, dynamic programming considers all possible choices to find the globally optimal solution. The two main approaches to DP are memoization (top-down) and tabulation (bottom-up).
-              </p>
-
-              <div className="bg-orange-50 dark:bg-orange-950/30 p-6 rounded-xl border border-orange-100 dark:border-orange-900/50 my-8">
-                <h3 className="font-bold mb-2 flex items-center gap-2 text-orange-700 dark:text-orange-400">
-                  <Brain className="h-5 w-5" /> Key Characteristics
-                </h3>
-                <ul className="list-disc pl-5 space-y-2 text-sm text-stone-700 dark:text-stone-300">
-                  <li><strong>Optimal Substructure:</strong> The optimal solution to the problem contains optimal solutions to subproblems.</li>
-                  <li><strong>Overlapping Subproblems:</strong> The space of subproblems is small, meaning the same subproblems are solved repeatedly.</li>
-                </ul>
+          {/* PDF Page Viewer */}
+          <div className="flex-1 relative bg-stone-100 dark:bg-stone-900 overflow-y-auto overflow-x-hidden flex flex-col items-center py-8">
+            {pdfFile ? (
+              <Document
+                file={pdfFile}
+                onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                onLoadError={(error) => {
+                  console.error("PDF Load Error:", error);
+                  toast.error("PDF Error: " + error.message);
+                }}
+                loading={
+                  <div className="flex items-center justify-center p-12 text-stone-500 animate-pulse">
+                    Loading PDF Document...
+                  </div>
+                }
+                error={
+                  <div className="flex flex-col items-center justify-center p-12 text-red-500">
+                    <p className="font-bold text-lg">Failed to load PDF.</p>
+                    <p className="text-sm mt-2 opacity-80">This could be a CORS issue with the backend. Check the console or toast message.</p>
+                  </div>
+                }
+              >
+                {numPages && Array.from(new Array(numPages), (_, index) => (
+                  <Page
+                    key={`page_${index + 1}`}
+                    pageNumber={index + 1}
+                    className="mb-8 shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden bg-white"
+                    scale={zoom}
+                    renderTextLayer={true}
+                    renderAnnotationLayer={true}
+                  />
+                ))}
+              </Document>
+            ) : (
+              <div className="flex items-center justify-center h-full text-stone-500">
+                Loading Document Metadata...
               </div>
-
-              <h2 className="text-xl font-bold mb-4 font-serif text-orange-600 dark:text-orange-400">4.2 Binary Search</h2>
-              <p className="text-base leading-relaxed mb-6 font-serif selection:bg-orange-200 dark:selection:bg-orange-900/50">
-                Binary search is an efficient algorithm for finding an item from a sorted list of items. It works by repeatedly dividing in half the portion of the list that could contain the item, until you've narrowed down the possible locations to just one.
-              </p>
-            </div>
+            )}
           </div>
         </motion.div>
 
@@ -226,21 +322,25 @@ function WorkspacePage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="space-y-6"
+                  className="space-y-6 flex flex-col items-center justify-center pt-10"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] flex items-center justify-center animate-pulse">
-                      <Brain className="h-6 w-6 text-[var(--lf-text-secondary)]" />
-                    </div>
-                    <div>
-                      <div className="h-4 w-32 bg-[var(--lf-surface)] rounded-md animate-pulse mb-2" />
-                      <div className="h-3 w-48 bg-[var(--lf-surface)] rounded-md animate-pulse" />
+                  <div className="relative w-20 h-20 flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full border border-orange-500/20 animate-ping duration-1000" />
+                    <div className="absolute inset-2 rounded-full border border-orange-500/40 animate-pulse duration-700" />
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-orange-600 to-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.5)] flex items-center justify-center animate-bounce">
+                      <Brain className="h-6 w-6 text-white" />
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    <div className="h-32 w-full bg-[var(--lf-surface)] rounded-2xl animate-pulse" />
-                    <div className="h-24 w-full bg-[var(--lf-surface)] rounded-2xl animate-pulse" />
-                    <div className="h-40 w-full bg-[var(--lf-surface)] rounded-2xl animate-pulse" />
+                  <div className="text-center space-y-2">
+                    <h3 className="text-[16px] font-bold text-[var(--lf-text-primary)] animate-pulse">
+                      Analyzing Context...
+                    </h3>
+                    <p className="text-[13px] text-[var(--lf-text-secondary)] animate-pulse">
+                      Searching the document to generate your explanation.
+                    </p>
+                  </div>
+                  <div className="w-full max-w-xs h-1 bg-[var(--lf-surface)] rounded-full overflow-hidden mt-4">
+                    <div className="h-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-400 animate-slide-right w-[200%]" />
                   </div>
                 </motion.div>
               )}
@@ -270,7 +370,7 @@ function WorkspacePage() {
                   </div>
 
                   {/* Feature Content */}
-                  {activeFeature === "explain" && <FeatureExplain />}
+                  {activeFeature === "explain" && <FeatureExplain content={explanationContent} />}
                   {activeFeature === "notes" && <FeatureNotes />}
                   {activeFeature === "quiz" && <FeatureQuiz />}
                   {activeFeature === "analogy" && <FeatureAnalogy />}
@@ -294,45 +394,87 @@ function WorkspacePage() {
 // FEATURE COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function FeatureExplain() {
+function FeatureExplain({ content }: { content: string }) {
+  // Parse sections based on markdown headings
+  const parseSections = (markdown: string) => {
+    const sections: { title: string; content: string }[] = [];
+    const regex = /(?:^|\n)#{1,3}\s+(.*?)\n([\s\S]*?)(?=\n#{1,3}\s+|$)/g;
+    let match;
+    
+    // Check if there's text before the first heading
+    const firstHeadingIndex = markdown.indexOf("#");
+    if (firstHeadingIndex > 0) {
+      sections.push({
+        title: "Overview",
+        content: markdown.substring(0, firstHeadingIndex).trim()
+      });
+    } else if (firstHeadingIndex === -1 && markdown.trim()) {
+       return [{ title: "Explanation", content: markdown.trim() }];
+    }
+
+    while ((match = regex.exec(markdown)) !== null) {
+      sections.push({ title: match[1].trim(), content: match[2].trim() });
+    }
+    return sections;
+  };
+
+  const sections = content ? parseSections(content) : [];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 mb-2">
         <Sparkles className="h-6 w-6 text-[var(--lf-accent)]" />
-        <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Explanation</h2>
+        <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Explanation</h2>
       </div>
 
-      <p className="text-[15px] leading-relaxed text-[var(--lf-text-primary)]">
-        <strong className="text-orange-500">Dynamic Programming</strong> is a problem-solving technique that breaks a larger problem into smaller subproblems and stores previously computed results to avoid redundant calculations.
-      </p>
+      {content ? (
+        <div className="space-y-6">
+          {sections.map((section, idx) => {
+            const isRealWorld = section.title.toLowerCase().includes("real-world") || section.title.toLowerCase().includes("example");
+            const isKeyPoints = section.title.toLowerCase().includes("key");
+            const isImportantNotes = section.title.toLowerCase().includes("important") || section.title.toLowerCase().includes("note");
 
-      <div className="p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow">
-        <h3 className="text-[14px] font-bold flex items-center gap-2 mb-4 text-[var(--lf-text-primary)]">
-          <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Key Points
-        </h3>
-        <ul className="space-y-3">
-          {[
-            "Breaks problems into subproblems",
-            "Stores previous results (Memoization/Tabulation)",
-            "Improves algorithm efficiency dramatically",
-            "Reduces repeated work from exponential to polynomial time"
-          ].map((pt, i) => (
-            <li key={i} className="flex items-start gap-2 text-[14px] text-[var(--lf-text-secondary)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
-              {pt}
-            </li>
-          ))}
-        </ul>
-      </div>
+            let containerClass = "";
+            let titleIcon = null;
+            let titleClass = "text-[16px] font-bold text-[var(--lf-text-primary)] mb-3";
 
-      <div className="p-5 rounded-2xl bg-orange-500/5 border border-orange-500/20">
-        <h3 className="text-[14px] font-bold flex items-center gap-2 mb-2 text-orange-600 dark:text-orange-400">
-          <Globe className="h-4 w-4" /> Real World Example
-        </h3>
-        <p className="text-[14px] text-[var(--lf-text-secondary)]">
-          Google Maps calculating shortest routes. If it already knows the shortest path from City B to City C, it saves that result when calculating the path from City A through City B to City C.
-        </p>
-      </div>
+            if (isRealWorld) {
+              containerClass = "p-5 rounded-2xl bg-orange-500/10 border border-orange-500/30 shadow-sm shadow-orange-500/10";
+              titleIcon = <Globe className="h-5 w-5 text-orange-600 dark:text-orange-400" />;
+              titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-orange-700 dark:text-orange-400";
+            } else if (isKeyPoints) {
+              containerClass = "p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow";
+              titleIcon = <CheckCircle2 className="h-5 w-5 text-emerald-500" />;
+              titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-[var(--lf-text-primary)]";
+            } else if (isImportantNotes) {
+              containerClass = "p-5 rounded-2xl bg-red-500/5 border border-red-500/20";
+              titleIcon = <Brain className="h-5 w-5 text-red-500" />;
+              titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-red-600 dark:text-red-400";
+            } else {
+              containerClass = "text-[15px] leading-relaxed text-[var(--lf-text-primary)]";
+            }
+
+            return (
+              <div key={idx} className={containerClass}>
+                {titleIcon ? (
+                  <h3 className={titleClass}>
+                    {titleIcon} {section.title}
+                  </h3>
+                ) : (
+                  <h3 className={titleClass}>{section.title}</h3>
+                )}
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-orange prose-p:leading-relaxed prose-li:my-1">
+                  <ReactMarkdown>{section.content}</ReactMarkdown>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="text-[14px] text-[var(--lf-text-secondary)] italic">
+          No explanation generated yet.
+        </div>
+      )}
     </div>
   );
 }

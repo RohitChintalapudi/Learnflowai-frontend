@@ -98,7 +98,7 @@ function PublicLayout() {
       className={`min-h-screen flex flex-col relative text-stone-800 dark:text-stone-100 transition-colors duration-300 antialiased selection:bg-orange-100 dark:selection:bg-orange-900/40 selection:text-stone-900 ${
         isAppRoute || isLanding 
           ? "bg-white dark:bg-[#0c0a09]" 
-          : "bg-[url('/background.png')] dark:bg-[url('/background_dark.png')] bg-cover bg-[50%_95%] bg-no-repeat"
+          : "bg-[url('/background.png')] dark:bg-[url('/background_dark.png')] bg-cover bg-[50%_-250px] bg-no-repeat"
       }`}
     >
       {/* Global Public Navbar */}
