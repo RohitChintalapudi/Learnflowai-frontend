@@ -98,6 +98,7 @@ function WorkspacePage() {
 
   const [explanationContent, setExplanationContent] = useState<string>("");
   const [interviewQuestionsContent, setInterviewQuestionsContent] = useState<any>(null);
+  const [quizContent, setQuizContent] = useState<any>(null);
 
   const handleFeatureClick = async (featureId: FeatureType) => {
     setIsMenuOpen(false);
@@ -153,6 +154,32 @@ function WorkspacePage() {
         toast.success("Interview questions generated successfully!");
       } catch (error: any) {
         toast.error(error.message || "Failed to generate interview questions");
+        setActiveFeature(null);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (featureId === "quiz") {
+      if (highlightedText.trim().length < 5) {
+        toast.error("Please highlight at least 5 characters to generate a quiz.");
+        setActiveFeature(null);
+        return;
+      }
+      if (highlightedText.trim().length > 5000) {
+        toast.error("Highlighted text is too long (max 5000 characters).");
+        setActiveFeature(null);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const urlParts = window.location.pathname.split("/");
+        const docId = urlParts[urlParts.length - 1];
+        
+        const res = await WorkflowAPI.generateQuiz(docId, highlightedText);
+        setQuizContent(res.quiz);
+        toast.success("Quiz generated successfully!");
+      } catch (error: any) {
+        toast.error(error.message || "Failed to generate quiz");
         setActiveFeature(null);
       } finally {
         setIsLoading(false);
@@ -400,7 +427,7 @@ function WorkspacePage() {
                   {/* Feature Content */}
                   {activeFeature === "explain" && <FeatureExplain content={explanationContent} />}
                   {activeFeature === "notes" && <FeatureNotes />}
-                  {activeFeature === "quiz" && <FeatureQuiz />}
+                  {activeFeature === "quiz" && <FeatureQuiz quiz={quizContent} />}
                   {activeFeature === "analogy" && <FeatureAnalogy />}
                   {activeFeature === "interview" && <FeatureInterview questions={interviewQuestionsContent} />}
                   {activeFeature === "mindmap" && <FeatureMindMap />}
@@ -537,71 +564,168 @@ function FeatureNotes() {
   );
 }
 
-function FeatureQuiz() {
-  const [selected, setSelected] = useState<number | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+function FeatureQuiz({ quiz }: { quiz: any }) {
+  const [mcqAnswers, setMcqAnswers] = useState<Record<number, string>>({});
+  const [tfAnswers, setTfAnswers] = useState<Record<number, boolean>>({});
+  const [shortAnswers, setShortAnswers] = useState<Record<number, string>>({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  if (!quiz) {
+    return (
+      <div className="text-[14px] text-[var(--lf-text-secondary)] italic">
+        No quiz generated yet.
+      </div>
+    );
+  }
+
+  const { score, total } = useMemo(() => {
+    let s = 0;
+    let t = (quiz.mcqs?.length || 0) + (quiz.trueFalse?.length || 0);
+    quiz.mcqs?.forEach((q: any, i: number) => {
+      if (mcqAnswers[i] === q.correctAnswer) s++;
+    });
+    quiz.trueFalse?.forEach((q: any, i: number) => {
+      if (tfAnswers[i] === q.answer) s++;
+    });
+    return { score: s, total: t };
+  }, [quiz, mcqAnswers, tfAnswers, isSubmitted]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <HelpCircle className="h-6 w-6 text-[var(--lf-accent)]" />
-        <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Quiz</h2>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <HelpCircle className="h-6 w-6 text-[var(--lf-accent)]" />
+          <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Quiz</h2>
+        </div>
+        {isSubmitted && (
+          <div className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+            Score: {score} / {total}
+          </div>
+        )}
       </div>
 
-      <div className="p-6 rounded-3xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow-lg">
-        <div className="flex items-center justify-between mb-6">
-          <span className="text-[12px] font-bold text-[var(--lf-accent)] bg-orange-500/10 px-3 py-1 rounded-full">Question 1 of 3</span>
+      {/* Multiple Choice Section */}
+      {quiz.mcqs && quiz.mcqs.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider">Multiple Choice</h3>
+          {quiz.mcqs.map((q: any, i: number) => (
+            <div key={`mcq-${i}`} className="p-6 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow">
+              <p className="text-[15px] font-medium text-[var(--lf-text-primary)] mb-4">
+                <span className="text-[var(--lf-accent)] font-bold mr-2">{i + 1}.</span> {q.question}
+              </p>
+              <div className="space-y-2">
+                {q.options.map((opt: string, optIdx: number) => {
+                  const isSelected = mcqAnswers[i] === opt;
+                  const isCorrect = q.correctAnswer === opt;
+                  
+                  let btnClass = "border-[var(--lf-border)] bg-[var(--lf-bg)] hover:border-orange-500/50";
+                  if (isSubmitted) {
+                    if (isCorrect) btnClass = "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400";
+                    else if (isSelected) btnClass = "border-red-500 bg-red-500/10 text-red-700 dark:text-red-400";
+                    else btnClass = "border-[var(--lf-border)] bg-[var(--lf-bg)] opacity-50";
+                  } else if (isSelected) {
+                    btnClass = "border-orange-500 bg-orange-500/10 text-[var(--lf-accent)] ring-1 ring-orange-500/20";
+                  }
+
+                  return (
+                    <button
+                      key={optIdx}
+                      onClick={() => !isSubmitted && setMcqAnswers(prev => ({ ...prev, [i]: opt }))}
+                      disabled={isSubmitted}
+                      className={`w-full text-left px-4 py-3 rounded-xl border text-[14px] transition-all flex items-center justify-between ${btnClass}`}
+                    >
+                      <span>{opt}</span>
+                      {isSubmitted && isCorrect && <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />}
+                      {isSubmitted && isSelected && !isCorrect && <X className="h-4 w-4 text-red-500 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
-        
-        <p className="text-[16px] font-bold text-[var(--lf-text-primary)] mb-6">
-          Which technique stores previously computed results to avoid redundant calculations?
-        </p>
+      )}
 
-        <div className="space-y-3">
-          {["Greedy Algorithms", "Memoization", "Depth First Search", "Breadth First Search"].map((opt, i) => {
-            const isCorrect = i === 1;
-            const isSelected = selected === i;
-            let btnClass = "border-[var(--lf-border)] bg-[var(--lf-surface)] hover:border-orange-500/50 hover:bg-[var(--lf-bg)]";
+      {/* True / False Section */}
+      {quiz.trueFalse && quiz.trueFalse.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider">True or False</h3>
+          {quiz.trueFalse.map((q: any, i: number) => {
+            const isCorrectAnswer = q.answer;
+            const userAnswer = tfAnswers[i];
             
-            if (submitted) {
-              if (isCorrect) btnClass = "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
-              else if (isSelected) btnClass = "border-red-500 bg-red-500/10 text-red-600 dark:text-red-400";
-              else btnClass = "border-[var(--lf-border)] bg-[var(--lf-surface)] opacity-50";
-            } else if (isSelected) {
-              btnClass = "border-orange-500 bg-orange-500/10 text-[var(--lf-accent)] ring-2 ring-orange-500/20";
-            }
-
             return (
-              <button
-                key={i}
-                onClick={() => !submitted && setSelected(i)}
-                disabled={submitted}
-                className={`w-full text-left px-5 py-4 rounded-xl border text-[14px] font-medium transition-all duration-200 flex items-center justify-between ${btnClass}`}
-              >
-                <span><span className="font-bold opacity-50 mr-3">{["A", "B", "C", "D"][i]}.</span> {opt}</span>
-                {submitted && isCorrect && <CheckCircle2 className="h-5 w-5 text-emerald-500" />}
-                {submitted && isSelected && !isCorrect && <X className="h-5 w-5 text-red-500" />}
-              </button>
+              <div key={`tf-${i}`} className="p-6 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <p className="text-[15px] font-medium text-[var(--lf-text-primary)]">
+                  <span className="text-[var(--lf-accent)] font-bold mr-2">{i + 1}.</span> {q.question}
+                </p>
+                <div className="flex gap-2 shrink-0">
+                  {[true, false].map((val) => {
+                    const isSelected = userAnswer === val;
+                    const isCorrect = isCorrectAnswer === val;
+                    
+                    let btnClass = "border-[var(--lf-border)] bg-[var(--lf-bg)] hover:bg-[var(--lf-surface)]";
+                    if (isSubmitted) {
+                      if (isCorrect) btnClass = "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400";
+                      else if (isSelected) btnClass = "border-red-500 bg-red-500/10 text-red-700 dark:text-red-400";
+                      else btnClass = "border-[var(--lf-border)] bg-[var(--lf-bg)] opacity-50";
+                    } else if (isSelected) {
+                      btnClass = "border-orange-500 bg-orange-500/10 text-[var(--lf-accent)]";
+                    }
+
+                    return (
+                      <button
+                        key={String(val)}
+                        onClick={() => !isSubmitted && setTfAnswers(prev => ({ ...prev, [i]: val }))}
+                        disabled={isSubmitted}
+                        className={`px-6 py-2 rounded-lg border text-sm font-bold transition-all ${btnClass}`}
+                      >
+                        {val ? "True" : "False"}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </div>
+      )}
 
-        {submitted && (
-          <div className="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-            <p className="text-[13px] text-emerald-700 dark:text-emerald-400 font-medium">
-              <strong>Correct!</strong> Memoization is the top-down DP approach that caches the results of function calls.
-            </p>
-          </div>
-        )}
+      {/* Short Answer Section */}
+      {quiz.shortAnswer && quiz.shortAnswer.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider">Short Answer</h3>
+          {quiz.shortAnswer.map((q: any, i: number) => (
+            <div key={`sa-${i}`} className="p-6 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow">
+              <p className="text-[15px] font-medium text-[var(--lf-text-primary)] mb-4">
+                <span className="text-[var(--lf-accent)] font-bold mr-2">{i + 1}.</span> {q.question}
+              </p>
+              <textarea
+                value={shortAnswers[i] || ""}
+                onChange={(e) => setShortAnswers(prev => ({ ...prev, [i]: e.target.value }))}
+                disabled={isSubmitted}
+                placeholder="Type your answer here..."
+                className="w-full p-4 rounded-xl bg-[var(--lf-bg)] border border-[var(--lf-border)] text-[14px] text-[var(--lf-text-primary)] focus:outline-none focus:border-orange-500/50 resize-none min-h-[100px] disabled:opacity-70"
+              />
+              {isSubmitted && (
+                <div className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">Expected Answer</p>
+                  <p className="text-[14px] text-blue-700 dark:text-blue-400">{q.expectedAnswer}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
-        <button 
-          onClick={() => setSubmitted(true)}
-          disabled={selected === null || submitted}
-          className="w-full mt-6 py-3 rounded-xl bg-[var(--lf-accent)] text-white text-[14px] font-bold disabled:opacity-50 transition-opacity"
+      {!isSubmitted && (
+        <button
+          onClick={() => setIsSubmitted(true)}
+          className="w-full py-4 rounded-2xl bg-[var(--lf-accent)] text-white font-bold text-[15px] shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_25px_rgba(249,115,22,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0"
         >
-          {submitted ? "Next Question" : "Submit Answer"}
+          Submit Quiz
         </button>
-      </div>
+      )}
     </div>
   );
 }

@@ -135,5 +135,25 @@ export const WorkflowAPI = {
 
     return response.json();
   },
-};
 
+  /**
+   * Generate AI quiz for highlighted text
+   */
+  async generateQuiz(documentId: string, highlightedText: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/quiz`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate quiz");
+    }
+
+    return response.json();
+  },
+};
