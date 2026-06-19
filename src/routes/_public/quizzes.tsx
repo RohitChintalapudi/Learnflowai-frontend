@@ -1,19 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import {
   Search,
   BookOpen,
-  Calendar,
-  Layers,
   HelpCircle,
   FileQuestion,
   Trash2,
   Clock,
   X,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Award,
+  Target,
+  Brain,
+  Star
 } from "lucide-react";
 import { QuizDashboardAPI } from "../../lib/api";
 import toast from "react-hot-toast";
@@ -26,6 +28,9 @@ interface QuizStats {
   totalQuizzes: number;
   thisWeek: number;
   thisMonth: number;
+  averageScore?: number;
+  totalQuestionsAnswered?: number;
+  totalCorrect?: number;
 }
 
 interface QuizData {
@@ -41,6 +46,9 @@ interface GeneratedQuiz {
   quizData: QuizData;
   totalQuestions: number;
   createdAt: string;
+  score?: number;
+  totalQuestionsSubmitted?: number;
+  topicsToImprove?: string[];
 }
 
 // Custom hook for debouncing
@@ -145,6 +153,34 @@ function QuizDashboardPage() {
 
   const closeDetails = () => setSelectedQuiz(null);
 
+  // Compute analytics from quizzes
+  const analytics = useMemo(() => {
+    const submitted = quizzes.filter(q => q.score !== undefined && q.totalQuestionsSubmitted !== undefined);
+    const totalCorrect = submitted.reduce((sum, q) => sum + (q.score || 0), 0);
+    const totalAnswered = submitted.reduce((sum, q) => sum + (q.totalQuestionsSubmitted || 0), 0);
+    const avgScore = submitted.length > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+
+    // Collect topics from quizzes with score below 5, grouped by topic with lowest score
+    const topicData: Record<string, { count: number; lowestScore: number }> = {};
+    quizzes.forEach(q => {
+      const quizScore = q.score;
+      if (quizScore !== undefined && quizScore < 5) {
+        (q.topicsToImprove || []).forEach(t => {
+          if (!topicData[t]) topicData[t] = { count: 0, lowestScore: Infinity };
+          topicData[t].count++;
+          topicData[t].lowestScore = Math.min(topicData[t].lowestScore, quizScore);
+        });
+      }
+    });
+    const sortedTopics = Object.entries(topicData).sort((a, b) => {
+      if (a[1].lowestScore !== b[1].lowestScore) return a[1].lowestScore - b[1].lowestScore;
+      return b[1].count - a[1].count;
+    }).map(([topic, data]) => [topic, data.count] as [string, number]);
+    const weakestTopic = sortedTopics.length > 0 ? sortedTopics[0][0] : null;
+
+    return { avgScore, totalCorrect, totalAnswered, submittedCount: submitted.length, topics: sortedTopics, weakestTopic };
+  }, [quizzes]);
+
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);
@@ -166,6 +202,20 @@ function QuizDashboardPage() {
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
   };
 
+  // Score color helper
+  const scoreColor = (score: number, total: number) => {
+    const pct = (score / total) * 100;
+    if (pct >= 80) return "text-emerald-500";
+    if (pct >= 60) return "text-amber-500";
+    return "text-red-500";
+  };
+  const scoreBgColor = (score: number, total: number) => {
+    const pct = (score / total) * 100;
+    if (pct >= 80) return "bg-emerald-500/10 border-emerald-500/20";
+    if (pct >= 60) return "bg-amber-500/10 border-amber-500/20";
+    return "bg-red-500/10 border-red-500/20";
+  };
+
   return (
     <DashboardLayout headerTitle={
       <div className="flex items-center gap-2">
@@ -177,17 +227,23 @@ function QuizDashboardPage() {
           variants={containerVariants} 
           initial="hidden" 
           animate="show" 
-          className="max-w-[1200px] mx-auto space-y-8 pb-12"
+          className="max-w-[1400px] mx-auto pb-12"
         >
           {/* Header Description */}
           <motion.div variants={itemVariants} className="space-y-2 mb-8">
             <p className="text-[15px] text-[var(--lf-text-secondary)]">Track and revisit your generated AI quizzes to identify areas for improvement.</p>
           </motion.div>
 
-          {/* Stats Section */}
+          {/* Main layout: content left + topics sidebar right */}
+          <div className="flex gap-8">
+
+          {/* Left column — stats + search + quiz grid */}
+          <div className="flex-1 min-w-0 space-y-8">
+
+          {/* Analytics + Stats Section */}
           {isStatsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map(i => (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[1, 2, 3].map(i => (
                 <div key={i} className="h-28 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl animate-pulse card-shadow" />
               ))}
             </div>
@@ -196,28 +252,70 @@ function QuizDashboardPage() {
               variants={containerVariants} 
               initial="hidden" 
               animate="show" 
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+              className="grid grid-cols-1 md:grid-cols-3 gap-4"
             >
-              {[
-                { title: "Total Quizzes", value: stats?.totalQuizzes || 0, icon: <BookOpen className="text-orange-500" /> },
-                { title: "This Week", value: stats?.thisWeek || 0, icon: <Calendar className="text-blue-500" /> },
-                { title: "This Month", value: stats?.thisMonth || 0, icon: <Layers className="text-emerald-500" /> },
-                { title: "Engagement", value: "Active", icon: <HelpCircle className="text-purple-500" /> },
-              ].map((stat, i) => (
-                <motion.div 
-                  key={i} 
-                  variants={itemVariants}
-                  className="bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow rounded-2xl p-6 flex items-center justify-between hover:-translate-y-1 hover:border-orange-500/30 transition-all duration-300 group"
-                >
+              {/* Total Quizzes */}
+              <motion.div 
+                variants={itemVariants}
+                className="bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow rounded-2xl p-6 hover:-translate-y-1 hover:border-orange-500/30 transition-all duration-300 group relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/8 blur-[40px] rounded-full pointer-events-none" />
+                <div className="flex items-center justify-between relative z-10">
                   <div>
-                    <p className="text-[13px] font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider mb-1">{stat.title}</p>
-                    <p className="text-3xl font-black text-[var(--lf-text-primary)]">{stat.value}</p>
+                    <p className="text-[13px] font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider mb-1">Total Quizzes</p>
+                    <p className="text-3xl font-black text-[var(--lf-text-primary)]">{stats?.totalQuizzes || 0}</p>
                   </div>
-                  <div className="h-12 w-12 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] flex items-center justify-center group-hover:scale-110 transition-transform">
-                    {stat.icon}
+                  <div className="h-12 w-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <BookOpen className="h-5 w-5 text-orange-500" />
                   </div>
-                </motion.div>
-              ))}
+                </div>
+              </motion.div>
+
+              {/* Average Score */}
+              <motion.div 
+                variants={itemVariants}
+                className="bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow rounded-2xl p-6 hover:-translate-y-1 hover:border-orange-500/30 transition-all duration-300 group relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/8 blur-[40px] rounded-full pointer-events-none" />
+                <div className="flex items-center justify-between relative z-10">
+                  <div>
+                    <p className="text-[13px] font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider mb-1">Avg Score</p>
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="text-3xl font-black text-[var(--lf-text-primary)]">{analytics.submittedCount > 0 ? analytics.avgScore : "—"}</p>
+                      {analytics.submittedCount > 0 && (
+                        <span className="text-[16px] font-bold text-[var(--lf-text-secondary)]">%</span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[var(--lf-text-secondary)] mt-0.5">{analytics.submittedCount} quiz{analytics.submittedCount !== 1 ? "zes" : ""} submitted</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Award className="h-5 w-5 text-emerald-500" />
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Questions Answered */}
+              <motion.div 
+                variants={itemVariants}
+                className="bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow rounded-2xl p-6 hover:-translate-y-1 hover:border-orange-500/30 transition-all duration-300 group relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/8 blur-[40px] rounded-full pointer-events-none" />
+                <div className="flex items-center justify-between relative z-10">
+                  <div>
+                    <p className="text-[13px] font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider mb-1">Questions</p>
+                    <p className="text-3xl font-black text-[var(--lf-text-primary)]">
+                      {analytics.totalAnswered > 0 ? `${analytics.totalCorrect}/${analytics.totalAnswered}` : "—"}
+                    </p>
+                    <p className="text-[11px] text-[var(--lf-text-secondary)] mt-0.5">
+                      {analytics.totalAnswered > 0 ? `${Math.round((analytics.totalCorrect / analytics.totalAnswered) * 100)}% accuracy` : "No data yet"}
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Target className="h-5 w-5 text-blue-500" />
+                  </div>
+                </div>
+              </motion.div>
+
             </motion.div>
           )}
 
@@ -246,8 +344,10 @@ function QuizDashboardPage() {
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="py-20 flex flex-col items-center justify-center text-center border border-dashed border-[var(--lf-border)] rounded-3xl bg-[var(--lf-surface)]"
+              className="py-20 flex flex-col items-center justify-center text-center border border-dashed border-[var(--lf-border)] rounded-3xl bg-[var(--lf-surface)] relative overflow-hidden"
             >
+              <div className="absolute top-0 right-0 w-40 h-40 bg-orange-500/6 blur-[60px] rounded-full pointer-events-none" />
+              <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-orange-400/5 blur-[50px] rounded-full pointer-events-none" />
               <FileQuestion className="h-16 w-16 text-[var(--lf-text-secondary)] opacity-50 mb-4" />
               <h3 className="text-xl font-bold text-[var(--lf-text-primary)] mb-2">No quizzes found</h3>
               <p className="text-[14px] text-[var(--lf-text-secondary)] max-w-md">
@@ -265,9 +365,12 @@ function QuizDashboardPage() {
                 <motion.div 
                   key={quiz.id}
                   variants={itemVariants}
-                  className="bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow rounded-2xl p-5 flex flex-col h-full hover:border-orange-500/40 hover:shadow-[0_0_15px_rgba(249,115,22,0.1)] transition-all duration-300 group"
+                  className="bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow rounded-2xl p-5 flex flex-col h-full hover:border-orange-500/40 hover:shadow-[0_0_15px_rgba(249,115,22,0.1)] transition-all duration-300 group relative overflow-hidden"
                 >
-                  <div className="flex justify-between items-start mb-3">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/8 blur-[50px] rounded-full pointer-events-none" />
+                  <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-orange-400/6 blur-[40px] rounded-full pointer-events-none" />
+
+                  <div className="flex justify-between items-start mb-3 relative z-10">
                     <h3 className="text-[15px] font-bold text-[var(--lf-text-primary)] line-clamp-1 flex-1 pr-2" title={quiz.title}>
                       {quiz.title || "Untitled Quiz"}
                     </h3>
@@ -285,20 +388,33 @@ function QuizDashboardPage() {
                     </button>
                   </div>
                   
-                  <div className="flex items-center gap-2 text-[11px] font-bold text-[var(--lf-text-secondary)] uppercase tracking-wide mb-4">
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-[var(--lf-text-secondary)] uppercase tracking-wide mb-4 relative z-10">
                     <Clock className="h-3.5 w-3.5" />
                     <span>{formatDate(quiz.createdAt)}</span>
                     <span className="w-1 h-1 rounded-full bg-[var(--lf-border)] mx-1"></span>
                     <span>{quiz.totalQuestions} Qs</span>
                   </div>
+
+                  {/* Score badge */}
+                  {quiz.score !== undefined && quiz.totalQuestionsSubmitted !== undefined ? (
+                    <div className={`relative z-10 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-[12px] font-bold mb-3 ${scoreBgColor(quiz.score, quiz.totalQuestionsSubmitted)} ${scoreColor(quiz.score, quiz.totalQuestionsSubmitted)}`}>
+                      <Star className="h-3.5 w-3.5" />
+                      Score: {quiz.score}/{quiz.totalQuestionsSubmitted} ({Math.round((quiz.score / quiz.totalQuestionsSubmitted) * 100)}%)
+                    </div>
+                  ) : (
+                    <div className="relative z-10 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-[var(--lf-border)] bg-[var(--lf-surface)] text-[12px] font-bold text-[var(--lf-text-secondary)] mb-3">
+                      <HelpCircle className="h-3.5 w-3.5" />
+                      Not attempted
+                    </div>
+                  )}
                   
-                  <p className="text-[13px] text-[var(--lf-text-secondary)] line-clamp-3 mb-6 flex-1 italic bg-[var(--lf-surface)] p-3 rounded-xl border border-[var(--lf-border)]">
+                  <p className="text-[13px] text-[var(--lf-text-secondary)] line-clamp-3 mb-6 flex-1 italic bg-[var(--lf-surface)] p-3 rounded-xl border border-[var(--lf-border)] relative z-10">
                     "{quiz.highlightedText}"
                   </p>
                   
                   <button 
                     onClick={() => openQuizDetails(quiz)}
-                    className="w-full py-2.5 bg-[var(--lf-accent)] text-white rounded-xl font-semibold text-sm hover:bg-[var(--lf-accent-hover)] transition-colors shadow-lg shadow-orange-500/20 active:scale-[0.98]"
+                    className="relative z-10 w-full py-2.5 bg-[var(--lf-accent)] text-white rounded-xl font-semibold text-sm hover:bg-[var(--lf-accent-hover)] transition-colors shadow-lg shadow-orange-500/20 active:scale-[0.98]"
                   >
                     View Quiz
                   </button>
@@ -306,6 +422,87 @@ function QuizDashboardPage() {
               ))}
             </motion.div>
           )}
+
+          </div>{/* end left column */}
+
+          {/* ── Right Sidebar: Topics to Improve ─────────────────────── */}
+          <div className="w-72 shrink-0 hidden lg:block">
+            <div className="sticky top-0 space-y-6">
+              <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow rounded-2xl p-5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/8 blur-[50px] rounded-full pointer-events-none" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Brain className="h-5 w-5 text-purple-500" />
+                    <h3 className="text-[15px] font-bold text-[var(--lf-text-primary)]">Topics to Improve</h3>
+                  </div>
+
+                  {analytics.topics.length > 0 ? (
+                    <div className="space-y-3">
+                      {analytics.topics.map(([topic, count], i) => (
+                        <div key={i} className="flex items-center justify-between group">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${
+                              i === 0 ? "bg-red-500" : i === 1 ? "bg-amber-500" : "bg-orange-400"
+                            }`} />
+                            <span className="text-[13px] font-medium text-[var(--lf-text-primary)] truncate">{topic}</span>
+                          </div>
+                          <span className="text-[11px] font-bold text-[var(--lf-text-secondary)] ml-2">{count}x</span>
+                        </div>
+                      ))}
+                      <div className="pt-3 mt-3 border-t border-[var(--lf-border)]">
+                        <p className="text-[11px] text-[var(--lf-text-secondary)]">
+                          {analytics.weakestTopic
+                            ? `🔴 Focus on "${analytics.weakestTopic}" — it needs the most attention.`
+                            : "Review the topics above to strengthen your understanding."}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <Target className="h-10 w-10 text-[var(--lf-text-secondary)]/30 mx-auto mb-2" />
+                      <p className="text-[12px] text-[var(--lf-text-secondary)]">No topics yet.</p>
+                      <p className="text-[11px] text-[var(--lf-text-secondary)] mt-1">Submit a quiz to get personalized improvement insights.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Overall Stats mini card */}
+              {analytics.submittedCount > 0 && (
+                <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow rounded-2xl p-5 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/8 blur-[40px] rounded-full pointer-events-none" />
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Award className="h-5 w-5 text-emerald-500" />
+                      <h3 className="text-[15px] font-bold text-[var(--lf-text-primary)]">Performance</h3>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex justify-between text-[12px] mb-1">
+                          <span className="text-[var(--lf-text-secondary)]">Average Score</span>
+                          <span className="font-bold text-[var(--lf-text-primary)]">{analytics.avgScore}%</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-[var(--lf-surface)] border border-[var(--lf-border)] overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-orange-500 to-emerald-500 transition-all duration-500"
+                            style={{ width: `${analytics.avgScore}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-between text-[12px]">
+                        <span className="text-[var(--lf-text-secondary)]">Accuracy</span>
+                        <span className="font-bold text-[var(--lf-text-primary)]">
+                          {analytics.totalCorrect}/{analytics.totalAnswered}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+        </div>{/* end flex row */}
 
         </motion.div>
       </div>
@@ -343,6 +540,37 @@ function QuizDashboardPage() {
 
               {/* Modal Body */}
               <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
+
+                {/* Score + Topics Section */}
+                {(selectedQuiz.score !== undefined || (selectedQuiz.topicsToImprove && selectedQuiz.topicsToImprove.length > 0)) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedQuiz.score !== undefined && selectedQuiz.totalQuestionsSubmitted !== undefined && (
+                      <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800">
+                        <p className="text-xs text-zinc-500 uppercase tracking-wider font-bold mb-2">Score</p>
+                        <div className="flex items-baseline gap-2">
+                          <span className={`text-4xl font-black ${scoreColor(selectedQuiz.score, selectedQuiz.totalQuestionsSubmitted)}`}>
+                            {Math.round((selectedQuiz.score / selectedQuiz.totalQuestionsSubmitted) * 100)}%
+                          </span>
+                          <span className="text-zinc-400 text-sm font-medium">
+                            ({selectedQuiz.score}/{selectedQuiz.totalQuestionsSubmitted})
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {selectedQuiz.topicsToImprove && selectedQuiz.topicsToImprove.length > 0 && (
+                      <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800">
+                        <p className="text-xs text-zinc-500 uppercase tracking-wider font-bold mb-2">Topics to Improve</p>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedQuiz.topicsToImprove.map((topic, i) => (
+                            <span key={i} className="px-3 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-[12px] font-semibold">
+                              {topic}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 {/* Context Snippet */}
                 <div className="p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50 text-zinc-300 italic text-sm">

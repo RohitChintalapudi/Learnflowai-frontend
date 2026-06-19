@@ -856,7 +856,7 @@ function FeatureQuiz(props: { quiz: any; quizId: string | null }) {
       {/* Short Answer Section */}
       {quiz.shortAnswer && quiz.shortAnswer.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-sm font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider">Short Answer</h3>
+          <h3 className="text-sm font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider">Short Answer <span className="text-[10px] font-normal text-[var(--lf-text-secondary)] normal-case">(optional for improvement)</span></h3>
           {quiz.shortAnswer.map((q: any, i: number) => (
             <div key={`sa-${i}`} className="p-6 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow">
               <p className="text-[15px] font-medium text-[var(--lf-text-primary)] mb-4">

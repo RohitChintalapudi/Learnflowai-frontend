@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
+import { ProfileAPI } from "../lib/api";
 import {
   LayoutDashboard,
   FileText,
@@ -31,7 +32,7 @@ const navItems = [
   { icon: Settings, label: "Settings", to: "#" },
 ];
 
-export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit", hideHeader = false }: { children: React.ReactNode, headerTitle?: React.ReactNode, hideHeader?: boolean }) {
+export function DashboardLayout({ children, headerTitle, hideHeader = false }: { children: React.ReactNode, headerTitle?: React.ReactNode, hideHeader?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -48,6 +49,23 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit",
     }
     return false;
   });
+
+  const [profile, setProfile] = useState<{name: string, profileImage?: string} | null>(null);
+
+  useEffect(() => {
+    ProfileAPI.getProfile()
+      .then((res) => {
+        if (res.success && res.profile) {
+          setProfile(res.profile);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const getAvatarUrl = () => {
+    if (!profile) return "https://api.dicebear.com/7.x/notionists/svg?seed=User&backgroundColor=FF7A18";
+    return profile.profileImage || `https://api.dicebear.com/7.x/notionists/svg?seed=${profile.name}&backgroundColor=FF7A18`;
+  };
 
   const toggleSidebar = () => {
     setIsCollapsed(prev => {
@@ -159,9 +177,9 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit",
               title="Profile"
             >
               <img
-                src="https://api.dicebear.com/7.x/notionists/svg?seed=Rohit&backgroundColor=FF7A18"
+                src={getAvatarUrl()}
                 alt="Profile"
-                className="h-6 w-6 rounded-full"
+                className="h-6 w-6 rounded-full object-cover"
               />
             </button>
           ) : (
@@ -171,13 +189,13 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit",
             >
               <div className="h-9 w-9 rounded-full border border-[var(--lf-border)] overflow-hidden shrink-0 group-hover:ring-2 ring-orange-500/50 transition-all">
                 <img
-                  src="https://api.dicebear.com/7.x/notionists/svg?seed=Rohit&backgroundColor=FF7A18"
+                  src={getAvatarUrl()}
                   alt="Profile"
                   className="h-full w-full object-cover"
                 />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-sm font-semibold text-[var(--lf-text-primary)] group-hover:text-[var(--lf-accent)] transition-colors">Rohit</p>
+                <p className="text-sm font-semibold text-[var(--lf-text-primary)] group-hover:text-[var(--lf-accent)] transition-colors">{profile?.name || "User"}</p>
                 <p className="text-[11px] text-[var(--lf-text-secondary)]">Edit Profile</p>
               </div>
               <div className="w-6 h-6 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
@@ -196,7 +214,11 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit",
         {!hideHeader && (
           <header className="h-16 px-8 flex items-center justify-between border-b border-[var(--lf-border)] bg-white/80 dark:bg-black/70 backdrop-blur-md sticky top-0 z-30">
             <div className="flex items-center gap-2">
-              {typeof headerTitle === "string" ? (
+              {headerTitle === undefined ? (
+                <h2 className="text-lg font-bold">
+                  Welcome back, {profile?.name || "User"}
+                </h2>
+              ) : typeof headerTitle === "string" ? (
                 <h2 className="text-lg font-bold">
                   {headerTitle}
                 </h2>
@@ -244,7 +266,7 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit",
                 className="h-8 w-8 rounded-full border border-[var(--lf-border)] overflow-hidden cursor-pointer hover:ring-2 ring-orange-500/50 transition-all shrink-0"
               >
                 <img
-                  src="https://api.dicebear.com/7.x/notionists/svg?seed=Rohit&backgroundColor=FF7A18"
+                  src={getAvatarUrl()}
                   alt="Profile"
                   className="h-full w-full object-cover"
                 />

@@ -49,10 +49,7 @@ function PublicLayout() {
   // Load theme preference on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-    const systemPrefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
-    const initialTheme = savedTheme || (systemPrefersDark ? "dark" : "light");
+    const initialTheme = savedTheme || "light";
 
     setTheme(initialTheme);
     if (initialTheme === "dark") {
@@ -87,7 +84,7 @@ function PublicLayout() {
           playsInline
           onEnded={handleVideoEnd}
           onError={handleVideoEnd}
-          className="w-full max-w-sm h-auto object-contain px-6"
+          className="w-full h-full object-cover"
         >
           <source src="/loading.mp4" type="video/mp4" />
           {/* Fallback if video fails to load */}

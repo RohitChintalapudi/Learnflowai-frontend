@@ -185,16 +185,16 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden card-shadow-lg"
+          className="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-[var(--lf-card)] dark:bg-zinc-950 border border-[var(--lf-border)] dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden card-shadow-lg"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-zinc-800/60 bg-zinc-900/40 backdrop-blur-xl shrink-0 z-10 sticky top-0">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <div className="flex items-center justify-between p-6 border-b border-[var(--lf-border)] dark:border-zinc-800/60 bg-[var(--lf-card)]/80 dark:bg-zinc-900/40 backdrop-blur-xl shrink-0 z-10 sticky top-0">
+            <h2 className="text-xl font-bold text-[var(--lf-text-primary)] dark:text-white flex items-center gap-2">
               <User className="h-5 w-5 text-orange-500" /> My Profile
             </h2>
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+              className="p-2 rounded-full hover:bg-[var(--lf-surface)] dark:hover:bg-zinc-800 text-[var(--lf-text-secondary)] dark:text-zinc-400 hover:text-[var(--lf-text-primary)] dark:hover:text-white transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -204,7 +204,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center h-64 space-y-4">
                 <Loader2 className="h-8 w-8 text-orange-500 animate-spin" />
-                <p className="text-zinc-500 text-sm">Loading profile data...</p>
+                <p className="text-[var(--lf-text-secondary)] dark:text-zinc-500 text-sm">Loading profile data...</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -212,11 +212,11 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 {/* Left Column: Avatar & Quick Stats */}
                 <div className="space-y-6">
                   {/* Avatar Card */}
-                  <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 flex flex-col items-center text-center relative overflow-hidden group">
+                  <div className="bg-[var(--lf-surface)] dark:bg-zinc-900/40 border border-[var(--lf-border)] dark:border-zinc-800 rounded-3xl p-6 flex flex-col items-center text-center relative overflow-hidden group card-shadow">
                     <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 to-transparent pointer-events-none" />
                     
                     <div className="relative mb-4">
-                      <div className="w-32 h-32 rounded-full border-4 border-zinc-800/80 overflow-hidden bg-zinc-900 shadow-xl relative group-hover:border-orange-500/30 transition-colors">
+                      <div className="w-32 h-32 rounded-full border-4 border-[var(--lf-border)] dark:border-zinc-800/80 overflow-hidden bg-[var(--lf-surface)] dark:bg-zinc-900 shadow-xl relative group-hover:border-orange-500/30 transition-colors">
                         <img 
                           src={getAvatarUrl()} 
                           alt="Profile" 
@@ -244,7 +244,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         <button 
                           onClick={handleDeleteAvatar}
                           disabled={isDeletingAvatar}
-                          className="absolute bottom-0 right-0 p-2.5 bg-zinc-800 hover:bg-red-500/20 text-zinc-400 hover:text-red-500 rounded-full border border-zinc-700 hover:border-red-500/50 shadow-lg transition-all z-10"
+                          className="absolute bottom-0 right-0 p-2.5 bg-[var(--lf-card)] dark:bg-zinc-800 hover:bg-red-500/20 text-[var(--lf-text-secondary)] dark:text-zinc-400 hover:text-red-500 rounded-full border border-[var(--lf-border)] dark:border-zinc-700 hover:border-red-500/50 shadow-lg transition-all z-10"
                           title="Remove Photo"
                         >
                           {isDeletingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
@@ -260,8 +260,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       onChange={handleAvatarUpload}
                     />
 
-                    <h3 className="text-lg font-bold text-white mb-1">{profile?.name}</h3>
-                    <p className="text-xs text-zinc-500 font-medium bg-zinc-800/50 px-3 py-1 rounded-full flex items-center gap-1.5 inline-flex">
+                    <h3 className="text-lg font-bold text-[var(--lf-text-primary)] dark:text-white mb-1">{profile?.name}</h3>
+                    <p className="text-xs text-[var(--lf-text-secondary)] dark:text-zinc-500 font-medium bg-[var(--lf-surface)] dark:bg-zinc-800/50 px-3 py-1 rounded-full flex items-center gap-1.5 inline-flex border border-[var(--lf-border)] dark:border-zinc-700">
                       <Check className="h-3.5 w-3.5 text-emerald-500" />
                       Free Plan
                     </p>
@@ -269,33 +269,33 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                   {/* Stats Grid */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center text-center group hover:border-orange-500/30 transition-colors">
+                    <div className="bg-[var(--lf-surface)] dark:bg-zinc-900/40 border border-[var(--lf-border)] dark:border-zinc-800 rounded-2xl p-4 flex flex-col items-center text-center group hover:border-orange-500/30 transition-colors">
                       <div className="h-10 w-10 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <FileText className="h-5 w-5" />
                       </div>
-                      <span className="text-2xl font-black text-white">{stats?.documentsCount || 0}</span>
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500 mt-1">Docs</span>
+                      <span className="text-2xl font-black text-[var(--lf-text-primary)] dark:text-white">{stats?.documentsCount || 0}</span>
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--lf-text-secondary)] dark:text-zinc-500 mt-1">Docs</span>
                     </div>
-                    <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center text-center group hover:border-blue-500/30 transition-colors">
+                    <div className="bg-[var(--lf-surface)] dark:bg-zinc-900/40 border border-[var(--lf-border)] dark:border-zinc-800 rounded-2xl p-4 flex flex-col items-center text-center group hover:border-blue-500/30 transition-colors">
                       <div className="h-10 w-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <StickyNote className="h-5 w-5" />
                       </div>
-                      <span className="text-2xl font-black text-white">{stats?.notesCount || 0}</span>
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500 mt-1">Notes</span>
+                      <span className="text-2xl font-black text-[var(--lf-text-primary)] dark:text-white">{stats?.notesCount || 0}</span>
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--lf-text-secondary)] dark:text-zinc-500 mt-1">Notes</span>
                     </div>
-                    <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center text-center group hover:border-emerald-500/30 transition-colors">
+                    <div className="bg-[var(--lf-surface)] dark:bg-zinc-900/40 border border-[var(--lf-border)] dark:border-zinc-800 rounded-2xl p-4 flex flex-col items-center text-center group hover:border-emerald-500/30 transition-colors">
                       <div className="h-10 w-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <HelpCircle className="h-5 w-5" />
                       </div>
-                      <span className="text-2xl font-black text-white">{stats?.quizzesCount || 0}</span>
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500 mt-1">Quizzes</span>
+                      <span className="text-2xl font-black text-[var(--lf-text-primary)] dark:text-white">{stats?.quizzesCount || 0}</span>
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--lf-text-secondary)] dark:text-zinc-500 mt-1">Quizzes</span>
                     </div>
-                    <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center text-center group hover:border-purple-500/30 transition-colors">
+                    <div className="bg-[var(--lf-surface)] dark:bg-zinc-900/40 border border-[var(--lf-border)] dark:border-zinc-800 rounded-2xl p-4 flex flex-col items-center text-center group hover:border-purple-500/30 transition-colors">
                       <div className="h-10 w-10 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <BrainCircuit className="h-5 w-5" />
                       </div>
-                      <span className="text-2xl font-black text-white">{stats?.explanationsCount || 0}</span>
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500 mt-1">Explanations</span>
+                      <span className="text-2xl font-black text-[var(--lf-text-primary)] dark:text-white">{stats?.explanationsCount || 0}</span>
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--lf-text-secondary)] dark:text-zinc-500 mt-1">Explanations</span>
                     </div>
                   </div>
                 </div>
@@ -304,18 +304,18 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 <div className="lg:col-span-2 space-y-6">
                   
                   {/* Account Details Form */}
-                  <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 md:p-8 space-y-6">
-                    <h3 className="text-lg font-bold text-white border-b border-zinc-800 pb-3">Personal Details</h3>
+                  <div className="bg-[var(--lf-surface)] dark:bg-zinc-900/40 border border-[var(--lf-border)] dark:border-zinc-800 rounded-3xl p-6 md:p-8 space-y-6 card-shadow">
+                    <h3 className="text-lg font-bold text-[var(--lf-text-primary)] dark:text-white border-b border-[var(--lf-border)] dark:border-zinc-800 pb-3">Personal Details</h3>
                     
                     <div className="space-y-5">
                       {/* Name Input */}
                       <div>
-                        <label className="block text-sm font-semibold text-zinc-400 mb-2">Display Name</label>
+                        <label className="block text-sm font-semibold text-[var(--lf-text-secondary)] dark:text-zinc-400 mb-2">Display Name</label>
                         <input
                           type="text"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
-                          className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-colors"
+                          className="w-full bg-[var(--lf-bg)] dark:bg-zinc-950 border border-[var(--lf-border)] dark:border-zinc-800 rounded-xl px-4 py-3 text-[var(--lf-text-primary)] dark:text-white focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-colors"
                           placeholder="Your Name"
                         />
                       </div>
@@ -323,15 +323,15 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       {/* Bio Input */}
                       <div>
                         <div className="flex justify-between items-center mb-2">
-                          <label className="block text-sm font-semibold text-zinc-400">Bio</label>
-                          <span className={`text-xs font-medium ${bio.length > 300 ? 'text-red-500' : 'text-zinc-500'}`}>
+                          <label className="block text-sm font-semibold text-[var(--lf-text-secondary)] dark:text-zinc-400">Bio</label>
+                          <span className={`text-xs font-medium ${bio.length > 300 ? 'text-red-500' : 'text-[var(--lf-text-secondary)] dark:text-zinc-500'}`}>
                             {bio.length} / 300
                           </span>
                         </div>
                         <textarea
                           value={bio}
                           onChange={(e) => setBio(e.target.value)}
-                          className={`w-full bg-zinc-950 border ${bio.length > 300 ? 'border-red-500/50 focus:ring-red-500/50' : 'border-zinc-800 focus:border-orange-500/50 focus:ring-orange-500/50'} rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 transition-colors resize-none`}
+                          className={`w-full bg-[var(--lf-bg)] dark:bg-zinc-950 border ${bio.length > 300 ? 'border-red-500/50 focus:ring-red-500/50' : 'border-[var(--lf-border)] dark:border-zinc-800 focus:border-orange-500/50 focus:ring-orange-500/50'} rounded-xl px-4 py-3 text-[var(--lf-text-primary)] dark:text-white focus:outline-none focus:ring-1 transition-colors resize-none`}
                           rows={3}
                           placeholder="Write a short bio about yourself..."
                         />
@@ -340,15 +340,15 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       {/* Learning Goals Input */}
                       <div>
                         <div className="flex justify-between items-center mb-2">
-                          <label className="block text-sm font-semibold text-zinc-400">Learning Goals</label>
-                          <span className={`text-xs font-medium ${learningGoals.length > 500 ? 'text-red-500' : 'text-zinc-500'}`}>
+                          <label className="block text-sm font-semibold text-[var(--lf-text-secondary)] dark:text-zinc-400">Learning Goals</label>
+                          <span className={`text-xs font-medium ${learningGoals.length > 500 ? 'text-red-500' : 'text-[var(--lf-text-secondary)] dark:text-zinc-500'}`}>
                             {learningGoals.length} / 500
                           </span>
                         </div>
                         <textarea
                           value={learningGoals}
                           onChange={(e) => setLearningGoals(e.target.value)}
-                          className={`w-full bg-zinc-950 border ${learningGoals.length > 500 ? 'border-red-500/50 focus:ring-red-500/50' : 'border-zinc-800 focus:border-orange-500/50 focus:ring-orange-500/50'} rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 transition-colors resize-none`}
+                          className={`w-full bg-[var(--lf-bg)] dark:bg-zinc-950 border ${learningGoals.length > 500 ? 'border-red-500/50 focus:ring-red-500/50' : 'border-[var(--lf-border)] dark:border-zinc-800 focus:border-orange-500/50 focus:ring-orange-500/50'} rounded-xl px-4 py-3 text-[var(--lf-text-primary)] dark:text-white focus:outline-none focus:ring-1 transition-colors resize-none`}
                           rows={4}
                           placeholder="What do you want to achieve with LearnFlow AI?"
                         />
@@ -356,20 +356,20 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                       {/* Email Input (Read Only) */}
                       <div>
-                        <label className="block text-sm font-semibold text-zinc-400 mb-2">Email Address</label>
+                        <label className="block text-sm font-semibold text-[var(--lf-text-secondary)] dark:text-zinc-400 mb-2">Email Address</label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Lock className="h-4 w-4 text-zinc-600" />
+                            <Lock className="h-4 w-4 text-[var(--lf-text-secondary)] dark:text-zinc-600" />
                           </div>
                           <input
                             type="email"
                             value={profile?.email || ""}
                             readOnly
                             disabled
-                            className="w-full bg-zinc-950/50 border border-zinc-800/50 rounded-xl py-3 pl-10 pr-4 text-zinc-500 cursor-not-allowed"
+                            className="w-full bg-[var(--lf-bg)]/50 dark:bg-zinc-950/50 border border-[var(--lf-border)]/50 dark:border-zinc-800/50 rounded-xl py-3 pl-10 pr-4 text-[var(--lf-text-secondary)] dark:text-zinc-500 cursor-not-allowed"
                           />
                         </div>
-                        <p className="text-xs text-zinc-600 mt-2">Email addresses cannot be changed directly. Contact support if you need assistance.</p>
+                        <p className="text-xs text-[var(--lf-text-secondary)] dark:text-zinc-600 mt-2">Email addresses cannot be changed directly. Contact support if you need assistance.</p>
                       </div>
 
                     </div>
@@ -383,7 +383,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       className={`flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold transition-all shadow-lg active:scale-95 ${
                         hasChanges && isValid
                           ? "bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/25"
-                          : "bg-zinc-800 text-zinc-500 cursor-not-allowed shadow-none"
+                          : "bg-[var(--lf-surface)] dark:bg-zinc-800 text-[var(--lf-text-secondary)] dark:text-zinc-500 cursor-not-allowed shadow-none"
                       }`}
                     >
                       {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
