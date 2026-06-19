@@ -25,15 +25,24 @@ function NotesPage() {
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const notesStr = localStorage.getItem("recent_ai_notes");
-    if (notesStr) {
+    const fetchNotes = async () => {
       try {
-        const notes = JSON.parse(notesStr);
-        setSavedNotes(notes);
+        const response = await WorkflowAPI.getNotes();
+        if (response.success && response.notes) {
+          const mappedNotes = response.notes.map((n: any) => ({
+            id: n.id,
+            documentId: n.documentId,
+            createdAt: n.createdAt,
+            data: n.notes
+          }));
+          setSavedNotes(mappedNotes);
+        }
       } catch (e) {
-        console.error("Failed to parse saved notes", e);
+        console.error("Failed to fetch notes", e);
+        toast.error("Failed to fetch notes");
       }
-    }
+    };
+    fetchNotes();
   }, []);
 
   const handleDownloadPDF = useReactToPrint({
@@ -54,17 +63,16 @@ function NotesPage() {
     // Call backend to delete permanently
     try {
       await WorkflowAPI.deleteNote(id);
+      const updated = savedNotes.filter(n => n.id !== id);
+      setSavedNotes(updated);
+      if (selectedNote?.id === id) {
+        setSelectedNote(null);
+      }
+      toast.success("Note deleted.");
     } catch (err) {
       console.error("Failed to delete from backend", err);
+      toast.error("Failed to delete note.");
     }
-
-    const updated = savedNotes.filter(n => n.id !== id);
-    setSavedNotes(updated);
-    localStorage.setItem("recent_ai_notes", JSON.stringify(updated));
-    if (selectedNote?.id === id) {
-      setSelectedNote(null);
-    }
-    toast.success("Note deleted.");
   };
 
   const printStyle: React.CSSProperties = { WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" };
@@ -93,7 +101,7 @@ function NotesPage() {
                 </div>
 
                 {savedNotes.length === 0 ? (
-                  <div className="text-center py-20 bg-[var(--lf-surface)] rounded-3xl border border-[var(--lf-border)] border-dashed">
+                  <div className="text-center py-20 bg-[var(--lf-surface)] rounded-3xl border border-[var(--lf-border)] border-dashed card-shadow">
                     <FileText className="h-12 w-12 text-[var(--lf-text-secondary)]/50 mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-[var(--lf-text-primary)] mb-2">No notes yet</h3>
                     <p className="text-[14px] text-[var(--lf-text-secondary)]">Go to the AI Workspace, highlight some text, and generate notes to see them here.</p>
@@ -104,8 +112,11 @@ function NotesPage() {
                       <div 
                         key={note.id}
                         onClick={() => setSelectedNote(note)}
-                        className="group p-6 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/50 card-shadow hover:shadow-[0_8px_30px_rgba(249,115,22,0.12)] transition-all cursor-pointer flex flex-col h-full"
+                        className="group p-6 rounded-3xl bg-[var(--lf-card)] border border-[var(--lf-border)] hover:border-orange-500/50 card-shadow hover:shadow-[0_8px_30px_rgba(249,115,22,0.12)] transition-all cursor-pointer flex flex-col h-full relative overflow-hidden"
                       >
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-orange-500/10 blur-[60px] rounded-full pointer-events-none" />
+                        <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-orange-400/8 blur-[50px] rounded-full pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/[0.03] via-transparent to-transparent pointer-events-none" />
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-2 text-[12px] font-medium text-[var(--lf-text-secondary)] bg-[var(--lf-bg)] px-2.5 py-1 rounded-full border border-[var(--lf-border)]">
                             <Clock className="h-3.5 w-3.5" />
@@ -130,7 +141,7 @@ function NotesPage() {
                         <div className="flex items-center justify-between pt-4 border-t border-[var(--lf-border)]">
                           <div className="flex items-center gap-3 text-[12px] font-bold text-[var(--lf-text-secondary)]">
                             <span className="flex items-center gap-1.5"><Lightbulb className="h-3.5 w-3.5 text-amber-500" /> {note.data.keyPoints.length}</span>
-                            <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5 text-blue-500" /> {note.data.importantConcepts.length}</span>
+                            <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5 text-blue-500" /> {(note.data.importantConcepts || note.data.relatedConcepts || []).length}</span>
                           </div>
                           <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center text-[var(--lf-accent)] group-hover:scale-110 transition-transform">
                             <ChevronRight className="h-4 w-4" />
@@ -170,7 +181,7 @@ function NotesPage() {
                 <div 
                   ref={contentRef}
                   id="pdf-content" 
-                  className="bg-white dark:bg-[#0c0a09] rounded-[2rem] border border-[var(--lf-border)] p-10 md:p-14 card-shadow-lg relative print:shadow-none print:border-none print:p-12 print:w-full print:max-w-none print:m-0 print:block"
+                  className="bg-[var(--lf-card)] dark:bg-[#0c0a09] rounded-[2rem] border border-[var(--lf-border)] p-10 md:p-14 card-shadow-lg relative print:shadow-none print:border-none print:p-12 print:w-full print:max-w-none print:m-0 print:block"
                   style={printStyle}
                 >
                   {/* Watermark - Shows up on every printed page */}
@@ -207,7 +218,7 @@ function NotesPage() {
                         <BookOpen className="h-6 w-6" /> Important Concepts
                       </h3>
                       <ul className="space-y-4">
-                        {selectedNote.data.importantConcepts.map((concept, i) => (
+                        {(selectedNote.data.importantConcepts || selectedNote.data.relatedConcepts || []).map((concept, i) => (
                           <li key={i} className="text-[15px] leading-relaxed text-[var(--lf-text-primary)] flex items-start gap-3">
                             <span className="text-blue-500 mt-1 flex-shrink-0">•</span> {concept}
                           </li>

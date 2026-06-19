@@ -13,7 +13,9 @@ export interface GeneratedNotes {
   title: string;
   summary: string;
   keyPoints: string[];
-  importantConcepts: string[];
+  importantConcepts?: string[];
+  relatedConcepts?: string[];
+  importantSubtopics?: string[];
   examTips: string[];
   revisionNotes: string[];
 }
@@ -208,6 +210,47 @@ export const WorkflowAPI = {
   },
 
   /**
+   * Get all user quizzes
+   */
+  async getQuizzes() {
+    const response = await fetch(`${API_BASE_URL}/workflow/quiz`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch quizzes");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Submit quiz score and get analysis
+   */
+  async submitQuiz(quizId: string, score: number, totalQuestions: number, topicsToImprove: string[]) {
+    const response = await fetch(`${API_BASE_URL}/workflow/quiz/${quizId}/submit`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ score, totalQuestions, topicsToImprove }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to submit quiz");
+    }
+
+    return response.json();
+  },
+
+  /**
    * Generate AI notes for highlighted text
    */
   async generateNotes(documentId: string, highlightedText: string) {
@@ -247,4 +290,86 @@ export const WorkflowAPI = {
 
     return response.json();
   },
+
+  /**
+   * Get all AI generated notes for the user
+   */
+  async getNotes() {
+    const response = await fetch(`${API_BASE_URL}/workflow/notes`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch notes");
+    }
+
+    return response.json();
+  },
+};
+
+export const QuizDashboardAPI = {
+  async getStats() {
+    const response = await fetch(`${API_BASE_URL}/quizzes/stats`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch quiz stats");
+    }
+    return response.json();
+  },
+
+  async getQuizzes(page: number = 1, limit: number = 20, search?: string) {
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    if (search) {
+      queryParams.append("search", search);
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/quizzes?${queryParams.toString()}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch quizzes");
+    }
+    return response.json();
+  },
+
+  async getSingleQuiz(quizId: string) {
+    const response = await fetch(`${API_BASE_URL}/quizzes/${quizId}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch quiz details");
+    }
+    return response.json();
+  },
+
+  async deleteQuiz(quizId: string) {
+    const response = await fetch(`${API_BASE_URL}/quizzes/${quizId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to delete quiz");
+    }
+    return response.json();
+  }
 };

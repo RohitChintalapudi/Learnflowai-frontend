@@ -14,7 +14,6 @@ import {
   Sun,
   Moon,
   LogOut,
-  Zap,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -25,7 +24,7 @@ const navItems = [
   { icon: FileText, label: "Documents", to: "/documents" },
   { icon: Brain, label: "AI Workspace", to: "/workspace" },
   { icon: StickyNote, label: "Notes", to: "/notes" },
-  { icon: HelpCircle, label: "Quizzes", to: "#" },
+  { icon: HelpCircle, label: "Quizzes", to: "/quizzes" },
   { icon: BarChart3, label: "Analytics", to: "#" },
   { icon: History, label: "Learning History", to: "#" },
   { icon: Settings, label: "Settings", to: "#" },
@@ -84,7 +83,7 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit",
   return (
     <div className="h-screen w-full flex bg-[var(--lf-bg)] text-[var(--lf-text-primary)] overflow-hidden selection:bg-[var(--lf-accent)] selection:text-white font-sans relative">
       {/* ── SIDEBAR ────────────────────────────────────────────────────────── */}
-      <aside className={`flex-shrink-0 border-r border-[var(--lf-border)] bg-white/40 dark:bg-black/40 backdrop-blur-xl flex flex-col relative z-20 transition-all duration-300 ${isCollapsed ? "w-[76px]" : "w-64"}`}>
+      <aside className={`flex-shrink-0 border-r border-[var(--lf-border)] bg-white/80 dark:bg-black/60 backdrop-blur-xl flex flex-col relative z-20 transition-all duration-300 ${isCollapsed ? "w-[76px]" : "w-64"}`}>
         
         {/* Toggle Collapse Button */}
         <button 
@@ -117,81 +116,76 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit",
                 key={idx}
                 to={item.to}
                 title={isCollapsed ? item.label : undefined}
-                className={`w-full flex items-center rounded-xl transition-all duration-200 group relative ${isCollapsed ? "justify-center p-3" : "gap-3 px-3 py-2.5"} ${active ? "bg-orange-500/10 text-[var(--lf-accent)]" : "text-[var(--lf-text-secondary)] hover:bg-[var(--lf-surface)] hover:text-[var(--lf-text-primary)]"}`}
+                className={`w-full flex items-center rounded-xl transition-all duration-200 group relative overflow-hidden ${isCollapsed ? "justify-center p-3" : "gap-3 px-3 py-2.5"} ${active ? "bg-gradient-to-r from-orange-500/15 to-orange-500/5 text-[var(--lf-accent)] shadow-sm shadow-orange-500/10" : "text-[var(--lf-text-secondary)] hover:bg-[var(--lf-surface)] hover:text-[var(--lf-text-primary)] hover:shadow-sm"} active:scale-[0.97]`}
               >
-                {active && <div className="absolute inset-0 rounded-xl bg-orange-500/5 blur-sm" />}
+                {/* Active background glow */}
+                {active && (
+                  <>
+                    <div className="absolute inset-0 rounded-xl bg-orange-500/10 blur-md" />
+                    <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full bg-gradient-to-b from-orange-500 to-orange-400 shadow-sm shadow-orange-500/50" />
+                  </>
+                )}
                 
+                {/* Hover shimmer effect */}
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none" />
+
                 {/* When collapsed, if active, show a small left indicator */}
                 {active && isCollapsed && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-[var(--lf-accent)] z-10 shrink-0" />
                 )}
 
-                <Icon className={`h-[18px] w-[18px] relative z-10 shrink-0 ${active ? "text-[var(--lf-accent)]" : "text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-text-primary)]"}`} />
+                <Icon className={`h-[18px] w-[18px] relative z-10 shrink-0 transition-transform duration-200 group-hover:scale-110 ${active ? "text-[var(--lf-accent)]" : "text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-text-primary)]"}`} />
                 
                 {!isCollapsed && (
                   <span className="text-[13.5px] font-medium relative z-10 whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
                 )}
 
                 {active && !isCollapsed && (
-                  <div className="ml-auto w-1 h-4 rounded-full bg-[var(--lf-accent)] relative z-10 shrink-0" />
+                  <div className="ml-auto w-1.5 h-5 rounded-full bg-gradient-to-b from-orange-500 to-orange-400 relative z-10 shrink-0 shadow-sm shadow-orange-500/50" />
                 )}
               </Link>
             );
           })}
         </nav>
 
-        {/* Upgrade / Bottom Card */}
+        {/* Profile Card */}
         <div className={`p-4 border-t border-[var(--lf-border)] transition-all ${isCollapsed ? "px-2" : ""}`}>
           {isCollapsed ? (
-            <button className="w-full flex items-center justify-center p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/50 group transition-all" title="Upgrade to Pro Plan">
-              <Zap className="h-5 w-5 text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-colors" />
+            <button className="w-full flex items-center justify-center p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/50 group transition-all card-shadow" title="Profile">
+              <img
+                src="https://api.dicebear.com/7.x/notionists/svg?seed=Rohit&backgroundColor=FF7A18"
+                alt="Profile"
+                className="h-6 w-6 rounded-full"
+              />
             </button>
           ) : (
-            <div className="rounded-2xl bg-[var(--lf-surface)] p-4 border border-[var(--lf-border)] relative overflow-hidden group cursor-pointer hover:border-orange-500/50 card-shadow-sidebar transition-all duration-300">
-              <div className="absolute -right-6 -top-6 w-32 h-32 bg-orange-500/15 blur-3xl rounded-full animate-pulse-card-1" />
-              <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-orange-400/10 blur-3xl rounded-full animate-pulse-card-2" />
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="h-4 w-4 text-[var(--lf-accent)] shrink-0" />
-                <span className="text-xs font-bold text-[var(--lf-text-primary)] whitespace-nowrap">
-                  Pro Plan
-                </span>
+            <button className="w-full flex items-center gap-3 p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/30 card-shadow hover:shadow-[0_0_15px_rgba(255,122,24,0.15)] transition-all duration-300 group">
+              <div className="h-9 w-9 rounded-full border border-[var(--lf-border)] overflow-hidden shrink-0 group-hover:ring-2 ring-orange-500/50 transition-all">
+                <img
+                  src="https://api.dicebear.com/7.x/notionists/svg?seed=Rohit&backgroundColor=FF7A18"
+                  alt="Profile"
+                  className="h-full w-full object-cover"
+                />
               </div>
-              <p className="text-[11px] text-[var(--lf-text-secondary)] mb-3 leading-relaxed relative z-10 line-clamp-2">
-                Unlock unlimited AI explanations and PDF uploads.
-              </p>
-              <button className="relative z-10 w-full py-1.5 rounded-lg bg-[var(--lf-bg)] border border-[var(--lf-border)] text-xs font-semibold hover:text-[var(--lf-accent)] transition-colors">
-                Upgrade
-              </button>
-            </div>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-semibold text-[var(--lf-text-primary)] group-hover:text-[var(--lf-accent)] transition-colors">Rohit</p>
+                <p className="text-[11px] text-[var(--lf-text-secondary)]">Edit Profile</p>
+              </div>
+              <div className="w-6 h-6 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
+                <span className="text-xs text-orange-500">›</span>
+              </div>
+            </button>
           )}
         </div>
       </aside>
 
       {/* ── MAIN CONTENT AREA ──────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col relative z-10 overflow-hidden bg-transparent">
-        {/* ── FLOATING GRADIENT ORBS ─────────────────── */}
-        <div className="absolute top-[10%] left-[25%] w-[400px] h-[400px] rounded-full bg-gradient-to-br from-orange-500/15 to-purple-500/5 blur-[120px] pointer-events-none z-0 dark:from-orange-500/5 dark:to-purple-500/5" />
-        <div className="absolute top-[40%] right-[10%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-orange-400/15 to-amber-600/10 blur-[140px] pointer-events-none z-0 dark:from-orange-500/3 dark:to-amber-500/3" />
-        <div className="absolute bottom-[15%] left-[40%] w-[350px] h-[350px] rounded-full bg-gradient-to-tr from-orange-500/15 to-rose-500/5 blur-[100px] pointer-events-none z-0 dark:from-orange-500/5 dark:to-rose-500/3" />
 
-        {/* ── SUBTLE DOT-GRID TEXTURE ──────────────────────────────────────── */}
-        <div
-          className="absolute inset-0 pointer-events-none z-[1] opacity-[0.15] dark:opacity-[0.08]"
-          style={{
-            backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-            color: "var(--lf-accent)",
-          }}
-        />
-
-        {/* ── AMBIENT GLOWS ──────────────────────────── */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/[0.05] via-transparent to-orange-500/[0.03] dark:from-orange-500/[0.02] dark:via-transparent dark:to-orange-500/[0.02] pointer-events-none z-0" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,_var(--tw-gradient-stops))] from-orange-500/10 via-transparent to-transparent dark:from-orange-500/[0.03] pointer-events-none z-0" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_80%,_var(--tw-gradient-stops))] from-orange-500/10 via-transparent to-transparent dark:from-orange-500/[0.02] pointer-events-none z-0" />
 
         {/* Top Header */}
         {!hideHeader && (
-          <header className="h-16 px-8 flex items-center justify-between border-b border-[var(--lf-border)] bg-white/60 dark:bg-black/60 backdrop-blur-md sticky top-0 z-30">
+          <header className="h-16 px-8 flex items-center justify-between border-b border-[var(--lf-border)] bg-white/80 dark:bg-black/70 backdrop-blur-md sticky top-0 z-30">
             <div className="flex items-center gap-2">
               {typeof headerTitle === "string" ? (
                 <h2 className="text-lg font-bold">

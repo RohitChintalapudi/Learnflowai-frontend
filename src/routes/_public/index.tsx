@@ -1174,7 +1174,7 @@ function HomePage() {
   };
 
   return (
-    <div className="flex flex-col w-full bg-white dark:bg-[#0c0a09] relative overflow-hidden">
+    <div className="flex flex-col w-full bg-[#f8f5f0] dark:bg-[#0c0a09] relative overflow-hidden">
       {/* ΓöÇΓöÇ AMBIENT ORANGE GLOWS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-orange-500/20 dark:bg-orange-500/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute top-[35%] right-[-10%] w-[600px] h-[600px] bg-orange-500/10 dark:bg-orange-500/5 blur-[150px] rounded-full pointer-events-none" />

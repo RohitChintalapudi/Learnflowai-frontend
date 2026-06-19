@@ -11,6 +11,7 @@ import {
   ArrowRight,
   ChevronRight,
   PlayCircle,
+  HelpCircle,
 } from "lucide-react";
 import { DashboardLayout } from "../../components/DashboardLayout";
 
@@ -142,6 +143,14 @@ function DashboardHomePage() {
                 bg: "bg-orange-500/10",
                 border: "border-orange-500/20",
               },
+              {
+                title: "Quizzes Taken",
+                value: summary?.stats.quizzesCount ?? 0,
+                icon: HelpCircle,
+                color: "text-[var(--lf-accent)]",
+                bg: "bg-[var(--lf-accent)]/10",
+                border: "border-[var(--lf-accent)]/20",
+              },
             ].map((stat, i) => (
               <div
                 key={i}
@@ -188,7 +197,7 @@ function DashboardHomePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {loading ? (
                     Array(4).fill(0).map((_, i) => (
-                      <div key={i} className="h-20 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl animate-pulse"></div>
+                      <div key={i} className="h-20 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl animate-pulse card-shadow"></div>
                     ))
                   ) : summary?.recentDocuments.length === 0 ? (
                     <div className="col-span-2 text-center py-6 text-[14px] text-[var(--lf-text-secondary)] italic">
@@ -234,7 +243,7 @@ function DashboardHomePage() {
                 <div className="flex overflow-x-auto no-scrollbar gap-4 pb-4 snap-x">
                   {loading ? (
                     Array(4).fill(0).map((_, i) => (
-                      <div key={i} className="min-w-[240px] h-24 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl animate-pulse snap-start"></div>
+                      <div key={i} className="min-w-[240px] h-24 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl animate-pulse snap-start card-shadow"></div>
                     ))
                   ) : summary?.recentActivity.length === 0 ? (
                     <div className="text-[13px] text-[var(--lf-text-secondary)] italic">

@@ -104,6 +104,7 @@ function WorkspacePage() {
   const [explanationContent, setExplanationContent] = useState<string>("");
   const [interviewQuestionsContent, setInterviewQuestionsContent] = useState<any>(null);
   const [quizContent, setQuizContent] = useState<any>(null);
+  const [quizId, setQuizId] = useState<string | null>(null);
   const [notesContent, setNotesContent] = useState<GeneratedNotes | null>(null);
 
   const handleFeatureClick = async (featureId: FeatureType) => {
@@ -158,21 +159,6 @@ function WorkspacePage() {
         const res = await WorkflowAPI.generateNotes(docId, highlightedText);
         setNotesContent(res.notes);
         
-        // Save to localStorage
-        try {
-          const notesStr = localStorage.getItem("recent_ai_notes");
-          const savedNotes = notesStr ? JSON.parse(notesStr) : [];
-          savedNotes.unshift({
-            id: crypto.randomUUID(),
-            documentId: docId,
-            createdAt: new Date().toISOString(),
-            data: res.notes
-          });
-          localStorage.setItem("recent_ai_notes", JSON.stringify(savedNotes));
-        } catch (e) {
-          console.error("Failed to save note to local storage", e);
-        }
-
         toast.success("Notes generated successfully!");
       } catch (error: any) {
         toast.error(error.message || "Failed to generate notes");
@@ -225,6 +211,7 @@ function WorkspacePage() {
         
         const res = await WorkflowAPI.generateQuiz(docId, highlightedText);
         setQuizContent(res.quiz);
+        setQuizId(res.id || null);
         toast.success("Quiz generated successfully!");
       } catch (error: any) {
         toast.error(error.message || "Failed to generate quiz");
@@ -268,38 +255,35 @@ function WorkspacePage() {
                 transform: 'translate(-50%, -100%)',
                 zIndex: 100,
               }}
-              className="bg-white/80 dark:bg-black/80 backdrop-blur-xl border border-[var(--lf-border)] shadow-2xl rounded-2xl p-1.5 flex items-center gap-1"
+              className="bg-white/90 dark:bg-black/90 backdrop-blur-xl border border-orange-500/30 shadow-2xl shadow-orange-500/20 rounded-2xl p-2 flex items-center gap-1.5"
             >
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-white/80 dark:border-t-black/80 backdrop-blur-xl" />
+              {/* Outer glow ring */}
+              <div className="absolute inset-0 rounded-2xl bg-orange-500/5 blur-xl -z-10" />
+              {/* Top glow accent */}
+              <div className="absolute -top-px left-4 right-4 h-px bg-gradient-to-r from-transparent via-orange-500/50 to-transparent" />
+              
+              {/* Bottom arrow */}
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-white/90 dark:bg-black/90 border-r border-b border-orange-500/20" />
               
               {features.map((feature) => (
                 <button
                   key={feature.id}
                   onClick={() => handleFeatureClick(feature.id)}
-                  className={`flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl transition-all group min-w-[70px] ${
-                    feature.id === "explain"
-                      ? "hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 hover:shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                      : "hover:bg-orange-500/10 hover:text-[var(--lf-accent)] text-[var(--lf-text-secondary)]"
-                  }`}
+                  className="flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all duration-300 group min-w-[70px] relative overflow-hidden hover:bg-orange-500/10 hover:shadow-[0_0_20px_rgba(255,122,24,0.25)] active:scale-90"
                 >
-                  <feature.icon className={`h-4 w-4 transition-colors ${
-                    feature.id === "explain"
-                      ? "text-orange-500 animate-pulse"
-                      : "text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)]"
-                  }`} />
-                  <span className={`text-[10px] font-bold transition-colors ${
-                    feature.id === "explain"
-                      ? "text-orange-600 dark:text-orange-400"
-                      : "text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)]"
-                  }`}>
-                    {feature.id === "explain" ? "Explain Concept" : feature.label}
+                  {/* Hover glow background */}
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-b from-orange-500/0 to-orange-500/0 group-hover:from-orange-500/5 group-hover:to-orange-500/0 transition-all duration-300" />
+                  
+                  <feature.icon className="h-[18px] w-[18px] text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-all duration-300 group-hover:scale-110" />
+                  <span className="text-[10px] font-bold text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-colors duration-300 whitespace-nowrap">
+                    {feature.label}
                   </span>
                 </button>
               ))}
-              <div className="w-px h-8 bg-[var(--lf-border)] mx-1" />
+              <div className="w-px h-8 bg-gradient-to-b from-transparent via-orange-500/20 to-transparent mx-1" />
               <button 
                 onClick={() => setIsMenuOpen(false)}
-                className="p-2 text-[var(--lf-text-secondary)] hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-colors"
+                className="p-2 text-[var(--lf-text-secondary)] hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all duration-200 active:scale-90"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -458,7 +442,7 @@ function WorkspacePage() {
                   className="space-y-6 pb-20"
                 >
                   {/* Context Header */}
-                  <div className="p-4 rounded-2xl border border-[var(--lf-border)] bg-[var(--lf-surface)] flex gap-4">
+                  <div className="p-4 rounded-2xl border border-[var(--lf-border)] bg-[var(--lf-surface)] flex gap-4 card-shadow">
                     <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
                       <FileText className="h-5 w-5 text-orange-500" />
                     </div>
@@ -475,7 +459,7 @@ function WorkspacePage() {
                   {/* Feature Content */}
                   {activeFeature === "explain" && <FeatureExplain content={explanationContent} />}
                   {activeFeature === "notes" && <FeatureNotes notes={notesContent} loading={isLoading} />}
-                  {activeFeature === "quiz" && <FeatureQuiz quiz={quizContent} />}
+                  {activeFeature === "quiz" && <FeatureQuiz quiz={quizContent} quizId={quizId} />}
                   {activeFeature === "analogy" && <FeatureAnalogy />}
                   {activeFeature === "interview" && <FeatureInterview questions={interviewQuestionsContent} />}
                   {activeFeature === "mindmap" && <FeatureMindMap />}
@@ -525,8 +509,11 @@ function FeatureExplain({ content }: { content: string }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-2">
-        <Sparkles className="h-6 w-6 text-[var(--lf-accent)]" />
+      <div className="flex items-center gap-3 mb-2 group cursor-default">
+        <div className="relative">
+          <Sparkles className="h-6 w-6 text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-all duration-300" />
+          <div className="absolute inset-0 h-6 w-6 bg-orange-500/0 group-hover:bg-orange-500/20 blur-xl rounded-full transition-all duration-300" />
+        </div>
         <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Explanation</h2>
       </div>
 
@@ -542,7 +529,7 @@ function FeatureExplain({ content }: { content: string }) {
             let titleClass = "text-[16px] font-bold text-[var(--lf-text-primary)] mb-3";
 
             if (isRealWorld) {
-              containerClass = "p-5 rounded-2xl bg-orange-500/10 border border-orange-500/30 shadow-sm shadow-orange-500/10";
+              containerClass = "p-5 rounded-2xl bg-orange-500/10 border border-orange-500/30 card-shadow-lg";
               titleIcon = <Globe className="h-5 w-5 text-orange-600 dark:text-orange-400" />;
               titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-orange-700 dark:text-orange-400";
             } else if (isKeyPoints) {
@@ -676,7 +663,7 @@ function FeatureNotes({
               <BookOpen className="h-5 w-5" /> Important Concepts
             </h3>
             <ul className="space-y-2">
-              {notes.importantConcepts.map((concept, i) => (
+              {(notes.importantConcepts || notes.relatedConcepts || []).map((concept, i) => (
                 <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
                   <span className="text-blue-500 mt-0.5">•</span> {concept}
                 </li>
@@ -716,8 +703,8 @@ function FeatureNotes({
   );
 }
 
-function FeatureQuiz(props: { quiz: any }) {
-  const { quiz } = props;
+function FeatureQuiz(props: { quiz: any; quizId: string | null }) {
+  const { quiz, quizId } = props;
   const [mcqAnswers, setMcqAnswers] = useState<Record<number, string>>({});
   const [tfAnswers, setTfAnswers] = useState<Record<number, boolean>>({});
   const [shortAnswers, setShortAnswers] = useState<Record<number, string>>({});
@@ -741,7 +728,29 @@ function FeatureQuiz(props: { quiz: any }) {
       if (tfAnswers[i] === q.answer) s++;
     });
     return { score: s, total: t };
-  }, [quiz, mcqAnswers, tfAnswers, isSubmitted]);
+  }, [quiz, mcqAnswers, tfAnswers]);
+
+  const handleSubmit = async () => {
+    setIsSubmitted(true);
+    if (quizId) {
+      const topics = new Set<string>();
+      quiz.mcqs?.forEach((q: any, i: number) => {
+        if (mcqAnswers[i] !== q.correctAnswer && q.topic) topics.add(q.topic);
+      });
+      quiz.trueFalse?.forEach((q: any, i: number) => {
+        if (tfAnswers[i] !== q.answer && q.topic) topics.add(q.topic);
+      });
+      const topicsToImprove = Array.from(topics);
+      try {
+        await WorkflowAPI.submitQuiz(quizId, score, total, topicsToImprove);
+        toast.success("Quiz results saved!");
+      } catch (err: any) {
+        toast.error(err.message || "Failed to save quiz results");
+        console.error("Failed to save quiz results", err);
+        setIsSubmitted(false); // Revert submission state so they can try again
+      }
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -873,7 +882,7 @@ function FeatureQuiz(props: { quiz: any }) {
 
       {!isSubmitted && (
         <button
-          onClick={() => setIsSubmitted(true)}
+          onClick={handleSubmit}
           className="w-full py-4 rounded-2xl bg-[var(--lf-accent)] text-white font-bold text-[15px] shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_25px_rgba(249,115,22,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0"
         >
           Submit Quiz
@@ -891,7 +900,7 @@ function FeatureAnalogy() {
         <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Real World Analogy</h2>
       </div>
 
-      <div className="p-8 rounded-3xl bg-gradient-to-br from-orange-500/10 to-[var(--lf-surface)] border border-orange-500/20 relative overflow-hidden">
+      <div className="p-8 rounded-3xl bg-gradient-to-br from-orange-500/10 to-[var(--lf-surface)] border border-orange-500/20 card-shadow-lg relative overflow-hidden">
         <div className="absolute -right-10 -top-10 w-40 h-40 bg-orange-500/20 blur-3xl rounded-full" />
         
         <p className="text-[16px] leading-relaxed text-[var(--lf-text-primary)] font-medium mb-6 relative z-10">
@@ -999,10 +1008,10 @@ function FeatureMindMap() {
         <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Mind Map</h2>
       </div>
 
-      <div className="flex-1 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] flex items-center justify-center p-8 min-h-[400px]">
+      <div className="flex-1 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow flex items-center justify-center p-8 min-h-[400px]">
         {/* Simple CSS-based mind map representation */}
         <div className="flex items-center gap-8">
-          <div className="px-6 py-4 rounded-2xl bg-orange-500 text-white font-bold shadow-lg shadow-orange-500/30">
+          <div className="px-6 py-4 rounded-2xl bg-orange-500 text-white font-bold card-shadow-lg">
             Dynamic Programming
           </div>
           
@@ -1011,13 +1020,13 @@ function FeatureMindMap() {
             <div className="absolute right-[100%] top-[20px] bottom-[20px] w-8 border-l-2 border-t-2 border-b-2 border-orange-500/30 rounded-l-xl" />
             <div className="absolute right-[100%] top-1/2 w-8 border-t-2 border-orange-500/30" />
             
-            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] shadow-sm font-medium text-[13px] text-[var(--lf-text-primary)] relative">
+            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow font-medium text-[13px] text-[var(--lf-text-primary)] relative">
               Memoization (Top-Down)
             </div>
-            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] shadow-sm font-medium text-[13px] text-[var(--lf-text-primary)] relative">
+            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow font-medium text-[13px] text-[var(--lf-text-primary)] relative">
               Tabulation (Bottom-Up)
             </div>
-            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] shadow-sm font-medium text-[13px] text-[var(--lf-text-primary)] relative">
+            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow font-medium text-[13px] text-[var(--lf-text-primary)] relative">
               Optimal Substructure
             </div>
           </div>
