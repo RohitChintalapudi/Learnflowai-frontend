@@ -18,6 +18,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { ProfileModal } from "./ProfileModal";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/home" },
@@ -40,6 +41,7 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit",
     return "light";
   });
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof localStorage !== "undefined") {
       return localStorage.getItem("sidebar_collapsed") === "true";
@@ -151,7 +153,11 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit",
         {/* Profile Card */}
         <div className={`p-4 border-t border-[var(--lf-border)] transition-all ${isCollapsed ? "px-2" : ""}`}>
           {isCollapsed ? (
-            <button className="w-full flex items-center justify-center p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/50 group transition-all card-shadow" title="Profile">
+            <button 
+              onClick={() => setIsProfileModalOpen(true)}
+              className="w-full flex items-center justify-center p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/50 group transition-all card-shadow" 
+              title="Profile"
+            >
               <img
                 src="https://api.dicebear.com/7.x/notionists/svg?seed=Rohit&backgroundColor=FF7A18"
                 alt="Profile"
@@ -159,7 +165,10 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit",
               />
             </button>
           ) : (
-            <button className="w-full flex items-center gap-3 p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/30 card-shadow hover:shadow-[0_0_15px_rgba(255,122,24,0.15)] transition-all duration-300 group">
+            <button 
+              onClick={() => setIsProfileModalOpen(true)}
+              className="w-full flex items-center gap-3 p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/30 card-shadow hover:shadow-[0_0_15px_rgba(255,122,24,0.15)] transition-all duration-300 group"
+            >
               <div className="h-9 w-9 rounded-full border border-[var(--lf-border)] overflow-hidden shrink-0 group-hover:ring-2 ring-orange-500/50 transition-all">
                 <img
                   src="https://api.dicebear.com/7.x/notionists/svg?seed=Rohit&backgroundColor=FF7A18"
@@ -230,7 +239,10 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit",
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500 border-2 border-[var(--lf-bg)]" />
               </button>
 
-              <button className="h-8 w-8 rounded-full border border-[var(--lf-border)] overflow-hidden cursor-pointer hover:ring-2 ring-orange-500/50 transition-all shrink-0">
+              <button 
+                onClick={() => setIsProfileModalOpen(true)}
+                className="h-8 w-8 rounded-full border border-[var(--lf-border)] overflow-hidden cursor-pointer hover:ring-2 ring-orange-500/50 transition-all shrink-0"
+              >
                 <img
                   src="https://api.dicebear.com/7.x/notionists/svg?seed=Rohit&backgroundColor=FF7A18"
                   alt="Profile"
@@ -252,6 +264,11 @@ export function DashboardLayout({ children, headerTitle = "Welcome back, Rohit",
         {/* Scrollable / Container Content */}
         {children}
       </main>
+
+      <ProfileModal 
+        isOpen={isProfileModalOpen} 
+        onClose={() => setIsProfileModalOpen(false)} 
+      />
 
       {/* ── LOGOUT CONFIRMATION MODAL ──────────────────────────────────────── */}
       {showLogoutConfirm && (

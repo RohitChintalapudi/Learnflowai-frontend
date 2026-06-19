@@ -373,3 +373,74 @@ export const QuizDashboardAPI = {
     return response.json();
   }
 };
+
+export const ProfileAPI = {
+  async getProfile() {
+    const response = await fetch(`${API_BASE_URL}/profile`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch profile");
+    }
+    return response.json();
+  },
+
+  async updateProfile(data: { name?: string; bio?: string; learningGoals?: string }) {
+    const response = await fetch(`${API_BASE_URL}/profile`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to update profile");
+    }
+    return response.json();
+  },
+
+  async getProfileStats() {
+    const response = await fetch(`${API_BASE_URL}/profile/stats`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch profile stats");
+    }
+    return response.json();
+  },
+
+  async uploadAvatar(file: File) {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    
+    const response = await fetch(`${API_BASE_URL}/profile/avatar`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to upload avatar");
+    }
+    return response.json();
+  },
+
+  async deleteAvatar() {
+    const response = await fetch(`${API_BASE_URL}/profile/avatar`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to delete avatar");
+    }
+    return response.json();
+  }
+};
