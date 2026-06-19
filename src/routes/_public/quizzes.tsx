@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import {
   Search,
@@ -114,7 +114,6 @@ function QuizDashboardPage() {
     setIsDeleting(quizId);
     try {
       // Optimistic update
-      const previousQuizzes = [...quizzes];
       setQuizzes(prev => prev.filter(q => q.id !== quizId));
       
       const res = await QuizDashboardAPI.deleteQuiz(quizId);
@@ -152,7 +151,7 @@ function QuizDashboardPage() {
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -162,7 +161,7 @@ function QuizDashboardPage() {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
   };
