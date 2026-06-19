@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { ProfileAPI } from "../lib/api";
 import {
@@ -50,17 +51,13 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
     return false;
   });
 
-  const [profile, setProfile] = useState<{name: string, profileImage?: string} | null>(null);
-
-  useEffect(() => {
-    ProfileAPI.getProfile()
-      .then((res) => {
-        if (res.success && res.profile) {
-          setProfile(res.profile);
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const res = await ProfileAPI.getProfile();
+      return res.success && res.profile ? res.profile : null;
+    }
+  });
 
   const getAvatarUrl = () => {
     if (!profile) return "https://api.dicebear.com/7.x/notionists/svg?seed=User&backgroundColor=FF7A18";

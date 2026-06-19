@@ -1258,7 +1258,7 @@ function HomePage() {
             <img
               src="/light_theme_laptop.png"
               alt="LearnFlow AI on laptop"
-              className="w-full h-auto block dark:hidden"
+              className="w-full h-auto block dark:hidden -mt-4"
             />
             <img
               src="/dark_theme_laptop.png"
@@ -1307,18 +1307,15 @@ function HomePage() {
         <div className="space-y-24">
           {featureSections.map((f, idx) => {
             const isLeft = idx % 2 === 0;
-            const [isHovered, setIsHovered] = useState(false);
 
             const card = (
               <div
                 key={f.title}
                 className="group relative cursor-pointer"
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
               >
                 {/* Glow effect on hover */}
                 <div
-                  className={`absolute inset-0 rounded-3xl blur-2xl transition-all duration-500 ${isHovered ? "bg-orange-500/20 opacity-100" : "bg-orange-500/0 opacity-0"}`}
+                  className="absolute inset-0 rounded-3xl blur-2xl transition-all duration-500 bg-orange-500/0 opacity-0 group-hover:bg-orange-500/20 group-hover:opacity-100"
                 />
 
                 <div className="relative flex flex-col gap-4 p-8 rounded-3xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-orange-500/50 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-orange-500/10">
@@ -1364,7 +1361,7 @@ function HomePage() {
                       <p className="text-lg font-bold text-stone-900 dark:text-white mb-3">
                         Why choose {f.title}?
                       </p>
-                      <p className="text-base text-stone-600 dark:text-stone-400 leading-relaxed">
+                      <div className="text-base text-stone-600 dark:text-stone-400 leading-relaxed">
                         {f.title === "Smart Learning" &&
                           "Get structured explanations tailored to your specific pace. Our AI breaks down complex topics into bite-sized, understandable modules."}
                         {f.title === "Interactive Quizzes & Interview QnA" && (
@@ -1396,7 +1393,7 @@ function HomePage() {
                           "Effortlessly organize your study material. Create smart notes and flashcards that help you retain what you learn through spaced repetition."}
                         {f.title === "Learning Roadmap" &&
                           "Follow a proven path to mastery. Track your progress across your entire curriculum with a clear, personalized roadmap that keeps you on track."}
-                      </p>
+                      </div>
                     </div>
 
                     <div className="flex items-start gap-4">

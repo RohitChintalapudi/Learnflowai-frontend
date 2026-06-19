@@ -54,12 +54,6 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchData();
-    }
-  }, [isOpen]);
-
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -84,6 +78,12 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchData();
+    }
+  }, [isOpen]);
 
   const hasChanges = 
     profile && (

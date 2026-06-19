@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
@@ -27,14 +28,18 @@ import {
 import { DashboardLayout } from "../../components/DashboardLayout";
 import ReactMarkdown from "react-markdown";
 import toast from "react-hot-toast";
-import { WorkflowAPI, DocumentAPI, type DocumentMetadata, type GeneratedNotes } from "../../lib/api";
+import { WorkflowAPI, DocumentAPI, BACKEND_URL, type GeneratedNotes } from "../../lib/api";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
+import { DocxViewer } from "../../components/DocxViewer";
 import { useReactToPrint } from "react-to-print";
 
-// Configure PDF.js worker using unpkg to strictly match the react-pdf internal version
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Configure PDF.js worker to use the local bundled worker
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 export const Route = createFileRoute("/_public/workspace/$documentId")({
   component: WorkspacePage,
@@ -58,30 +63,34 @@ function WorkspacePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [highlightedText, setHighlightedText] = useState("");
-  const [documentMetadata, setDocumentMetadata] = useState<DocumentMetadata | null>(null);
   const [numPages, setNumPages] = useState<number | null>(null);
   const [zoom, setZoom] = useState(1.0);
+
+  const urlParts = window.location.pathname.split("/");
+  const docId = urlParts[urlParts.length - 1];
+
+  const { data: documentMetadata } = useQuery({
+    queryKey: ['document', docId],
+    queryFn: async () => {
+      if (!docId) return null;
+      try {
+        return await DocumentAPI.getDocument(docId);
+      } catch (err: any) {
+        toast.error("Failed to load document: " + err.message);
+        return null;
+      }
+    },
+    enabled: !!docId,
+  });
 
   // Memoize the file configuration to prevent react-pdf from refreshing endlessly on re-renders
   const pdfFile = useMemo(() => {
     if (!documentMetadata?.fileUrl) return null;
     return {
-      url: documentMetadata.fileUrl.startsWith('http') ? documentMetadata.fileUrl : `http://localhost:3000${documentMetadata.fileUrl}`,
+      url: documentMetadata.fileUrl.startsWith('http') ? documentMetadata.fileUrl : `${BACKEND_URL}${documentMetadata.fileUrl}`,
       withCredentials: true
     };
-  }, [documentMetadata?.fileUrl]);
-
-  // Fetch document metadata on mount
-  useEffect(() => {
-    const urlParts = window.location.pathname.split("/");
-    const docId = urlParts[urlParts.length - 1];
-    
-    if (docId) {
-      DocumentAPI.getDocument(docId)
-        .then(doc => setDocumentMetadata(doc))
-        .catch(err => toast.error("Failed to load document: " + err.message));
-    }
-  }, []);
+  }, [documentMetadata]);
 
   // Handle text selection
   const handleTextSelect = () => {
@@ -299,7 +308,8 @@ function WorkspacePage() {
           className="border-r border-[var(--lf-border)] flex flex-col bg-[#F3F4F6] dark:bg-[#0c0a09] relative z-10 shrink-0" 
           onMouseUp={handleTextSelect}
         >
-          {/* PDF Toolbar */}
+          {/* Document Toolbar */}
+          {(!documentMetadata || ["pdf", "docx", "doc"].includes(documentMetadata.fileType)) && (
           <div className="h-12 border-b border-[var(--lf-border)] bg-[var(--lf-bg)] flex items-center justify-between px-4 shrink-0">
             <div className="flex items-center gap-2">
               <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
@@ -334,10 +344,12 @@ function WorkspacePage() {
               </button>
             </div>
           </div>
+          )}
 
-          {/* PDF Page Viewer */}
+          {/* Document Viewer (PDF or DocViewer) */}
           <div className="flex-1 relative bg-stone-100 dark:bg-stone-900 overflow-y-auto overflow-x-hidden flex flex-col items-center py-8">
             {pdfFile ? (
+              documentMetadata?.fileType === "pdf" ? (
               <Document
                 file={pdfFile}
                 onLoadSuccess={({ numPages }) => setNumPages(numPages)}
@@ -368,6 +380,25 @@ function WorkspacePage() {
                   />
                 ))}
               </Document>
+              ) : documentMetadata?.fileType === "docx" || documentMetadata?.fileType === "doc" ? (
+                <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
+                  <DocxViewer 
+                    fileUrl={pdfFile.url} 
+                    zoom={zoom} 
+                    onLoadSuccess={(numPages) => setNumPages(numPages)} 
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-stone-500 p-8 text-center space-y-4">
+                  <FileText className="h-12 w-12 text-stone-400" />
+                  <p className="font-medium text-[var(--lf-text-primary)]">
+                    Local Preview not natively supported for .{documentMetadata?.fileType}
+                  </p>
+                  <p className="text-sm">
+                    Only PDF and DOCX files support offline local rendering. PPTX and other formats may require third-party server-side rendering or Microsoft Office Online access which is not available in local development.
+                  </p>
+                </div>
+              )
             ) : (
               <div className="flex items-center justify-center h-full text-stone-500">
                 Loading Document Metadata...
@@ -524,7 +555,7 @@ function FeatureExplain({ content }: { content: string }) {
             const isKeyPoints = section.title.toLowerCase().includes("key");
             const isImportantNotes = section.title.toLowerCase().includes("important") || section.title.toLowerCase().includes("note");
 
-            let containerClass = "";
+            let containerClass;
             let titleIcon = null;
             let titleClass = "text-[16px] font-bold text-[var(--lf-text-primary)] mb-3";
 
@@ -710,17 +741,10 @@ function FeatureQuiz(props: { quiz: any; quizId: string | null }) {
   const [shortAnswers, setShortAnswers] = useState<Record<number, string>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  if (!quiz) {
-    return (
-      <div className="text-[14px] text-[var(--lf-text-secondary)] italic">
-        No quiz generated yet.
-      </div>
-    );
-  }
-
   const { score, total } = useMemo(() => {
+    if (!quiz) return { score: 0, total: 0 };
     let s = 0;
-    let t = (quiz.mcqs?.length || 0) + (quiz.trueFalse?.length || 0);
+    const t = (quiz.mcqs?.length || 0) + (quiz.trueFalse?.length || 0);
     quiz.mcqs?.forEach((q: any, i: number) => {
       if (mcqAnswers[i] === q.correctAnswer) s++;
     });
@@ -729,6 +753,14 @@ function FeatureQuiz(props: { quiz: any; quizId: string | null }) {
     });
     return { score: s, total: t };
   }, [quiz, mcqAnswers, tfAnswers]);
+
+  if (!quiz) {
+    return (
+      <div className="text-[14px] text-[var(--lf-text-secondary)] italic">
+        No quiz generated yet.
+      </div>
+    );
+  }
 
   const handleSubmit = async () => {
     setIsSubmitted(true);

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import {
@@ -23,29 +24,18 @@ export const Route = createFileRoute("/_public/documents")({
 
 function DocumentsPage() {
   const navigate = useNavigate();
-  const [documents, setDocuments] = useState<DocumentMetadata[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    fetchDocuments();
-  }, []);
-
-  const fetchDocuments = async () => {
-    setIsLoading(true);
-    try {
-      const data = await DocumentAPI.getDocuments();
-      setDocuments(data || []);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to load documents");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
+  const { data: documents = [], isLoading } = useQuery({
+    queryKey: ['documents'],
+    queryFn: () => DocumentAPI.getDocuments(),
+  });
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -95,7 +85,8 @@ function DocumentsPage() {
     try {
       await DocumentAPI.uploadDocument(file);
       toast.success("Document uploaded successfully!");
-      fetchDocuments();
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
     } catch (error: any) {
       toast.error(error.message || "Failed to upload document.");
     } finally {
@@ -110,15 +101,16 @@ function DocumentsPage() {
     if (!documentToDelete) return;
     
     // Optimistic UI Update Option (or just wait for backend)
-    const prevDocs = [...documents];
-    setDocuments((docs) => docs.filter((d) => d.id !== documentToDelete));
+    const prevDocs = queryClient.getQueryData<DocumentMetadata[]>(['documents']) || [];
+    queryClient.setQueryData(['documents'], prevDocs.filter((d) => d.id !== documentToDelete));
     
     try {
       await DocumentAPI.deleteDocument(documentToDelete);
       toast.success("Document deleted");
+      queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
     } catch (error: any) {
       toast.error(error.message || "Failed to delete document");
-      setDocuments(prevDocs); // Revert on failure
+      queryClient.setQueryData(['documents'], prevDocs); // Revert on failure
     } finally {
       setDocumentToDelete(null);
     }

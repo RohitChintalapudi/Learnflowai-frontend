@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import {
@@ -24,14 +25,7 @@ export const Route = createFileRoute("/_public/quizzes")({
   component: QuizDashboardPage,
 });
 
-interface QuizStats {
-  totalQuizzes: number;
-  thisWeek: number;
-  thisMonth: number;
-  averageScore?: number;
-  totalQuestionsAnswered?: number;
-  totalCorrect?: number;
-}
+// Removed unused QuizStats
 
 interface QuizData {
   mcqs?: Array<{ question: string; options: string[]; answer: string; correctAnswer?: string }>;
@@ -64,76 +58,60 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 function QuizDashboardPage() {
-  const [stats, setStats] = useState<QuizStats | null>(null);
-  const [quizzes, setQuizzes] = useState<GeneratedQuiz[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isStatsLoading, setIsStatsLoading] = useState(true);
-  
+  const queryClient = useQueryClient();
+
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 400);
 
   const [selectedQuiz, setSelectedQuiz] = useState<GeneratedQuiz | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  useEffect(() => {
-    fetchQuizzes(debouncedSearch);
-  }, [debouncedSearch]);
-
-  const fetchStats = async () => {
-    setIsStatsLoading(true);
-    try {
+  const { data: stats, isLoading: isStatsLoading } = useQuery({
+    queryKey: ['quizStats'],
+    queryFn: async () => {
       const res = await QuizDashboardAPI.getStats();
       if (res.success) {
-        setStats({
+        return {
           totalQuizzes: res.totalQuizzes,
           thisWeek: res.thisWeek,
           thisMonth: res.thisMonth,
-        });
+        };
       }
-    } catch (err: any) {
-      console.error("Failed to fetch stats", err);
-    } finally {
-      setIsStatsLoading(false);
+      return null;
     }
-  };
+  });
 
-  const fetchQuizzes = async (search: string) => {
-    setIsLoading(true);
-    try {
-      const res = await QuizDashboardAPI.getQuizzes(1, 20, search);
+  const { data: quizzes = [], isLoading } = useQuery({
+    queryKey: ['quizzes', debouncedSearch],
+    queryFn: async () => {
+      const res = await QuizDashboardAPI.getQuizzes(1, 20, debouncedSearch);
       if (res.success && res.quizzes) {
-        setQuizzes(res.quizzes);
+        return res.quizzes;
       }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to load quizzes");
-    } finally {
-      setIsLoading(false);
+      return [];
     }
-  };
+  });
 
   const handleDelete = async (e: React.MouseEvent, quizId: string) => {
     e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this quiz?")) return;
     
     setIsDeleting(quizId);
+    
+    const prevQuizzes = queryClient.getQueryData<GeneratedQuiz[]>(['quizzes', debouncedSearch]) || [];
+    queryClient.setQueryData(['quizzes', debouncedSearch], prevQuizzes.filter(q => q.id !== quizId));
+    
     try {
-      // Optimistic update
-      setQuizzes(prev => prev.filter(q => q.id !== quizId));
-      
       const res = await QuizDashboardAPI.deleteQuiz(quizId);
       if (res.success) {
         toast.success("Quiz deleted successfully");
-        fetchStats(); // refresh stats
+        queryClient.invalidateQueries({ queryKey: ['quizStats'] });
       } else {
         throw new Error("Failed to delete");
       }
     } catch (err: any) {
       toast.error("Failed to delete quiz");
-      fetchQuizzes(debouncedSearch); // revert
+      queryClient.setQueryData(['quizzes', debouncedSearch], prevQuizzes);
     } finally {
       setIsDeleting(null);
     }
@@ -155,17 +133,17 @@ function QuizDashboardPage() {
 
   // Compute analytics from quizzes
   const analytics = useMemo(() => {
-    const submitted = quizzes.filter(q => q.score !== undefined && q.totalQuestionsSubmitted !== undefined);
-    const totalCorrect = submitted.reduce((sum, q) => sum + (q.score || 0), 0);
-    const totalAnswered = submitted.reduce((sum, q) => sum + (q.totalQuestionsSubmitted || 0), 0);
+    const submitted = quizzes.filter((q: GeneratedQuiz) => q.score !== undefined && q.totalQuestionsSubmitted !== undefined);
+    const totalCorrect = submitted.reduce((sum: number, q: GeneratedQuiz) => sum + (q.score || 0), 0);
+    const totalAnswered = submitted.reduce((sum: number, q: GeneratedQuiz) => sum + (q.totalQuestionsSubmitted || 0), 0);
     const avgScore = submitted.length > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
 
     // Collect topics from quizzes with score below 5, grouped by topic with lowest score
     const topicData: Record<string, { count: number; lowestScore: number }> = {};
-    quizzes.forEach(q => {
+    quizzes.forEach((q: GeneratedQuiz) => {
       const quizScore = q.score;
       if (quizScore !== undefined && quizScore < 5) {
-        (q.topicsToImprove || []).forEach(t => {
+        (q.topicsToImprove || []).forEach((t: string) => {
           if (!topicData[t]) topicData[t] = { count: 0, lowestScore: Infinity };
           topicData[t].count++;
           topicData[t].lowestScore = Math.min(topicData[t].lowestScore, quizScore);
@@ -361,7 +339,7 @@ function QuizDashboardPage() {
               animate="show" 
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             >
-              {quizzes.map(quiz => (
+              {quizzes.map((quiz: GeneratedQuiz) => (
                 <motion.div 
                   key={quiz.id}
                   variants={itemVariants}

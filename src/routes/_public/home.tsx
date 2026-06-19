@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion, type Variants } from "framer-motion";
-import { useEffect, useState } from "react";
-import { DocumentAPI, type DashboardSummary } from "../../lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { DocumentAPI } from "../../lib/api";
 import {
   FileText,
   Brain,
@@ -39,22 +39,10 @@ const itemVariants: Variants = {
 
 function DashboardHomePage() {
   const navigate = useNavigate();
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchSummary = async () => {
-      try {
-        const data = await DocumentAPI.getDashboardSummary();
-        setSummary(data);
-      } catch (error) {
-        console.error("Failed to load dashboard summary:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSummary();
-  }, []);
+  const { data: summary, isLoading: loading } = useQuery({
+    queryKey: ['dashboardSummary'],
+    queryFn: () => DocumentAPI.getDashboardSummary(),
+  });
 
   return (
     <DashboardLayout headerTitle={

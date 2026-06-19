@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import { type GeneratedNotes, WorkflowAPI } from "../../lib/api";
 import { Notebook, Download, Clock, ChevronRight, FileText, Lightbulb, BookOpen, GraduationCap, ArrowLeft, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { useReactToPrint } from "react-to-print";
-import { useRef } from "react";
 
 export const Route = createFileRoute("/_public/notes")({
   component: NotesPage,
@@ -20,30 +20,25 @@ export interface SavedNote {
 }
 
 function NotesPage() {
-  const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
+  const queryClient = useQueryClient();
   const [selectedNote, setSelectedNote] = useState<SavedNote | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        const response = await WorkflowAPI.getNotes();
-        if (response.success && response.notes) {
-          const mappedNotes = response.notes.map((n: any) => ({
-            id: n.id,
-            documentId: n.documentId,
-            createdAt: n.createdAt,
-            data: n.notes
-          }));
-          setSavedNotes(mappedNotes);
-        }
-      } catch (e) {
-        console.error("Failed to fetch notes", e);
-        toast.error("Failed to fetch notes");
+  
+  const { data: savedNotes = [] } = useQuery({
+    queryKey: ['notes'],
+    queryFn: async () => {
+      const response = await WorkflowAPI.getNotes();
+      if (response.success && response.notes) {
+        return response.notes.map((n: any) => ({
+          id: n.id,
+          documentId: n.documentId,
+          createdAt: n.createdAt,
+          data: n.notes
+        }));
       }
-    };
-    fetchNotes();
-  }, []);
+      return [];
+    }
+  });
 
   const handleDownloadPDF = useReactToPrint({
     contentRef,
@@ -60,11 +55,11 @@ function NotesPage() {
   const deleteNote = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     
-    // Call backend to delete permanently
+    const prevNotes = queryClient.getQueryData<SavedNote[]>(['notes']) || [];
+    queryClient.setQueryData(['notes'], prevNotes.filter(n => n.id !== id));
+    
     try {
       await WorkflowAPI.deleteNote(id);
-      const updated = savedNotes.filter(n => n.id !== id);
-      setSavedNotes(updated);
       if (selectedNote?.id === id) {
         setSelectedNote(null);
       }
@@ -72,6 +67,7 @@ function NotesPage() {
     } catch (err) {
       console.error("Failed to delete from backend", err);
       toast.error("Failed to delete note.");
+      queryClient.setQueryData(['notes'], prevNotes);
     }
   };
 
@@ -108,7 +104,7 @@ function NotesPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {savedNotes.map((note) => (
+                    {savedNotes.map((note: SavedNote) => (
                       <div 
                         key={note.id}
                         onClick={() => setSelectedNote(note)}
