@@ -13,11 +13,14 @@ import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicSignupRouteImport } from './routes/_public/signup'
+import { Route as PublicQuizzesRouteImport } from './routes/_public/quizzes'
+import { Route as PublicNotesRouteImport } from './routes/_public/notes'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
 import { Route as PublicHome_cleanRouteImport } from './routes/_public/home_clean'
 import { Route as PublicHomeRouteImport } from './routes/_public/home'
 import { Route as PublicDocumentsRouteImport } from './routes/_public/documents'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as PublicWorkspaceIndexRouteImport } from './routes/_public/workspace.index'
 import { Route as PublicWorkspaceDocumentIdRouteImport } from './routes/_public/workspace.$documentId'
 
 const PublicRoute = PublicRouteImport.update({
@@ -36,6 +39,16 @@ const PublicIndexRoute = PublicIndexRouteImport.update({
 const PublicSignupRoute = PublicSignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicQuizzesRoute = PublicQuizzesRouteImport.update({
+  id: '/quizzes',
+  path: '/quizzes',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicNotesRoute = PublicNotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicLoginRoute = PublicLoginRouteImport.update({
@@ -63,6 +76,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const PublicWorkspaceIndexRoute = PublicWorkspaceIndexRouteImport.update({
+  id: '/workspace/',
+  path: '/workspace/',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicWorkspaceDocumentIdRoute =
   PublicWorkspaceDocumentIdRouteImport.update({
     id: '/workspace/$documentId',
@@ -77,8 +95,11 @@ export interface FileRoutesByFullPath {
   '/home': typeof PublicHomeRoute
   '/home_clean': typeof PublicHome_cleanRoute
   '/login': typeof PublicLoginRoute
+  '/notes': typeof PublicNotesRoute
+  '/quizzes': typeof PublicQuizzesRoute
   '/signup': typeof PublicSignupRoute
   '/workspace/$documentId': typeof PublicWorkspaceDocumentIdRoute
+  '/workspace/': typeof PublicWorkspaceIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
@@ -87,8 +108,11 @@ export interface FileRoutesByTo {
   '/home': typeof PublicHomeRoute
   '/home_clean': typeof PublicHome_cleanRoute
   '/login': typeof PublicLoginRoute
+  '/notes': typeof PublicNotesRoute
+  '/quizzes': typeof PublicQuizzesRoute
   '/signup': typeof PublicSignupRoute
   '/workspace/$documentId': typeof PublicWorkspaceDocumentIdRoute
+  '/workspace': typeof PublicWorkspaceIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -99,9 +123,12 @@ export interface FileRoutesById {
   '/_public/home': typeof PublicHomeRoute
   '/_public/home_clean': typeof PublicHome_cleanRoute
   '/_public/login': typeof PublicLoginRoute
+  '/_public/notes': typeof PublicNotesRoute
+  '/_public/quizzes': typeof PublicQuizzesRoute
   '/_public/signup': typeof PublicSignupRoute
   '/_public/': typeof PublicIndexRoute
   '/_public/workspace/$documentId': typeof PublicWorkspaceDocumentIdRoute
+  '/_public/workspace/': typeof PublicWorkspaceIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -112,8 +139,11 @@ export interface FileRouteTypes {
     | '/home'
     | '/home_clean'
     | '/login'
+    | '/notes'
+    | '/quizzes'
     | '/signup'
     | '/workspace/$documentId'
+    | '/workspace/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,8 +152,11 @@ export interface FileRouteTypes {
     | '/home'
     | '/home_clean'
     | '/login'
+    | '/notes'
+    | '/quizzes'
     | '/signup'
     | '/workspace/$documentId'
+    | '/workspace'
   id:
     | '__root__'
     | '/_authenticated'
@@ -133,9 +166,12 @@ export interface FileRouteTypes {
     | '/_public/home'
     | '/_public/home_clean'
     | '/_public/login'
+    | '/_public/notes'
+    | '/_public/quizzes'
     | '/_public/signup'
     | '/_public/'
     | '/_public/workspace/$documentId'
+    | '/_public/workspace/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -173,6 +209,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicSignupRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/quizzes': {
+      id: '/_public/quizzes'
+      path: '/quizzes'
+      fullPath: '/quizzes'
+      preLoaderRoute: typeof PublicQuizzesRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/notes': {
+      id: '/_public/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof PublicNotesRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/login': {
       id: '/_public/login'
       path: '/login'
@@ -208,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_public/workspace/': {
+      id: '/_public/workspace/'
+      path: '/workspace'
+      fullPath: '/workspace/'
+      preLoaderRoute: typeof PublicWorkspaceIndexRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/workspace/$documentId': {
       id: '/_public/workspace/$documentId'
       path: '/workspace/$documentId'
@@ -235,9 +292,12 @@ interface PublicRouteChildren {
   PublicHomeRoute: typeof PublicHomeRoute
   PublicHome_cleanRoute: typeof PublicHome_cleanRoute
   PublicLoginRoute: typeof PublicLoginRoute
+  PublicNotesRoute: typeof PublicNotesRoute
+  PublicQuizzesRoute: typeof PublicQuizzesRoute
   PublicSignupRoute: typeof PublicSignupRoute
   PublicIndexRoute: typeof PublicIndexRoute
   PublicWorkspaceDocumentIdRoute: typeof PublicWorkspaceDocumentIdRoute
+  PublicWorkspaceIndexRoute: typeof PublicWorkspaceIndexRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
@@ -245,9 +305,12 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicHomeRoute: PublicHomeRoute,
   PublicHome_cleanRoute: PublicHome_cleanRoute,
   PublicLoginRoute: PublicLoginRoute,
+  PublicNotesRoute: PublicNotesRoute,
+  PublicQuizzesRoute: PublicQuizzesRoute,
   PublicSignupRoute: PublicSignupRoute,
   PublicIndexRoute: PublicIndexRoute,
   PublicWorkspaceDocumentIdRoute: PublicWorkspaceDocumentIdRoute,
+  PublicWorkspaceIndexRoute: PublicWorkspaceIndexRoute,
 }
 
 const PublicRouteWithChildren =

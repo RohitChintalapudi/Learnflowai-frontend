@@ -1,5 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
@@ -8,7 +9,6 @@ import {
   Search,
   ChevronRight,
   Brain,
-  StickyNote,
   HelpCircle,
   Globe,
   Briefcase,
@@ -17,9 +17,29 @@ import {
   Sparkles,
   CheckCircle2,
   X,
-  FileText
+  FileText,
+  Copy,
+  Notebook,
+  Download,
+  Lightbulb,
+  GraduationCap,
+  BookOpen
 } from "lucide-react";
 import { DashboardLayout } from "../../components/DashboardLayout";
+import ReactMarkdown from "react-markdown";
+import toast from "react-hot-toast";
+import { WorkflowAPI, DocumentAPI, BACKEND_URL, type GeneratedNotes } from "../../lib/api";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+import { DocxViewer } from "../../components/DocxViewer";
+import { useReactToPrint } from "react-to-print";
+
+// Configure PDF.js worker to use the local bundled worker
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 export const Route = createFileRoute("/_public/workspace/$documentId")({
   component: WorkspacePage,
@@ -29,7 +49,7 @@ type FeatureType = "explain" | "notes" | "quiz" | "analogy" | "interview" | "min
 
 const features = [
   { id: "explain", label: "Explain", icon: Sparkles },
-  { id: "notes", label: "Notes", icon: StickyNote },
+  { id: "notes", label: "Generate Notes", icon: Notebook },
   { id: "quiz", label: "Quiz", icon: HelpCircle },
   { id: "analogy", label: "Analogy", icon: Globe },
   { id: "interview", label: "Interview Qs", icon: Briefcase },
@@ -43,12 +63,39 @@ function WorkspacePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [highlightedText, setHighlightedText] = useState("");
-  const textRef = useRef<HTMLParagraphElement>(null);
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [zoom, setZoom] = useState(1.0);
 
-  // Mock text selection
+  const urlParts = window.location.pathname.split("/");
+  const docId = urlParts[urlParts.length - 1];
+
+  const { data: documentMetadata } = useQuery({
+    queryKey: ['document', docId],
+    queryFn: async () => {
+      if (!docId) return null;
+      try {
+        return await DocumentAPI.getDocument(docId);
+      } catch (err: any) {
+        toast.error("Failed to load document: " + err.message);
+        return null;
+      }
+    },
+    enabled: !!docId,
+  });
+
+  // Memoize the file configuration to prevent react-pdf from refreshing endlessly on re-renders
+  const pdfFile = useMemo(() => {
+    if (!documentMetadata?.fileUrl) return null;
+    return {
+      url: documentMetadata.fileUrl.startsWith('http') ? documentMetadata.fileUrl : `${BACKEND_URL}${documentMetadata.fileUrl}`,
+      withCredentials: true
+    };
+  }, [documentMetadata]);
+
+  // Handle text selection
   const handleTextSelect = () => {
     const selection = window.getSelection();
-    if (selection && selection.toString().length > 0 && textRef.current?.contains(selection.anchorNode)) {
+    if (selection && selection.toString().trim().length > 0) {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       
@@ -63,15 +110,131 @@ function WorkspacePage() {
     }
   };
 
-  const handleFeatureClick = (featureId: FeatureType) => {
+  const [explanationContent, setExplanationContent] = useState<string>("");
+  const [interviewQuestionsContent, setInterviewQuestionsContent] = useState<any>(null);
+  const [quizContent, setQuizContent] = useState<any>(null);
+  const [quizId, setQuizId] = useState<string | null>(null);
+  const [notesContent, setNotesContent] = useState<GeneratedNotes | null>(null);
+
+  const handleFeatureClick = async (featureId: FeatureType) => {
     setIsMenuOpen(false);
     setActiveFeature(featureId);
-    setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
+    if (featureId === "explain") {
+      if (highlightedText.trim().length < 5) {
+        toast.error("Please highlight at least 5 characters to explain.");
+        setActiveFeature(null);
+        return;
+      }
+      if (highlightedText.trim().length > 5000) {
+        toast.error("Highlighted text is too long (max 5000 characters).");
+        setActiveFeature(null);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        // We can extract documentId from the route path in a real scenario
+        // Assuming Route.useParams() provides it:
+        const urlParts = window.location.pathname.split("/");
+        const docId = urlParts[urlParts.length - 1];
+        
+        const res = await WorkflowAPI.generateExplanation(docId, highlightedText);
+        setExplanationContent(res.explanation);
+        toast.success("Explanation generated successfully!");
+      } catch (error: any) {
+        toast.error(error.message || "Failed to generate explanation");
+        setActiveFeature(null);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (featureId === "notes") {
+      if (highlightedText.trim().length < 5) {
+        toast.error("Please highlight at least 5 characters to generate notes.");
+        setActiveFeature(null);
+        return;
+      }
+      if (highlightedText.trim().length > 5000) {
+        toast.error("Highlighted text is too long (max 5000 characters).");
+        setActiveFeature(null);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const urlParts = window.location.pathname.split("/");
+        const docId = urlParts[urlParts.length - 1];
+        
+        const res = await WorkflowAPI.generateNotes(docId, highlightedText);
+        setNotesContent(res.notes);
+        
+        toast.success("Notes generated successfully!");
+      } catch (error: any) {
+        toast.error(error.message || "Failed to generate notes");
+        setActiveFeature(null);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (featureId === "interview") {
+      if (highlightedText.trim().length < 5) {
+        toast.error("Please highlight at least 5 characters to generate questions.");
+        setActiveFeature(null);
+        return;
+      }
+      if (highlightedText.trim().length > 5000) {
+        toast.error("Highlighted text is too long (max 5000 characters).");
+        setActiveFeature(null);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const urlParts = window.location.pathname.split("/");
+        const docId = urlParts[urlParts.length - 1];
+        
+        const res = await WorkflowAPI.generateInterviewQuestions(docId, highlightedText);
+        setInterviewQuestionsContent(res.questions);
+        toast.success("Interview questions generated successfully!");
+      } catch (error: any) {
+        toast.error(error.message || "Failed to generate interview questions");
+        setActiveFeature(null);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (featureId === "quiz") {
+      if (highlightedText.trim().length < 5) {
+        toast.error("Please highlight at least 5 characters to generate a quiz.");
+        setActiveFeature(null);
+        return;
+      }
+      if (highlightedText.trim().length > 5000) {
+        toast.error("Highlighted text is too long (max 5000 characters).");
+        setActiveFeature(null);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const urlParts = window.location.pathname.split("/");
+        const docId = urlParts[urlParts.length - 1];
+        
+        const res = await WorkflowAPI.generateQuiz(docId, highlightedText);
+        setQuizContent(res.quiz);
+        setQuizId(res.id || null);
+        toast.success("Quiz generated successfully!");
+      } catch (error: any) {
+        toast.error(error.message || "Failed to generate quiz");
+        setActiveFeature(null);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Mock for other features
+      setIsLoading(true);
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 300);
+    }
   };
 
   return (
@@ -80,7 +243,9 @@ function WorkspacePage() {
         <div className="flex items-center gap-2 text-[var(--lf-text-secondary)] text-sm font-medium">
           <Link to="/documents" className="hover:text-[var(--lf-text-primary)] transition-colors">Documents</Link>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-[var(--lf-text-primary)] font-bold truncate max-w-[200px]">Data Structures Notes.pdf</span>
+          <span className="text-[var(--lf-text-primary)] font-bold truncate max-w-[200px]">
+            {documentMetadata ? documentMetadata.title : "Loading Document..."}
+          </span>
         </div>
       }
     >
@@ -99,26 +264,35 @@ function WorkspacePage() {
                 transform: 'translate(-50%, -100%)',
                 zIndex: 100,
               }}
-              className="bg-white/80 dark:bg-black/80 backdrop-blur-xl border border-[var(--lf-border)] shadow-2xl rounded-2xl p-1.5 flex items-center gap-1"
+              className="bg-white/90 dark:bg-black/90 backdrop-blur-xl border border-orange-500/30 shadow-2xl shadow-orange-500/20 rounded-2xl p-2 flex items-center gap-1.5"
             >
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-white/80 dark:border-t-black/80 backdrop-blur-xl" />
+              {/* Outer glow ring */}
+              <div className="absolute inset-0 rounded-2xl bg-orange-500/5 blur-xl -z-10" />
+              {/* Top glow accent */}
+              <div className="absolute -top-px left-4 right-4 h-px bg-gradient-to-r from-transparent via-orange-500/50 to-transparent" />
+              
+              {/* Bottom arrow */}
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-white/90 dark:bg-black/90 border-r border-b border-orange-500/20" />
               
               {features.map((feature) => (
                 <button
                   key={feature.id}
                   onClick={() => handleFeatureClick(feature.id)}
-                  className="flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-orange-500/10 hover:text-[var(--lf-accent)] transition-all group min-w-[70px]"
+                  className="flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all duration-300 group min-w-[70px] relative overflow-hidden hover:bg-orange-500/10 hover:shadow-[0_0_20px_rgba(255,122,24,0.25)] active:scale-90"
                 >
-                  <feature.icon className="h-4 w-4 text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-colors" />
-                  <span className="text-[10px] font-bold text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-colors">
+                  {/* Hover glow background */}
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-b from-orange-500/0 to-orange-500/0 group-hover:from-orange-500/5 group-hover:to-orange-500/0 transition-all duration-300" />
+                  
+                  <feature.icon className="h-[18px] w-[18px] text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-all duration-300 group-hover:scale-110" />
+                  <span className="text-[10px] font-bold text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-colors duration-300 whitespace-nowrap">
                     {feature.label}
                   </span>
                 </button>
               ))}
-              <div className="w-px h-8 bg-[var(--lf-border)] mx-1" />
+              <div className="w-px h-8 bg-gradient-to-b from-transparent via-orange-500/20 to-transparent mx-1" />
               <button 
                 onClick={() => setIsMenuOpen(false)}
-                className="p-2 text-[var(--lf-text-secondary)] hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-colors"
+                className="p-2 text-[var(--lf-text-secondary)] hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all duration-200 active:scale-90"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -134,7 +308,8 @@ function WorkspacePage() {
           className="border-r border-[var(--lf-border)] flex flex-col bg-[#F3F4F6] dark:bg-[#0c0a09] relative z-10 shrink-0" 
           onMouseUp={handleTextSelect}
         >
-          {/* PDF Toolbar */}
+          {/* Document Toolbar */}
+          {(!documentMetadata || ["pdf", "docx", "doc"].includes(documentMetadata.fileType)) && (
           <div className="h-12 border-b border-[var(--lf-border)] bg-[var(--lf-bg)] flex items-center justify-between px-4 shrink-0">
             <div className="flex items-center gap-2">
               <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
@@ -144,52 +319,91 @@ function WorkspacePage() {
               <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="text-xs font-medium text-[var(--lf-text-primary)] min-w-[40px] text-center">1 / 52</span>
+              <span className="text-xs font-medium text-[var(--lf-text-primary)] min-w-[60px] text-center">
+                Total: {numPages || "-"}
+              </span>
               <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
+              <button 
+                onClick={() => setZoom(z => Math.max(0.5, z - 0.2))}
+                className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)] active:scale-95 transition-transform"
+              >
                 <ZoomOut className="h-4 w-4" />
               </button>
-              <span className="text-xs font-medium text-[var(--lf-text-primary)]">100%</span>
-              <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
+              <span className="text-xs font-medium text-[var(--lf-text-primary)] w-[40px] text-center">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button 
+                onClick={() => setZoom(z => Math.min(3.0, z + 0.2))}
+                className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)] active:scale-95 transition-transform"
+              >
                 <ZoomIn className="h-4 w-4" />
               </button>
             </div>
           </div>
+          )}
 
-          {/* PDF Page Mock */}
-          <div className="flex-1 overflow-y-auto p-8 flex justify-center no-scrollbar">
-            <div className="w-[800px] max-w-full bg-white dark:bg-[#1a1a1c] rounded-lg shadow-xl border border-stone-200 dark:border-stone-800 p-12 min-h-[1056px] text-stone-900 dark:text-stone-100">
-              <h1 className="text-3xl font-bold mb-8 font-serif border-b pb-4 dark:border-stone-800">Chapter 4: Advanced Algorithms</h1>
-              
-              <h2 className="text-xl font-bold mb-4 font-serif text-orange-600 dark:text-orange-400">4.1 Dynamic Programming</h2>
-              
-              <p ref={textRef} className="text-base leading-relaxed mb-6 font-serif selection:bg-orange-200 dark:selection:bg-orange-900/50">
-                Dynamic Programming is a problem-solving technique that breaks a larger problem into smaller subproblems and stores previously computed results to avoid redundant calculations. It is commonly used in optimization problems where the solution can be defined recursively.
-              </p>
-
-              <p className="text-base leading-relaxed mb-6 font-serif selection:bg-orange-200 dark:selection:bg-orange-900/50">
-                Unlike greedy algorithms, which make locally optimal choices at each step, dynamic programming considers all possible choices to find the globally optimal solution. The two main approaches to DP are memoization (top-down) and tabulation (bottom-up).
-              </p>
-
-              <div className="bg-orange-50 dark:bg-orange-950/30 p-6 rounded-xl border border-orange-100 dark:border-orange-900/50 my-8">
-                <h3 className="font-bold mb-2 flex items-center gap-2 text-orange-700 dark:text-orange-400">
-                  <Brain className="h-5 w-5" /> Key Characteristics
-                </h3>
-                <ul className="list-disc pl-5 space-y-2 text-sm text-stone-700 dark:text-stone-300">
-                  <li><strong>Optimal Substructure:</strong> The optimal solution to the problem contains optimal solutions to subproblems.</li>
-                  <li><strong>Overlapping Subproblems:</strong> The space of subproblems is small, meaning the same subproblems are solved repeatedly.</li>
-                </ul>
+          {/* Document Viewer (PDF or DocViewer) */}
+          <div className="flex-1 relative bg-stone-100 dark:bg-stone-900 overflow-y-auto overflow-x-hidden flex flex-col items-center py-8">
+            {pdfFile ? (
+              documentMetadata?.fileType === "pdf" ? (
+              <Document
+                file={pdfFile}
+                onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                onLoadError={(error) => {
+                  console.error("PDF Load Error:", error);
+                  toast.error("PDF Error: " + error.message);
+                }}
+                loading={
+                  <div className="flex items-center justify-center p-12 text-stone-500 animate-pulse">
+                    Loading PDF Document...
+                  </div>
+                }
+                error={
+                  <div className="flex flex-col items-center justify-center p-12 text-red-500">
+                    <p className="font-bold text-lg">Failed to load PDF.</p>
+                    <p className="text-sm mt-2 opacity-80">This could be a CORS issue with the backend. Check the console or toast message.</p>
+                  </div>
+                }
+              >
+                {numPages && Array.from(new Array(numPages), (_, index) => (
+                  <Page
+                    key={`page_${index + 1}`}
+                    pageNumber={index + 1}
+                    className="mb-8 shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden bg-white"
+                    scale={zoom}
+                    renderTextLayer={true}
+                    renderAnnotationLayer={true}
+                  />
+                ))}
+              </Document>
+              ) : documentMetadata?.fileType === "docx" || documentMetadata?.fileType === "doc" ? (
+                <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
+                  <DocxViewer 
+                    fileUrl={pdfFile.url} 
+                    zoom={zoom} 
+                    onLoadSuccess={(numPages) => setNumPages(numPages)} 
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-stone-500 p-8 text-center space-y-4">
+                  <FileText className="h-12 w-12 text-stone-400" />
+                  <p className="font-medium text-[var(--lf-text-primary)]">
+                    Local Preview not natively supported for .{documentMetadata?.fileType}
+                  </p>
+                  <p className="text-sm">
+                    Only PDF and DOCX files support offline local rendering. PPTX and other formats may require third-party server-side rendering or Microsoft Office Online access which is not available in local development.
+                  </p>
+                </div>
+              )
+            ) : (
+              <div className="flex items-center justify-center h-full text-stone-500">
+                Loading Document Metadata...
               </div>
-
-              <h2 className="text-xl font-bold mb-4 font-serif text-orange-600 dark:text-orange-400">4.2 Binary Search</h2>
-              <p className="text-base leading-relaxed mb-6 font-serif selection:bg-orange-200 dark:selection:bg-orange-900/50">
-                Binary search is an efficient algorithm for finding an item from a sorted list of items. It works by repeatedly dividing in half the portion of the list that could contain the item, until you've narrowed down the possible locations to just one.
-              </p>
-            </div>
+            )}
           </div>
         </motion.div>
 
@@ -226,21 +440,25 @@ function WorkspacePage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="space-y-6"
+                  className="space-y-6 flex flex-col items-center justify-center pt-10"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] flex items-center justify-center animate-pulse">
-                      <Brain className="h-6 w-6 text-[var(--lf-text-secondary)]" />
-                    </div>
-                    <div>
-                      <div className="h-4 w-32 bg-[var(--lf-surface)] rounded-md animate-pulse mb-2" />
-                      <div className="h-3 w-48 bg-[var(--lf-surface)] rounded-md animate-pulse" />
+                  <div className="relative w-20 h-20 flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full border border-orange-500/20 animate-ping duration-1000" />
+                    <div className="absolute inset-2 rounded-full border border-orange-500/40 animate-pulse duration-700" />
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-orange-600 to-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.5)] flex items-center justify-center animate-bounce">
+                      <Brain className="h-6 w-6 text-white" />
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    <div className="h-32 w-full bg-[var(--lf-surface)] rounded-2xl animate-pulse" />
-                    <div className="h-24 w-full bg-[var(--lf-surface)] rounded-2xl animate-pulse" />
-                    <div className="h-40 w-full bg-[var(--lf-surface)] rounded-2xl animate-pulse" />
+                  <div className="text-center space-y-2">
+                    <h3 className="text-[16px] font-bold text-[var(--lf-text-primary)] animate-pulse">
+                      Analyzing Context...
+                    </h3>
+                    <p className="text-[13px] text-[var(--lf-text-secondary)] animate-pulse">
+                      Searching the document to generate your explanation.
+                    </p>
+                  </div>
+                  <div className="w-full max-w-xs h-1 bg-[var(--lf-surface)] rounded-full overflow-hidden mt-4">
+                    <div className="h-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-400 animate-slide-right w-[200%]" />
                   </div>
                 </motion.div>
               )}
@@ -255,7 +473,7 @@ function WorkspacePage() {
                   className="space-y-6 pb-20"
                 >
                   {/* Context Header */}
-                  <div className="p-4 rounded-2xl border border-[var(--lf-border)] bg-[var(--lf-surface)] flex gap-4">
+                  <div className="p-4 rounded-2xl border border-[var(--lf-border)] bg-[var(--lf-surface)] flex gap-4 card-shadow">
                     <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
                       <FileText className="h-5 w-5 text-orange-500" />
                     </div>
@@ -270,11 +488,11 @@ function WorkspacePage() {
                   </div>
 
                   {/* Feature Content */}
-                  {activeFeature === "explain" && <FeatureExplain />}
-                  {activeFeature === "notes" && <FeatureNotes />}
-                  {activeFeature === "quiz" && <FeatureQuiz />}
+                  {activeFeature === "explain" && <FeatureExplain content={explanationContent} />}
+                  {activeFeature === "notes" && <FeatureNotes notes={notesContent} loading={isLoading} />}
+                  {activeFeature === "quiz" && <FeatureQuiz quiz={quizContent} quizId={quizId} />}
                   {activeFeature === "analogy" && <FeatureAnalogy />}
-                  {activeFeature === "interview" && <FeatureInterview />}
+                  {activeFeature === "interview" && <FeatureInterview questions={interviewQuestionsContent} />}
                   {activeFeature === "mindmap" && <FeatureMindMap />}
                   {activeFeature === "simulation" && <FeatureSimulation />}
 
@@ -294,144 +512,414 @@ function WorkspacePage() {
 // FEATURE COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function FeatureExplain() {
+function FeatureExplain({ content }: { content: string }) {
+  // Parse sections based on markdown headings
+  const parseSections = (markdown: string) => {
+    const sections: { title: string; content: string }[] = [];
+    const regex = /(?:^|\n)#{1,3}\s+(.*?)\n([\s\S]*?)(?=\n#{1,3}\s+|$)/g;
+    let match;
+    
+    // Check if there's text before the first heading
+    const firstHeadingIndex = markdown.indexOf("#");
+    if (firstHeadingIndex > 0) {
+      sections.push({
+        title: "Overview",
+        content: markdown.substring(0, firstHeadingIndex).trim()
+      });
+    } else if (firstHeadingIndex === -1 && markdown.trim()) {
+       return [{ title: "Explanation", content: markdown.trim() }];
+    }
+
+    while ((match = regex.exec(markdown)) !== null) {
+      sections.push({ title: match[1].trim(), content: match[2].trim() });
+    }
+    return sections;
+  };
+
+  const sections = content ? parseSections(content) : [];
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-2">
-        <Sparkles className="h-6 w-6 text-[var(--lf-accent)]" />
-        <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Explanation</h2>
-      </div>
-
-      <p className="text-[15px] leading-relaxed text-[var(--lf-text-primary)]">
-        <strong className="text-orange-500">Dynamic Programming</strong> is a problem-solving technique that breaks a larger problem into smaller subproblems and stores previously computed results to avoid redundant calculations.
-      </p>
-
-      <div className="p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow">
-        <h3 className="text-[14px] font-bold flex items-center gap-2 mb-4 text-[var(--lf-text-primary)]">
-          <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Key Points
-        </h3>
-        <ul className="space-y-3">
-          {[
-            "Breaks problems into subproblems",
-            "Stores previous results (Memoization/Tabulation)",
-            "Improves algorithm efficiency dramatically",
-            "Reduces repeated work from exponential to polynomial time"
-          ].map((pt, i) => (
-            <li key={i} className="flex items-start gap-2 text-[14px] text-[var(--lf-text-secondary)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
-              {pt}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="p-5 rounded-2xl bg-orange-500/5 border border-orange-500/20">
-        <h3 className="text-[14px] font-bold flex items-center gap-2 mb-2 text-orange-600 dark:text-orange-400">
-          <Globe className="h-4 w-4" /> Real World Example
-        </h3>
-        <p className="text-[14px] text-[var(--lf-text-secondary)]">
-          Google Maps calculating shortest routes. If it already knows the shortest path from City B to City C, it saves that result when calculating the path from City A through City B to City C.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function FeatureNotes() {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <StickyNote className="h-6 w-6 text-[var(--lf-accent)]" />
-          <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Smart Notes</h2>
+      <div className="flex items-center gap-3 mb-2 group cursor-default">
+        <div className="relative">
+          <Sparkles className="h-6 w-6 text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-all duration-300" />
+          <div className="absolute inset-0 h-6 w-6 bg-orange-500/0 group-hover:bg-orange-500/20 blur-xl rounded-full transition-all duration-300" />
         </div>
-        <button className="text-[12px] font-bold text-[var(--lf-accent)] hover:underline">Save Note</button>
+        <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Explanation</h2>
       </div>
 
-      <div className="prose prose-sm dark:prose-invert max-w-none prose-orange">
-        <h3>Topic Summary</h3>
-        <ul>
-          <li>Dynamic Programming optimizes recursive solutions.</li>
-          <li>Uses memoization (top-down) or tabulation (bottom-up).</li>
-          <li>Commonly used in optimization problems like shortest path or knapsack.</li>
-        </ul>
-        
-        <h3>Key Formula Concepts</h3>
-        <ul>
-          <li><strong>State:</strong> What subproblem are we solving?</li>
-          <li><strong>Transition:</strong> How does one subproblem relate to another?</li>
-          <li><strong>Base Case:</strong> What is the simplest subproblem?</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
+      {content ? (
+        <div className="space-y-6">
+          {sections.map((section, idx) => {
+            const isRealWorld = section.title.toLowerCase().includes("real-world") || section.title.toLowerCase().includes("example");
+            const isKeyPoints = section.title.toLowerCase().includes("key");
+            const isImportantNotes = section.title.toLowerCase().includes("important") || section.title.toLowerCase().includes("note");
 
-function FeatureQuiz() {
-  const [selected, setSelected] = useState<number | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+            let containerClass;
+            let titleIcon = null;
+            let titleClass = "text-[16px] font-bold text-[var(--lf-text-primary)] mb-3";
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <HelpCircle className="h-6 w-6 text-[var(--lf-accent)]" />
-        <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Quiz</h2>
-      </div>
-
-      <div className="p-6 rounded-3xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow-lg">
-        <div className="flex items-center justify-between mb-6">
-          <span className="text-[12px] font-bold text-[var(--lf-accent)] bg-orange-500/10 px-3 py-1 rounded-full">Question 1 of 3</span>
-        </div>
-        
-        <p className="text-[16px] font-bold text-[var(--lf-text-primary)] mb-6">
-          Which technique stores previously computed results to avoid redundant calculations?
-        </p>
-
-        <div className="space-y-3">
-          {["Greedy Algorithms", "Memoization", "Depth First Search", "Breadth First Search"].map((opt, i) => {
-            const isCorrect = i === 1;
-            const isSelected = selected === i;
-            let btnClass = "border-[var(--lf-border)] bg-[var(--lf-surface)] hover:border-orange-500/50 hover:bg-[var(--lf-bg)]";
-            
-            if (submitted) {
-              if (isCorrect) btnClass = "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
-              else if (isSelected) btnClass = "border-red-500 bg-red-500/10 text-red-600 dark:text-red-400";
-              else btnClass = "border-[var(--lf-border)] bg-[var(--lf-surface)] opacity-50";
-            } else if (isSelected) {
-              btnClass = "border-orange-500 bg-orange-500/10 text-[var(--lf-accent)] ring-2 ring-orange-500/20";
+            if (isRealWorld) {
+              containerClass = "p-5 rounded-2xl bg-orange-500/10 border border-orange-500/30 card-shadow-lg";
+              titleIcon = <Globe className="h-5 w-5 text-orange-600 dark:text-orange-400" />;
+              titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-orange-700 dark:text-orange-400";
+            } else if (isKeyPoints) {
+              containerClass = "p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow";
+              titleIcon = <CheckCircle2 className="h-5 w-5 text-emerald-500" />;
+              titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-[var(--lf-text-primary)]";
+            } else if (isImportantNotes) {
+              containerClass = "p-5 rounded-2xl bg-red-500/5 border border-red-500/20";
+              titleIcon = <Brain className="h-5 w-5 text-red-500" />;
+              titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-red-600 dark:text-red-400";
+            } else {
+              containerClass = "text-[15px] leading-relaxed text-[var(--lf-text-primary)]";
             }
 
             return (
-              <button
-                key={i}
-                onClick={() => !submitted && setSelected(i)}
-                disabled={submitted}
-                className={`w-full text-left px-5 py-4 rounded-xl border text-[14px] font-medium transition-all duration-200 flex items-center justify-between ${btnClass}`}
-              >
-                <span><span className="font-bold opacity-50 mr-3">{["A", "B", "C", "D"][i]}.</span> {opt}</span>
-                {submitted && isCorrect && <CheckCircle2 className="h-5 w-5 text-emerald-500" />}
-                {submitted && isSelected && !isCorrect && <X className="h-5 w-5 text-red-500" />}
-              </button>
+              <div key={idx} className={containerClass}>
+                {titleIcon ? (
+                  <h3 className={titleClass}>
+                    {titleIcon} {section.title}
+                  </h3>
+                ) : (
+                  <h3 className={titleClass}>{section.title}</h3>
+                )}
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-orange prose-p:leading-relaxed prose-li:my-1">
+                  <ReactMarkdown>{section.content}</ReactMarkdown>
+                </div>
+              </div>
             );
           })}
         </div>
+      ) : (
+        <div className="text-[14px] text-[var(--lf-text-secondary)] italic">
+          No explanation generated yet.
+        </div>
+      )}
+    </div>
+  );
+}
 
-        {submitted && (
-          <div className="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-            <p className="text-[13px] text-emerald-700 dark:text-emerald-400 font-medium">
-              <strong>Correct!</strong> Memoization is the top-down DP approach that caches the results of function calls.
-            </p>
-          </div>
-        )}
+function FeatureNotes({
+  notes,
+  loading,
+}: {
+  notes: GeneratedNotes | null;
+  loading: boolean;
+}) {
+  const contentRef = useRef<HTMLDivElement>(null);
 
+  const handleDownloadPDF = useReactToPrint({
+    contentRef,
+    documentTitle: notes?.title ? `${notes.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_notes` : "Study_Notes",
+    onAfterPrint: () => toast.success("PDF saved successfully!", { id: "pdf-toast" }),
+    onPrintError: () => toast.error("Failed to generate PDF.", { id: "pdf-toast" }),
+  });
+
+  const handleDownload = () => {
+    toast.loading("Opening Print Dialog (Save as PDF)...", { id: "pdf-toast", duration: 2000 });
+    handleDownloadPDF();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-60">
+        <Notebook className="h-16 w-16 mb-4 text-[var(--lf-text-secondary)] animate-pulse" />
+        <p className="text-lg font-medium text-[var(--lf-text-secondary)]">Generating your notes...</p>
+      </div>
+    );
+  }
+
+  if (!notes) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-60">
+        <Notebook className="h-16 w-16 mb-4 text-[var(--lf-text-secondary)]" />
+        <p className="text-lg font-medium text-[var(--lf-text-secondary)]">Highlight text and click Generate Notes to see them here.</p>
+      </div>
+    );
+  }
+
+  const printStyle: React.CSSProperties = { WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between border-b border-[var(--lf-border)] pb-4">
+        <div className="flex items-center gap-3">
+          <Notebook className="h-6 w-6 text-[var(--lf-accent)]" />
+          <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Generated Notes</h2>
+        </div>
         <button 
-          onClick={() => setSubmitted(true)}
-          disabled={selected === null || submitted}
-          className="w-full mt-6 py-3 rounded-xl bg-[var(--lf-accent)] text-white text-[14px] font-bold disabled:opacity-50 transition-opacity"
+          onClick={handleDownload}
+          className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-lg text-[13px] font-bold transition-colors"
         >
-          {submitted ? "Next Question" : "Submit Answer"}
+          <Download className="h-4 w-4" /> Download
         </button>
       </div>
+
+      <div 
+        ref={contentRef} 
+        id="pdf-content-workspace" 
+        className="p-6 md:p-10 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow-lg space-y-8 relative print:shadow-none print:border-none print:p-12 print:w-full print:max-w-none print:m-0 print:block"
+        style={printStyle}
+      >
+        {/* Watermark - Shows up on every printed page */}
+        <div className="hidden print:flex fixed inset-0 w-full h-full items-center justify-center pointer-events-none opacity-[0.05] z-0">
+          <img src="/logo.png" className="w-[80%] max-w-[600px] object-contain" alt="Learnflow AI Watermark" />
+        </div>
+
+        <div className="relative z-10 space-y-8">
+          <div className="text-center pb-6 border-b border-[var(--lf-border)]">
+          <h1 className="text-3xl font-extrabold text-[var(--lf-text-primary)] mb-4">{notes.title}</h1>
+          <p className="text-[15px] leading-relaxed text-[var(--lf-text-secondary)] max-w-2xl mx-auto italic">
+            "{notes.summary}"
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-1 print:gap-10">
+          <div className="space-y-4 p-5 rounded-2xl bg-amber-500/5 border border-amber-500/10 transition-colors print:break-inside-avoid print:p-6">
+            <h3 className="text-[16px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2">
+              <Lightbulb className="h-5 w-5" /> Key Points
+            </h3>
+            <ul className="space-y-2">
+              {notes.keyPoints.map((point, i) => (
+                <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
+                  <span className="text-amber-500 mt-0.5">•</span> {point}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-4 p-5 rounded-2xl bg-blue-500/5 border border-blue-500/10 transition-colors print:break-inside-avoid print:p-6">
+            <h3 className="text-[16px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
+              <BookOpen className="h-5 w-5" /> Important Concepts
+            </h3>
+            <ul className="space-y-2">
+              {(notes.importantConcepts || notes.relatedConcepts || []).map((concept, i) => (
+                <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
+                  <span className="text-blue-500 mt-0.5">•</span> {concept}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-4 p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 transition-colors print:break-inside-avoid print:p-6">
+            <h3 className="text-[16px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+              <GraduationCap className="h-5 w-5" /> Exam Tips
+            </h3>
+            <ul className="space-y-2">
+              {notes.examTips.map((tip, i) => (
+                <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
+                  <span className="text-emerald-500 mt-0.5">•</span> {tip}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-4 p-5 rounded-2xl bg-purple-500/5 border border-purple-500/10 transition-colors print:break-inside-avoid print:p-6">
+            <h3 className="text-[16px] font-bold text-purple-600 dark:text-purple-400 flex items-center gap-2">
+              <FileText className="h-5 w-5" /> Revision Notes
+            </h3>
+            <ul className="space-y-2">
+              {notes.revisionNotes.map((note, i) => (
+                <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
+                  <span className="text-purple-500 mt-0.5">•</span> {note}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  );
+}
+
+function FeatureQuiz(props: { quiz: any; quizId: string | null }) {
+  const { quiz, quizId } = props;
+  const [mcqAnswers, setMcqAnswers] = useState<Record<number, string>>({});
+  const [tfAnswers, setTfAnswers] = useState<Record<number, boolean>>({});
+  const [shortAnswers, setShortAnswers] = useState<Record<number, string>>({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const { score, total } = useMemo(() => {
+    if (!quiz) return { score: 0, total: 0 };
+    let s = 0;
+    const t = (quiz.mcqs?.length || 0) + (quiz.trueFalse?.length || 0);
+    quiz.mcqs?.forEach((q: any, i: number) => {
+      if (mcqAnswers[i] === q.correctAnswer) s++;
+    });
+    quiz.trueFalse?.forEach((q: any, i: number) => {
+      if (tfAnswers[i] === q.answer) s++;
+    });
+    return { score: s, total: t };
+  }, [quiz, mcqAnswers, tfAnswers]);
+
+  if (!quiz) {
+    return (
+      <div className="text-[14px] text-[var(--lf-text-secondary)] italic">
+        No quiz generated yet.
+      </div>
+    );
+  }
+
+  const handleSubmit = async () => {
+    setIsSubmitted(true);
+    if (quizId) {
+      const topics = new Set<string>();
+      quiz.mcqs?.forEach((q: any, i: number) => {
+        if (mcqAnswers[i] !== q.correctAnswer && q.topic) topics.add(q.topic);
+      });
+      quiz.trueFalse?.forEach((q: any, i: number) => {
+        if (tfAnswers[i] !== q.answer && q.topic) topics.add(q.topic);
+      });
+      const topicsToImprove = Array.from(topics);
+      try {
+        await WorkflowAPI.submitQuiz(quizId, score, total, topicsToImprove);
+        toast.success("Quiz results saved!");
+      } catch (err: any) {
+        toast.error(err.message || "Failed to save quiz results");
+        console.error("Failed to save quiz results", err);
+        setIsSubmitted(false); // Revert submission state so they can try again
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <HelpCircle className="h-6 w-6 text-[var(--lf-accent)]" />
+          <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Quiz</h2>
+        </div>
+        {isSubmitted && (
+          <div className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+            Score: {score} / {total}
+          </div>
+        )}
+      </div>
+
+      {/* Multiple Choice Section */}
+      {quiz.mcqs && quiz.mcqs.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider">Multiple Choice</h3>
+          {quiz.mcqs.map((q: any, i: number) => (
+            <div key={`mcq-${i}`} className="p-6 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow">
+              <p className="text-[15px] font-medium text-[var(--lf-text-primary)] mb-4">
+                <span className="text-[var(--lf-accent)] font-bold mr-2">{i + 1}.</span> {q.question}
+              </p>
+              <div className="space-y-2">
+                {q.options.map((opt: string, optIdx: number) => {
+                  const isSelected = mcqAnswers[i] === opt;
+                  const isCorrect = q.correctAnswer === opt;
+                  
+                  let btnClass = "border-[var(--lf-border)] bg-[var(--lf-bg)] hover:border-orange-500/50";
+                  if (isSubmitted) {
+                    if (isCorrect) btnClass = "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400";
+                    else if (isSelected) btnClass = "border-red-500 bg-red-500/10 text-red-700 dark:text-red-400";
+                    else btnClass = "border-[var(--lf-border)] bg-[var(--lf-bg)] opacity-50";
+                  } else if (isSelected) {
+                    btnClass = "border-orange-500 bg-orange-500/10 text-[var(--lf-accent)] ring-1 ring-orange-500/20";
+                  }
+
+                  return (
+                    <button
+                      key={optIdx}
+                      onClick={() => !isSubmitted && setMcqAnswers(prev => ({ ...prev, [i]: opt }))}
+                      disabled={isSubmitted}
+                      className={`w-full text-left px-4 py-3 rounded-xl border text-[14px] transition-all flex items-center justify-between ${btnClass}`}
+                    >
+                      <span>{opt}</span>
+                      {isSubmitted && isCorrect && <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />}
+                      {isSubmitted && isSelected && !isCorrect && <X className="h-4 w-4 text-red-500 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* True / False Section */}
+      {quiz.trueFalse && quiz.trueFalse.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider">True or False</h3>
+          {quiz.trueFalse.map((q: any, i: number) => {
+            const isCorrectAnswer = q.answer;
+            const userAnswer = tfAnswers[i];
+            
+            return (
+              <div key={`tf-${i}`} className="p-6 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <p className="text-[15px] font-medium text-[var(--lf-text-primary)]">
+                  <span className="text-[var(--lf-accent)] font-bold mr-2">{i + 1}.</span> {q.question}
+                </p>
+                <div className="flex gap-2 shrink-0">
+                  {[true, false].map((val) => {
+                    const isSelected = userAnswer === val;
+                    const isCorrect = isCorrectAnswer === val;
+                    
+                    let btnClass = "border-[var(--lf-border)] bg-[var(--lf-bg)] hover:bg-[var(--lf-surface)]";
+                    if (isSubmitted) {
+                      if (isCorrect) btnClass = "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400";
+                      else if (isSelected) btnClass = "border-red-500 bg-red-500/10 text-red-700 dark:text-red-400";
+                      else btnClass = "border-[var(--lf-border)] bg-[var(--lf-bg)] opacity-50";
+                    } else if (isSelected) {
+                      btnClass = "border-orange-500 bg-orange-500/10 text-[var(--lf-accent)]";
+                    }
+
+                    return (
+                      <button
+                        key={String(val)}
+                        onClick={() => !isSubmitted && setTfAnswers(prev => ({ ...prev, [i]: val }))}
+                        disabled={isSubmitted}
+                        className={`px-6 py-2 rounded-lg border text-sm font-bold transition-all ${btnClass}`}
+                      >
+                        {val ? "True" : "False"}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Short Answer Section */}
+      {quiz.shortAnswer && quiz.shortAnswer.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider">Short Answer <span className="text-[10px] font-normal text-[var(--lf-text-secondary)] normal-case">(optional for improvement)</span></h3>
+          {quiz.shortAnswer.map((q: any, i: number) => (
+            <div key={`sa-${i}`} className="p-6 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow">
+              <p className="text-[15px] font-medium text-[var(--lf-text-primary)] mb-4">
+                <span className="text-[var(--lf-accent)] font-bold mr-2">{i + 1}.</span> {q.question}
+              </p>
+              <textarea
+                value={shortAnswers[i] || ""}
+                onChange={(e) => setShortAnswers(prev => ({ ...prev, [i]: e.target.value }))}
+                disabled={isSubmitted}
+                placeholder="Type your answer here..."
+                className="w-full p-4 rounded-xl bg-[var(--lf-bg)] border border-[var(--lf-border)] text-[14px] text-[var(--lf-text-primary)] focus:outline-none focus:border-orange-500/50 resize-none min-h-[100px] disabled:opacity-70"
+              />
+              {isSubmitted && (
+                <div className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">Expected Answer</p>
+                  <p className="text-[14px] text-blue-700 dark:text-blue-400">{q.expectedAnswer}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isSubmitted && (
+        <button
+          onClick={handleSubmit}
+          className="w-full py-4 rounded-2xl bg-[var(--lf-accent)] text-white font-bold text-[15px] shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_25px_rgba(249,115,22,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+        >
+          Submit Quiz
+        </button>
+      )}
     </div>
   );
 }
@@ -444,7 +932,7 @@ function FeatureAnalogy() {
         <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Real World Analogy</h2>
       </div>
 
-      <div className="p-8 rounded-3xl bg-gradient-to-br from-orange-500/10 to-[var(--lf-surface)] border border-orange-500/20 relative overflow-hidden">
+      <div className="p-8 rounded-3xl bg-gradient-to-br from-orange-500/10 to-[var(--lf-surface)] border border-orange-500/20 card-shadow-lg relative overflow-hidden">
         <div className="absolute -right-10 -top-10 w-40 h-40 bg-orange-500/20 blur-3xl rounded-full" />
         
         <p className="text-[16px] leading-relaxed text-[var(--lf-text-primary)] font-medium mb-6 relative z-10">
@@ -463,7 +951,28 @@ function FeatureAnalogy() {
   );
 }
 
-function FeatureInterview() {
+function FeatureInterview({ questions }: { questions: any }) {
+  const [activeTab, setActiveTab] = useState<"basic" | "intermediate" | "advanced">("basic");
+  
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Copied to clipboard!");
+  };
+
+  if (!questions) {
+    return (
+      <div className="text-[14px] text-[var(--lf-text-secondary)] italic">
+        No questions generated yet.
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: "basic", label: "Basic" },
+    { id: "intermediate", label: "Intermediate" },
+    { id: "advanced", label: "Advanced" },
+  ] as const;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 mb-4">
@@ -471,22 +980,50 @@ function FeatureInterview() {
         <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Interview Questions</h2>
       </div>
 
+      <div className="flex gap-2 p-1 bg-[var(--lf-surface)] border border-[var(--lf-border)] rounded-xl">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+              activeTab === tab.id
+                ? "bg-[var(--lf-bg)] text-[var(--lf-text-primary)] shadow-sm border border-[var(--lf-border)]"
+                : "text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)] hover:bg-[var(--lf-surface)]"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="space-y-4">
-        {[
-          { q: "What is Dynamic Programming?", a: "DP is a method for solving complex problems by breaking them down into simpler subproblems and storing the results to avoid duplicate work." },
-          { q: "Difference between Memoization and Tabulation?", a: "Memoization is top-down recursion with caching. Tabulation is bottom-up iteration building a table of solutions." },
-          { q: "When should DP be preferred over Greedy?", a: "When the problem requires finding a global optimum and greedy choices might only yield a local optimum (e.g., 0/1 Knapsack problem)." },
-        ].map((item, i) => (
-          <details key={i} className="group p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] cursor-pointer">
-            <summary className="text-[15px] font-bold text-[var(--lf-text-primary)] list-none flex items-center justify-between">
-              <span className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded bg-orange-500/10 text-[var(--lf-accent)] text-[12px]">{i+1}</span>
-                {item.q}
-              </span>
-              <ChevronRight className="h-5 w-5 text-[var(--lf-text-secondary)] group-open:rotate-90 transition-transform" />
+        {questions[activeTab]?.map((item: { q: string; a: string }, i: number) => (
+          <details key={i} className="group p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/50 transition-all card-shadow">
+            <summary className="flex items-start justify-between gap-4 cursor-pointer list-none">
+              <div className="flex items-start gap-3">
+                <span className="flex items-center justify-center w-6 h-6 rounded bg-orange-500/10 text-[var(--lf-accent)] text-[12px] font-bold shrink-0 mt-0.5">
+                  Q{i+1}
+                </span>
+                <p className="text-[14px] leading-relaxed text-[var(--lf-text-primary)] font-medium">
+                  {item.q}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={(e) => { e.preventDefault(); handleCopy(item.q + "\n\nAnswer:\n" + item.a); }}
+                  className="p-2 rounded-lg bg-[var(--lf-bg)] border border-[var(--lf-border)] text-[var(--lf-text-secondary)] hover:text-[var(--lf-accent)] hover:border-[var(--lf-accent)] opacity-0 group-hover:opacity-100 transition-all"
+                  title="Copy Q&A"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+                <ChevronRight className="h-5 w-5 text-[var(--lf-text-secondary)] group-open:rotate-90 transition-transform shrink-0" />
+              </div>
             </summary>
-            <div className="pt-4 mt-4 border-t border-[var(--lf-border)] text-[14px] leading-relaxed text-[var(--lf-text-secondary)]">
-              {item.a}
+            <div className="pt-4 mt-4 border-t border-[var(--lf-border)] pl-9">
+              <p className="text-[13px] leading-relaxed text-[var(--lf-text-secondary)]">
+                <span className="font-bold text-[var(--lf-text-primary)] mb-1 block">Answer:</span>
+                {item.a}
+              </p>
             </div>
           </details>
         ))}
@@ -503,10 +1040,10 @@ function FeatureMindMap() {
         <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Mind Map</h2>
       </div>
 
-      <div className="flex-1 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] flex items-center justify-center p-8 min-h-[400px]">
+      <div className="flex-1 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow flex items-center justify-center p-8 min-h-[400px]">
         {/* Simple CSS-based mind map representation */}
         <div className="flex items-center gap-8">
-          <div className="px-6 py-4 rounded-2xl bg-orange-500 text-white font-bold shadow-lg shadow-orange-500/30">
+          <div className="px-6 py-4 rounded-2xl bg-orange-500 text-white font-bold card-shadow-lg">
             Dynamic Programming
           </div>
           
@@ -515,13 +1052,13 @@ function FeatureMindMap() {
             <div className="absolute right-[100%] top-[20px] bottom-[20px] w-8 border-l-2 border-t-2 border-b-2 border-orange-500/30 rounded-l-xl" />
             <div className="absolute right-[100%] top-1/2 w-8 border-t-2 border-orange-500/30" />
             
-            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] shadow-sm font-medium text-[13px] text-[var(--lf-text-primary)] relative">
+            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow font-medium text-[13px] text-[var(--lf-text-primary)] relative">
               Memoization (Top-Down)
             </div>
-            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] shadow-sm font-medium text-[13px] text-[var(--lf-text-primary)] relative">
+            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow font-medium text-[13px] text-[var(--lf-text-primary)] relative">
               Tabulation (Bottom-Up)
             </div>
-            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] shadow-sm font-medium text-[13px] text-[var(--lf-text-primary)] relative">
+            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow font-medium text-[13px] text-[var(--lf-text-primary)] relative">
               Optimal Substructure
             </div>
           </div>

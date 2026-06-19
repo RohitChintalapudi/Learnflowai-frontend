@@ -1,4 +1,5 @@
-const API_BASE_URL = "http://localhost:3000/api";
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const API_BASE_URL = `${BACKEND_URL}/api`;
 
 export interface DocumentMetadata {
   id: string;
@@ -7,6 +8,38 @@ export interface DocumentMetadata {
   totalPages?: number;
   createdAt?: string;
   fileUrl?: string;
+}
+
+export interface GeneratedNotes {
+  title: string;
+  summary: string;
+  keyPoints: string[];
+  importantConcepts?: string[];
+  relatedConcepts?: string[];
+  importantSubtopics?: string[];
+  examTips: string[];
+  revisionNotes: string[];
+}
+
+export interface DashboardSummary {
+  user: {
+    name: string;
+  };
+  stats: {
+    documentsCount: number;
+    explanationsCount: number;
+    notesCount: number;
+    quizzesCount: number;
+    learningStreak: number;
+  };
+  recentDocuments: DocumentMetadata[];
+  recentActivity: {
+    id: string;
+    action: string;
+    target: string;
+    time: string;
+    type: string;
+  }[];
 }
 
 export const DocumentAPI = {
@@ -27,6 +60,26 @@ export const DocumentAPI = {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || "Failed to upload document");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get dashboard summary
+   */
+  async getDashboardSummary(): Promise<DashboardSummary> {
+    const response = await fetch(`${API_BASE_URL}/dashboard/summary`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch dashboard summary");
     }
 
     return response.json();
@@ -91,4 +144,304 @@ export const DocumentAPI = {
 
     return response.json();
   },
+};
+
+export const WorkflowAPI = {
+  /**
+   * Generate an AI explanation for highlighted text
+   */
+  async generateExplanation(documentId: string, highlightedText: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/explanation`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate explanation");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Generate AI interview questions for highlighted text
+   */
+  async generateInterviewQuestions(documentId: string, highlightedText: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/interview-questions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate interview questions");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Generate AI quiz for highlighted text
+   */
+  async generateQuiz(documentId: string, highlightedText: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/quiz`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate quiz");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get all user quizzes
+   */
+  async getQuizzes() {
+    const response = await fetch(`${API_BASE_URL}/workflow/quiz`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch quizzes");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Submit quiz score and get analysis
+   */
+  async submitQuiz(quizId: string, score: number, totalQuestions: number, topicsToImprove: string[]) {
+    const response = await fetch(`${API_BASE_URL}/workflow/quiz/${quizId}/submit`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ score, totalQuestions, topicsToImprove }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to submit quiz");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Generate AI notes for highlighted text
+   */
+  async generateNotes(documentId: string, highlightedText: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/notes`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate notes");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Delete an AI generated note
+   */
+  async deleteNote(noteId: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/notes/${noteId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to delete note");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get all AI generated notes for the user
+   */
+  async getNotes() {
+    const response = await fetch(`${API_BASE_URL}/workflow/notes`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch notes");
+    }
+
+    return response.json();
+  },
+};
+
+export const QuizDashboardAPI = {
+  async getStats() {
+    const response = await fetch(`${API_BASE_URL}/quizzes/stats`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch quiz stats");
+    }
+    return response.json();
+  },
+
+  async getQuizzes(page: number = 1, limit: number = 20, search?: string) {
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    if (search) {
+      queryParams.append("search", search);
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/quizzes?${queryParams.toString()}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch quizzes");
+    }
+    return response.json();
+  },
+
+  async getSingleQuiz(quizId: string) {
+    const response = await fetch(`${API_BASE_URL}/quizzes/${quizId}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch quiz details");
+    }
+    return response.json();
+  },
+
+  async deleteQuiz(quizId: string) {
+    const response = await fetch(`${API_BASE_URL}/quizzes/${quizId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to delete quiz");
+    }
+    return response.json();
+  }
+};
+
+export const ProfileAPI = {
+  async getProfile() {
+    const response = await fetch(`${API_BASE_URL}/profile`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch profile");
+    }
+    return response.json();
+  },
+
+  async updateProfile(data: { name?: string; bio?: string; learningGoals?: string }) {
+    const response = await fetch(`${API_BASE_URL}/profile`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to update profile");
+    }
+    return response.json();
+  },
+
+  async getProfileStats() {
+    const response = await fetch(`${API_BASE_URL}/profile/stats`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch profile stats");
+    }
+    return response.json();
+  },
+
+  async uploadAvatar(file: File) {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    
+    const response = await fetch(`${API_BASE_URL}/profile/avatar`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to upload avatar");
+    }
+    return response.json();
+  },
+
+  async deleteAvatar() {
+    const response = await fetch(`${API_BASE_URL}/profile/avatar`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to delete avatar");
+    }
+    return response.json();
+  }
 };

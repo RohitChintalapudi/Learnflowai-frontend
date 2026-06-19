@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import {
@@ -11,7 +12,6 @@ import {
   Trash2,
   File as FileIcon,
   PlayCircle,
-  MoreVertical,
   AlertTriangle,
 } from "lucide-react";
 import { DocumentAPI } from "../../lib/api";
@@ -24,29 +24,18 @@ export const Route = createFileRoute("/_public/documents")({
 
 function DocumentsPage() {
   const navigate = useNavigate();
-  const [documents, setDocuments] = useState<DocumentMetadata[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    fetchDocuments();
-  }, []);
-
-  const fetchDocuments = async () => {
-    setIsLoading(true);
-    try {
-      const data = await DocumentAPI.getDocuments();
-      setDocuments(data || []);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to load documents");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
+  const { data: documents = [], isLoading } = useQuery({
+    queryKey: ['documents'],
+    queryFn: () => DocumentAPI.getDocuments(),
+  });
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -96,7 +85,8 @@ function DocumentsPage() {
     try {
       await DocumentAPI.uploadDocument(file);
       toast.success("Document uploaded successfully!");
-      fetchDocuments();
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
     } catch (error: any) {
       toast.error(error.message || "Failed to upload document.");
     } finally {
@@ -111,15 +101,16 @@ function DocumentsPage() {
     if (!documentToDelete) return;
     
     // Optimistic UI Update Option (or just wait for backend)
-    const prevDocs = [...documents];
-    setDocuments((docs) => docs.filter((d) => d.id !== documentToDelete));
+    const prevDocs = queryClient.getQueryData<DocumentMetadata[]>(['documents']) || [];
+    queryClient.setQueryData(['documents'], prevDocs.filter((d) => d.id !== documentToDelete));
     
     try {
       await DocumentAPI.deleteDocument(documentToDelete);
       toast.success("Document deleted");
+      queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
     } catch (error: any) {
       toast.error(error.message || "Failed to delete document");
-      setDocuments(prevDocs); // Revert on failure
+      queryClient.setQueryData(['documents'], prevDocs); // Revert on failure
     } finally {
       setDocumentToDelete(null);
     }
@@ -144,7 +135,7 @@ function DocumentsPage() {
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl shadow-2xl p-6 w-full max-w-sm relative z-10 overflow-hidden"
+              className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl card-shadow-lg p-6 w-full max-w-sm relative z-10 overflow-hidden"
             >
               <div className="flex items-center gap-4 mb-4 text-red-500">
                 <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
@@ -208,7 +199,7 @@ function DocumentsPage() {
             className={`relative rounded-3xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center p-12 overflow-hidden cursor-pointer ${
               isDragging
                 ? "border-orange-500 bg-orange-500/5 scale-[1.02] shadow-xl shadow-orange-500/10"
-                : "border-[var(--lf-border)] bg-[var(--lf-card)] hover:border-orange-500/30 hover:bg-[var(--lf-surface)]"
+                : "border-[var(--lf-border)] bg-[var(--lf-card)] hover:border-orange-500/30 hover:bg-[var(--lf-surface)] card-shadow"
             }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -310,7 +301,9 @@ function DocumentsPage() {
                     key={doc.id}
                     className="group rounded-3xl bg-[var(--lf-card)] border border-[var(--lf-border)] hover:border-orange-500/40 card-shadow card-shadow-hover transition-all flex flex-col overflow-hidden relative"
                   >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 blur-[40px] rounded-full pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-orange-500/10 blur-[60px] rounded-full pointer-events-none" />
+                    <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-orange-400/8 blur-[50px] rounded-full pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/[0.03] via-transparent to-transparent pointer-events-none" />
                     
                     <div className="p-5 flex items-start gap-4 flex-1">
                       <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-orange-500/10 text-orange-500">
@@ -329,9 +322,6 @@ function DocumentsPage() {
                           </span>
                         </div>
                       </div>
-                      <button className="text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)] transition-colors relative z-10">
-                        <MoreVertical className="h-5 w-5" />
-                      </button>
                     </div>
 
                     <div className="px-5 py-3 border-t border-[var(--lf-border)] bg-[var(--lf-surface)]/50 flex items-center justify-between text-[11px] text-[var(--lf-text-secondary)] font-medium">
@@ -343,7 +333,7 @@ function DocumentsPage() {
 
                     <div className="p-3 border-t border-[var(--lf-border)] flex items-center gap-2 relative z-10">
                       <button
-                        onClick={() => navigate({ to: `/workspace/${doc.id}` })}
+                        onClick={() => navigate({ to: "/workspace/$documentId", params: { documentId: String(doc.id) } })}
                         className="flex-1 py-2 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:bg-[var(--lf-accent)] hover:border-[var(--lf-accent)] hover:text-white text-[13px] font-bold text-[var(--lf-text-primary)] transition-all group/btn flex items-center justify-center gap-2"
                       >
                         Open Document <PlayCircle className="h-4 w-4" />
