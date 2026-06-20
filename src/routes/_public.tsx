@@ -72,7 +72,7 @@ function PublicLayout() {
   };
 
   const location = useLocation();
-  const isAppRoute = location.pathname === "/home" || location.pathname === "/documents" || location.pathname.startsWith("/workspace") || location.pathname.startsWith("/notes") || location.pathname.startsWith("/quizzes");
+  const isAppRoute = location.pathname === "/home" || location.pathname === "/documents" || location.pathname.startsWith("/workspace") || location.pathname.startsWith("/notes") || location.pathname.startsWith("/quizzes") || location.pathname.startsWith("/analytics");
   const isLanding = location.pathname === "/";
 
   if (isLoading) {

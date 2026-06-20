@@ -209,9 +209,9 @@ function NotesPage() {
                         <Lightbulb className="h-6 w-6" /> Key Points
                       </h3>
                       <ul className="space-y-4">
-                        {selectedNote.data.keyPoints.map((point, i) => (
+                        {selectedNote.data.keyPoints.map((point: any, i: number) => (
                           <li key={i} className="text-[15px] leading-relaxed text-[var(--lf-text-primary)] flex items-start gap-3">
-                            <span className="text-amber-500 mt-1 flex-shrink-0">•</span> {point}
+                            <span className="text-amber-500 mt-1 flex-shrink-0">•</span> {typeof point === "object" && point !== null ? Object.values(point).join(": ") : point}
                           </li>
                         ))}
                       </ul>
@@ -222,9 +222,9 @@ function NotesPage() {
                         <BookOpen className="h-6 w-6" /> Important Concepts
                       </h3>
                       <ul className="space-y-4">
-                        {(selectedNote.data.importantConcepts || selectedNote.data.relatedConcepts || []).map((concept, i) => (
+                        {(selectedNote.data.importantConcepts || selectedNote.data.relatedConcepts || []).map((concept: any, i: number) => (
                           <li key={i} className="text-[15px] leading-relaxed text-[var(--lf-text-primary)] flex items-start gap-3">
-                            <span className="text-blue-500 mt-1 flex-shrink-0">•</span> {concept}
+                            <span className="text-blue-500 mt-1 flex-shrink-0">•</span> {typeof concept === "object" && concept !== null ? Object.values(concept).join(": ") : concept}
                           </li>
                         ))}
                       </ul>
@@ -235,9 +235,9 @@ function NotesPage() {
                         <GraduationCap className="h-6 w-6" /> Exam Tips
                       </h3>
                       <ul className="space-y-4">
-                        {selectedNote.data.examTips.map((tip, i) => (
+                        {selectedNote.data.examTips.map((tip: any, i: number) => (
                           <li key={i} className="text-[15px] leading-relaxed text-[var(--lf-text-primary)] flex items-start gap-3">
-                            <span className="text-emerald-500 mt-1 flex-shrink-0">•</span> {tip}
+                            <span className="text-emerald-500 mt-1 flex-shrink-0">•</span> {typeof tip === "object" && tip !== null ? Object.values(tip).join(": ") : tip}
                           </li>
                         ))}
                       </ul>
@@ -248,9 +248,9 @@ function NotesPage() {
                         <FileText className="h-6 w-6" /> Revision Notes
                       </h3>
                       <ul className="space-y-4">
-                        {selectedNote.data.revisionNotes.map((note, i) => (
+                        {selectedNote.data.revisionNotes.map((note: any, i: number) => (
                           <li key={i} className="text-[15px] leading-relaxed text-[var(--lf-text-primary)] flex items-start gap-3">
-                            <span className="text-purple-500 mt-1 flex-shrink-0">•</span> {note}
+                            <span className="text-purple-500 mt-1 flex-shrink-0">•</span> {typeof note === "object" && note !== null ? Object.values(note).join(": ") : note}
                           </li>
                         ))}
                       </ul>

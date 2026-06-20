@@ -42,6 +42,8 @@ function DashboardHomePage() {
   const { data: summary, isLoading: loading } = useQuery({
     queryKey: ['dashboardSummary'],
     queryFn: () => DocumentAPI.getDashboardSummary(),
+    refetchOnMount: 'always',
+    gcTime: 0,
   });
 
   return (

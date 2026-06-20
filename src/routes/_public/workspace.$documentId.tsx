@@ -108,6 +108,11 @@ function WorkspacePage() {
     };
   }, [documentMetadata?.fileUrl]);
 
+  const safeDocxUrl = useMemo(() => {
+    if (!docId) return null;
+    return `${BACKEND_URL}/api/documents/${docId}/download`;
+  }, [docId]);
+
   // Handle text selection
   const handleTextSelect = () => {
     const selection = window.getSelection();
@@ -459,7 +464,7 @@ function WorkspacePage() {
               ) : documentMetadata?.fileType === "docx" || documentMetadata?.fileType === "doc" ? (
                 <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
                   <DocxViewer 
-                    fileUrl={pdfFile.url} 
+                    fileUrl={safeDocxUrl || ""} 
                     zoom={zoom} 
                     onLoadSuccess={(numPages) => setNumPages(numPages)} 
                   />
@@ -764,9 +769,9 @@ function FeatureNotes({
               <Lightbulb className="h-5 w-5" /> Key Points
             </h3>
             <ul className="space-y-2">
-              {notes.keyPoints.map((point, i) => (
+              {notes.keyPoints.map((point: any, i: number) => (
                 <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
-                  <span className="text-amber-500 mt-0.5">•</span> {point}
+                  <span className="text-amber-500 mt-0.5">•</span> {typeof point === "object" && point !== null ? Object.values(point).join(": ") : point}
                 </li>
               ))}
             </ul>
@@ -777,9 +782,9 @@ function FeatureNotes({
               <BookOpen className="h-5 w-5" /> Important Concepts
             </h3>
             <ul className="space-y-2">
-              {(notes.importantConcepts || notes.relatedConcepts || []).map((concept, i) => (
+              {(notes.importantConcepts || notes.relatedConcepts || []).map((concept: any, i: number) => (
                 <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
-                  <span className="text-blue-500 mt-0.5">•</span> {concept}
+                  <span className="text-blue-500 mt-0.5">•</span> {typeof concept === "object" && concept !== null ? Object.values(concept).join(": ") : concept}
                 </li>
               ))}
             </ul>
@@ -790,9 +795,9 @@ function FeatureNotes({
               <GraduationCap className="h-5 w-5" /> Exam Tips
             </h3>
             <ul className="space-y-2">
-              {notes.examTips.map((tip, i) => (
+              {notes.examTips.map((tip: any, i: number) => (
                 <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
-                  <span className="text-emerald-500 mt-0.5">•</span> {tip}
+                  <span className="text-emerald-500 mt-0.5">•</span> {typeof tip === "object" && tip !== null ? Object.values(tip).join(": ") : tip}
                 </li>
               ))}
             </ul>
@@ -803,9 +808,9 @@ function FeatureNotes({
               <FileText className="h-5 w-5" /> Revision Notes
             </h3>
             <ul className="space-y-2">
-              {notes.revisionNotes.map((note, i) => (
+              {notes.revisionNotes.map((note: any, i: number) => (
                 <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
-                  <span className="text-purple-500 mt-0.5">•</span> {note}
+                  <span className="text-purple-500 mt-0.5">•</span> {typeof note === "object" && note !== null ? Object.values(note).join(": ") : note}
                 </li>
               ))}
             </ul>

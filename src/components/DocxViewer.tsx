@@ -24,14 +24,29 @@ export function DocxViewer({ fileUrl, zoom = 1, onLoadSuccess }: DocxViewerProps
         // Ensure container is empty before rendering new doc
         containerRef.current.innerHTML = "";
         
-        const response = await fetch(fileUrl);
-        if (!response.ok) throw new Error("Failed to fetch document");
+        const response = await fetch(fileUrl, { credentials: "include" });
+        if (!response.ok) {
+          let errorText = response.statusText;
+          try {
+            const errJson = await response.json();
+            if (errJson.error) errorText = errJson.error;
+          } catch(e) {}
+          throw new Error("Failed to fetch document: " + errorText);
+        }
+        
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+          throw new Error("Received HTML instead of DOCX. The backend URL might be incorrect or returning an error page.");
+        }
         
         const blob = await response.blob();
         
         if (isMounted && containerRef.current) {
           // docx-preview requires the container, not the wrapper
-          await docx.renderAsync(blob, containerRef.current, undefined, {
+          const renderFn = docx.renderAsync || (docx as any)['default']?.renderAsync;
+          if (!renderFn) throw new Error("Could not find renderAsync in docx-preview module");
+          
+          await renderFn(blob, containerRef.current, undefined, {
             className: "docx-document",
             inWrapper: true,
             ignoreWidth: false,
@@ -55,7 +70,9 @@ export function DocxViewer({ fileUrl, zoom = 1, onLoadSuccess }: DocxViewerProps
       } catch (err: any) {
         if (isMounted) {
           console.error("Error rendering docx:", err);
-          setError(err.message || "Failed to render document");
+          let errMsg = err.message || "Failed to render document";
+          if (err instanceof TypeError) errMsg += " (TypeError)";
+          setError(errMsg + " | Details: " + String(err));
         }
       } finally {
         if (isMounted) setLoading(false);

@@ -509,3 +509,107 @@ export const ProfileAPI = {
     return response.json();
   }
 };
+
+// --- Analytics Types & API ---
+
+export interface OverviewStats {
+  documentsUploaded: number;
+  notesGenerated: number;
+  quizzesGenerated: number;
+  explanationsGenerated: number;
+  interviewQuestionsGenerated: number;
+  mindMapsGenerated: number;
+  analogiesGenerated: number;
+  totalAiInteractions: number;
+}
+
+export interface ActivityTimelineItem {
+  date: string;
+  count: number;
+}
+
+export interface FeatureUsageItem {
+  feature: string;
+  count: number;
+}
+
+export interface TopicItem {
+  topic: string;
+  frequency: number;
+}
+
+export interface ConsistencyScore {
+  score: number;
+  level: "Poor" | "Average" | "Good" | "Excellent";
+  reason: string;
+}
+
+export interface ProductivityStats {
+  mostActiveDay: string;
+  mostActiveHour: string;
+  averageDailyInteractions: number;
+  totalLearningSessions: number;
+}
+
+export interface RevisionCandidate {
+  topic: string;
+  daysSinceLastReview: number;
+  priority: "High" | "Medium" | "Low";
+}
+
+export interface AIInsights {
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  nextActions: string[];
+}
+
+export const AnalyticsAPI = {
+  async getOverview(): Promise<OverviewStats> {
+    const response = await fetch(`${API_BASE_URL}/analytics/overview`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch analytics overview");
+    return response.json();
+  },
+
+  async getActivity(days: number = 30): Promise<ActivityTimelineItem[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/activity?days=${days}`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch activity timeline");
+    return response.json();
+  },
+
+  async getFeatureUsage(): Promise<FeatureUsageItem[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/feature-usage`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch feature usage");
+    return response.json();
+  },
+
+  async getTopics(): Promise<TopicItem[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/topics`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch topics");
+    return response.json();
+  },
+
+  async getConsistency(): Promise<ConsistencyScore> {
+    const response = await fetch(`${API_BASE_URL}/analytics/consistency`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch consistency score");
+    return response.json();
+  },
+
+  async getProductivity(): Promise<ProductivityStats> {
+    const response = await fetch(`${API_BASE_URL}/analytics/productivity`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch productivity stats");
+    return response.json();
+  },
+
+  async getRevisions(): Promise<RevisionCandidate[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/revisions`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch revision recommendations");
+    return response.json();
+  },
+
+  async getInsights(): Promise<AIInsights> {
+    const response = await fetch(`${API_BASE_URL}/analytics/insights`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch AI insights");
+    return response.json();
+  }
+};

@@ -28,7 +28,7 @@ const navItems = [
   { icon: Brain, label: "AI Workspace", to: "/workspace" },
   { icon: StickyNote, label: "Notes", to: "/notes" },
   { icon: HelpCircle, label: "Quizzes", to: "/quizzes" },
-  { icon: BarChart3, label: "Analytics", to: "#" },
+  { icon: BarChart3, label: "Analytics", to: "/analytics" },
   { icon: History, label: "Learning History", to: "#" },
   { icon: Settings, label: "Settings", to: "#" },
 ];
