@@ -24,7 +24,7 @@ function NotesPage() {
   const [selectedNote, setSelectedNote] = useState<SavedNote | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   
-  const { data: savedNotes = [] } = useQuery({
+  const { data: savedNotes = [], isLoading } = useQuery({
     queryKey: ['notes'],
     queryFn: async () => {
       const response = await WorkflowAPI.getNotes();
@@ -96,7 +96,15 @@ function NotesPage() {
                   </div>
                 </div>
 
-                {savedNotes.length === 0 ? (
+                {isLoading ? (
+                  <div className="text-center py-20 bg-[var(--lf-surface)] rounded-3xl border border-[var(--lf-border)] border-dashed card-shadow">
+                    <div className="animate-pulse flex flex-col items-center">
+                      <div className="w-12 h-12 rounded-full bg-orange-500/20 mb-4" />
+                      <div className="h-4 bg-stone-200 dark:bg-stone-800 rounded w-48 mx-auto mb-2" />
+                      <div className="h-3 bg-stone-200 dark:bg-stone-800 rounded w-64 mx-auto" />
+                    </div>
+                  </div>
+                ) : savedNotes.length === 0 ? (
                   <div className="text-center py-20 bg-[var(--lf-surface)] rounded-3xl border border-[var(--lf-border)] border-dashed card-shadow">
                     <FileText className="h-12 w-12 text-[var(--lf-text-secondary)]/50 mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-[var(--lf-text-primary)] mb-2">No notes yet</h3>

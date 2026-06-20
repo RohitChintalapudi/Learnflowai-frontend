@@ -293,6 +293,49 @@ export const WorkflowAPI = {
   },
 
   /**
+   * Generate an AI mind map for highlighted text
+   */
+  async generateMindMap(documentId: string, highlightedText: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/mindmap`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate mind map");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Explain an AI generated mind map
+   */
+  async explainMindMap(mindMapId: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/mindmap/explain`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ mindMapId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to explain mind map");
+    }
+
+    return response.json();
+  },
+
+
+  /**
    * Get all AI generated notes for the user
    */
   async getNotes() {

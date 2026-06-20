@@ -1,5 +1,21 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { 
+  ReactFlow, 
+  ReactFlowProvider, 
+  Controls, 
+  Background, 
+  useNodesState, 
+  useEdgesState, 
+  useReactFlow,
+  MarkerType,
+  type Node,
+  type Edge
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import * as dagre from "dagre";
+import { CustomMindMapNode } from "../../components/CustomMindMapNode";
+import { toPng } from "html-to-image";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -35,11 +51,8 @@ import "react-pdf/dist/Page/TextLayer.css";
 import { DocxViewer } from "../../components/DocxViewer";
 import { useReactToPrint } from "react-to-print";
 
-// Configure PDF.js worker to use the local bundled worker
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).toString();
+// Configure PDF.js worker using unpkg to strictly match the react-pdf internal version
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export const Route = createFileRoute("/_public/workspace/$documentId")({
   component: WorkspacePage,
@@ -87,8 +100,7 @@ function WorkspacePage() {
   const pdfFile = useMemo(() => {
     if (!documentMetadata?.fileUrl) return null;
     return {
-      url: documentMetadata.fileUrl.startsWith('http') ? documentMetadata.fileUrl : `${BACKEND_URL}${documentMetadata.fileUrl}`,
-      withCredentials: true
+      url: documentMetadata.fileUrl.startsWith('http') ? documentMetadata.fileUrl : `${BACKEND_URL}${documentMetadata.fileUrl}`
     };
   }, [documentMetadata]);
 
@@ -115,6 +127,7 @@ function WorkspacePage() {
   const [quizContent, setQuizContent] = useState<any>(null);
   const [quizId, setQuizId] = useState<string | null>(null);
   const [notesContent, setNotesContent] = useState<GeneratedNotes | null>(null);
+  const [mindMapContent, setMindMapContent] = useState<any>(null);
 
   const handleFeatureClick = async (featureId: FeatureType) => {
     setIsMenuOpen(false);
@@ -224,6 +237,32 @@ function WorkspacePage() {
         toast.success("Quiz generated successfully!");
       } catch (error: any) {
         toast.error(error.message || "Failed to generate quiz");
+        setActiveFeature(null);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (featureId === "mindmap") {
+      if (highlightedText.trim().length < 5) {
+        toast.error("Please highlight at least 5 characters to generate a mind map.");
+        setActiveFeature(null);
+        return;
+      }
+      if (highlightedText.trim().length > 5000) {
+        toast.error("Highlighted text is too long (max 5000 characters).");
+        setActiveFeature(null);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const urlParts = window.location.pathname.split("/");
+        const docId = urlParts[urlParts.length - 1];
+        
+        const res = await WorkflowAPI.generateMindMap(docId, highlightedText);
+        setMindMapContent(res.mindMap);
+        toast.success("Mind map generated successfully!");
+      } catch (error: any) {
+        toast.error(error.message || "Failed to generate mind map");
         setActiveFeature(null);
       } finally {
         setIsLoading(false);
@@ -451,10 +490,15 @@ function WorkspacePage() {
                   </div>
                   <div className="text-center space-y-2">
                     <h3 className="text-[16px] font-bold text-[var(--lf-text-primary)] animate-pulse">
-                      Analyzing Context...
+                      {activeFeature === "mindmap" ? "Generating Mind Map..." : 
+                       activeFeature === "quiz" ? "Generating Quiz..." : 
+                       activeFeature === "notes" ? "Generating Notes..." : 
+                       activeFeature === "interview" ? "Generating Questions..." : 
+                       "Analyzing Context..."}
                     </h3>
                     <p className="text-[13px] text-[var(--lf-text-secondary)] animate-pulse">
-                      Searching the document to generate your explanation.
+                      {activeFeature === "mindmap" ? "Structuring your text into a visual hierarchy." : 
+                       "Searching the document to generate your content."}
                     </p>
                   </div>
                   <div className="w-full max-w-xs h-1 bg-[var(--lf-surface)] rounded-full overflow-hidden mt-4">
@@ -493,7 +537,7 @@ function WorkspacePage() {
                   {activeFeature === "quiz" && <FeatureQuiz quiz={quizContent} quizId={quizId} />}
                   {activeFeature === "analogy" && <FeatureAnalogy />}
                   {activeFeature === "interview" && <FeatureInterview questions={interviewQuestionsContent} />}
-                  {activeFeature === "mindmap" && <FeatureMindMap />}
+                  {activeFeature === "mindmap" && <FeatureMindMap mindMap={mindMapContent} />}
                   {activeFeature === "simulation" && <FeatureSimulation />}
 
                 </motion.div>
@@ -1032,37 +1076,240 @@ function FeatureInterview({ questions }: { questions: any }) {
   );
 }
 
-function FeatureMindMap() {
+const nodeTypes = {
+  custom: CustomMindMapNode,
+};
+
+const dagreGraph = new dagre.graphlib.Graph();
+dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+const nodeWidth = 220;
+const nodeHeight = 60;
+
+const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
+  dagreGraph.setGraph({ rankdir: direction });
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  const layoutedNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    const newNode = { ...node };
+
+    newNode.targetPosition = direction === 'TB' ? 'top' : 'left' as any;
+    newNode.sourcePosition = direction === 'TB' ? 'bottom' : 'right' as any;
+
+    // We are shifting the dagre node position (anchor=center center) to the top left
+    // so it matches the React Flow node anchor point (top left).
+    newNode.position = {
+      x: nodeWithPosition.x - nodeWidth / 2,
+      y: nodeWithPosition.y - nodeHeight / 2,
+    };
+
+    return newNode;
+  });
+
+  return { nodes: layoutedNodes, edges };
+};
+
+function MindMapFlow({ mindMap }: { mindMap: any }) {
+  const { fitView } = useReactFlow();
+  
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  useEffect(() => {
+    if (!mindMap?.nodes || !mindMap?.edges) return;
+
+    // Determine root node (usually the first one or node with no incoming edges)
+    // For simplicity, we can assume the first node is the root or check edge targets
+    const targetIds = new Set(mindMap.edges.map((e: any) => e.target));
+    
+    const initialNodes: Node[] = mindMap.nodes.map((n: any) => ({
+      id: n.id,
+      type: 'custom',
+      data: { 
+        label: n.label, 
+        isRoot: !targetIds.has(n.id) 
+      },
+      position: { x: 0, y: 0 }, // Will be calculated by dagre
+    }));
+
+    const initialEdges: Edge[] = mindMap.edges.map((e: any, idx: number) => ({
+      id: `e-${e.source}-${e.target}-${idx}`,
+      source: e.source,
+      target: e.target,
+      animated: true,
+      style: { stroke: 'rgba(249, 115, 22, 0.5)', strokeWidth: 2 },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: 'rgba(249, 115, 22, 0.5)',
+      },
+    }));
+
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      initialNodes,
+      initialEdges
+    );
+
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
+
+    // Give React Flow a frame to render the new nodes before fitting the view
+    setTimeout(() => {
+      fitView({ duration: 800, padding: 0.2 });
+    }, 50);
+  }, [mindMap, setNodes, setEdges, fitView]);
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      nodeTypes={nodeTypes}
+      fitView
+      className="bg-white/50 dark:bg-black/20"
+      style={{ width: '100%', height: '100%' }}
+      minZoom={0.1}
+      maxZoom={2}
+    >
+      <Background color="#ccc" gap={16} />
+      <Controls className="!bg-white dark:!bg-[#1a1a1a] !border-[var(--lf-border)] !shadow-lg !rounded-xl overflow-hidden [&>button]:!border-b-[var(--lf-border)] [&>button]:!bg-transparent dark:[&_path]:!fill-[var(--lf-text-primary)]" />
+    </ReactFlow>
+  );
+}
+
+function FeatureMindMap({ mindMap }: { mindMap: any }) {
+  const [explanation, setExplanation] = useState<string | null>(null);
+  const [isExplaining, setIsExplaining] = useState(false);
+
+  if (!mindMap) {
+    return (
+      <div className="text-[14px] text-[var(--lf-text-secondary)] italic">
+        No mind map generated yet.
+      </div>
+    );
+  }
+
+  const handleExplainFlow = async () => {
+    if (!mindMap?.id) {
+      toast.error("Mind map ID not found.");
+      return;
+    }
+    
+    setIsExplaining(true);
+    setExplanation(null);
+    
+    try {
+      const res = await WorkflowAPI.explainMindMap(mindMap.id);
+      setExplanation(res.explanation);
+    } catch (err: any) {
+      console.error("Explanation failed:", err);
+      toast.error(err.message || "Failed to generate explanation.");
+    } finally {
+      setIsExplaining(false);
+    }
+  };
+
+  const handleDownloadPNG = () => {
+    const rfElement = document.querySelector('.react-flow') as HTMLElement;
+    if (!rfElement) return;
+    
+    // Add a slight toast to show processing
+    const loadingToast = toast.loading("Generating PNG...");
+
+    toPng(rfElement, {
+      backgroundColor: document.documentElement.classList.contains('dark') ? '#000000' : '#ffffff',
+      pixelRatio: 2, // higher res
+    }).then((dataUrl) => {
+      const link = document.createElement('a');
+      link.download = mindMap?.title ? `${mindMap.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_mindmap.png` : 'mindmap.png';
+      link.href = dataUrl;
+      link.click();
+      toast.success("Mind map downloaded successfully!", { id: loadingToast });
+    }).catch((err) => {
+      console.error(err);
+      toast.error("Failed to download mind map.", { id: loadingToast });
+    });
+  };
+
   return (
     <div className="space-y-6 h-full flex flex-col">
-      <div className="flex items-center gap-3 mb-2 shrink-0">
-        <GitMerge className="h-6 w-6 text-[var(--lf-accent)]" />
-        <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Mind Map</h2>
+      <div className="flex items-center justify-between mb-2 shrink-0">
+        <div className="flex items-center gap-3">
+          <GitMerge className="h-6 w-6 text-[var(--lf-accent)]" />
+          <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Mind Map</h2>
+        </div>
+        <button 
+          onClick={handleDownloadPNG}
+          className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-lg text-[13px] font-bold transition-colors"
+        >
+          <Download className="h-4 w-4" /> Download PNG
+        </button>
       </div>
 
-      <div className="flex-1 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow flex items-center justify-center p-8 min-h-[400px]">
-        {/* Simple CSS-based mind map representation */}
-        <div className="flex items-center gap-8">
-          <div className="px-6 py-4 rounded-2xl bg-orange-500 text-white font-bold card-shadow-lg">
-            Dynamic Programming
-          </div>
-          
-          <div className="flex flex-col gap-6 relative">
-            {/* Connecting Lines */}
-            <div className="absolute right-[100%] top-[20px] bottom-[20px] w-8 border-l-2 border-t-2 border-b-2 border-orange-500/30 rounded-l-xl" />
-            <div className="absolute right-[100%] top-1/2 w-8 border-t-2 border-orange-500/30" />
-            
-            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow font-medium text-[13px] text-[var(--lf-text-primary)] relative">
-              Memoization (Top-Down)
-            </div>
-            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow font-medium text-[13px] text-[var(--lf-text-primary)] relative">
-              Tabulation (Bottom-Up)
-            </div>
-            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow font-medium text-[13px] text-[var(--lf-text-primary)] relative">
-              Optimal Substructure
-            </div>
-          </div>
+      <div className="flex-1 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow overflow-hidden min-h-[500px] flex flex-col relative">
+        <div className="p-4 border-b border-[var(--lf-border)] shrink-0 bg-white/50 dark:bg-black/20 backdrop-blur-md z-10">
+          <h3 className="font-bold text-[var(--lf-text-primary)]">{mindMap.title}</h3>
         </div>
+        <div className="flex-1 relative w-full h-full cursor-grab active:cursor-grabbing">
+          <ReactFlowProvider>
+            <div className="w-full h-full absolute inset-0">
+              <MindMapFlow mindMap={mindMap} />
+            </div>
+          </ReactFlowProvider>
+        </div>
+      </div>
+
+      <div className="shrink-0 flex flex-col gap-4">
+        {!explanation && !isExplaining && (
+          <button
+            onClick={handleExplainFlow}
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-orange-500/10 to-amber-500/10 hover:from-orange-500/20 hover:to-amber-500/20 border border-orange-500/20 text-orange-600 dark:text-orange-400 font-bold text-[15px] flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(249,115,22,0.15)] group"
+          >
+            <Sparkles className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+            ✨ Explain the Flow
+          </button>
+        )}
+
+        {isExplaining && (
+          <div className="w-full py-4 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] flex items-center justify-center gap-3">
+            <div className="w-5 h-5 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+            <span className="text-[14px] font-medium text-[var(--lf-text-secondary)] animate-pulse">
+              Analyzing structural logic...
+            </span>
+          </div>
+        )}
+
+        <AnimatePresence>
+          {explanation && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, y: 10 }}
+              animate={{ opacity: 1, height: "auto", y: 0 }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="overflow-hidden"
+            >
+              <div className="p-6 rounded-3xl bg-[var(--lf-surface)] border border-orange-500/30 card-shadow-lg relative backdrop-blur-md">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="h-5 w-5 text-orange-500" />
+                  <h3 className="font-bold text-[16px] text-[var(--lf-text-primary)]">Flow Explanation</h3>
+                </div>
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-p:text-[var(--lf-text-secondary)]">
+                  <ReactMarkdown>{explanation}</ReactMarkdown>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
