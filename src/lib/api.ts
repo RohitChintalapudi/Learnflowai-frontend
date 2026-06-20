@@ -169,6 +169,27 @@ export const WorkflowAPI = {
   },
 
   /**
+   * Generate an AI analogy for highlighted text based on a specific style
+   */
+  async generateAnalogy(documentId: string, highlightedText: string, style: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/analogy`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText, style }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate analogy");
+    }
+
+    return response.json();
+  },
+
+  /**
    * Generate AI interview questions for highlighted text
    */
   async generateInterviewQuestions(documentId: string, highlightedText: string) {

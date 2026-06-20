@@ -39,7 +39,11 @@ import {
   Download,
   Lightbulb,
   GraduationCap,
-  BookOpen
+  BookOpen,
+  Film,
+  Baby,
+  Swords,
+  ArrowRight
 } from "lucide-react";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import ReactMarkdown from "react-markdown";
@@ -102,7 +106,7 @@ function WorkspacePage() {
     return {
       url: documentMetadata.fileUrl.startsWith('http') ? documentMetadata.fileUrl : `${BACKEND_URL}${documentMetadata.fileUrl}`
     };
-  }, [documentMetadata]);
+  }, [documentMetadata?.fileUrl]);
 
   // Handle text selection
   const handleTextSelect = () => {
@@ -123,6 +127,8 @@ function WorkspacePage() {
   };
 
   const [explanationContent, setExplanationContent] = useState<string>("");
+  const [analogyContent, setAnalogyContent] = useState<any | null>(null);
+  const [isAnalogySelectingStyle, setIsAnalogySelectingStyle] = useState(false);
   const [interviewQuestionsContent, setInterviewQuestionsContent] = useState<any>(null);
   const [quizContent, setQuizContent] = useState<any>(null);
   const [quizId, setQuizId] = useState<string | null>(null);
@@ -267,12 +273,43 @@ function WorkspacePage() {
       } finally {
         setIsLoading(false);
       }
+    } else if (featureId === "analogy") {
+      if (highlightedText.trim().length < 5) {
+        toast.error("Please highlight at least 5 characters to generate an analogy.");
+        setActiveFeature(null);
+        return;
+      }
+      if (highlightedText.trim().length > 5000) {
+        toast.error("Highlighted text is too long (max 5000 characters).");
+        setActiveFeature(null);
+        return;
+      }
+      setIsAnalogySelectingStyle(true);
+      setAnalogyContent(null);
     } else {
       // Mock for other features
       setIsLoading(true);
       setTimeout(() => {
         setIsLoading(false);
       }, 300);
+    }
+  };
+
+  const handleGenerateAnalogy = async (style: string) => {
+    setIsAnalogySelectingStyle(false);
+    setIsLoading(true);
+    try {
+      const urlParts = window.location.pathname.split("/");
+      const docId = urlParts[urlParts.length - 1];
+      
+      const res = await WorkflowAPI.generateAnalogy(docId, highlightedText, style);
+      setAnalogyContent(res.analogy);
+      toast.success("Analogy generated successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to generate analogy");
+      setActiveFeature(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -494,10 +531,12 @@ function WorkspacePage() {
                        activeFeature === "quiz" ? "Generating Quiz..." : 
                        activeFeature === "notes" ? "Generating Notes..." : 
                        activeFeature === "interview" ? "Generating Questions..." : 
+                       activeFeature === "analogy" ? "Crafting the perfect analogy..." : 
                        "Analyzing Context..."}
                     </h3>
                     <p className="text-[13px] text-[var(--lf-text-secondary)] animate-pulse">
                       {activeFeature === "mindmap" ? "Structuring your text into a visual hierarchy." : 
+                       activeFeature === "analogy" ? "Mapping technical concepts to relatable themes." :
                        "Searching the document to generate your content."}
                     </p>
                   </div>
@@ -535,7 +574,7 @@ function WorkspacePage() {
                   {activeFeature === "explain" && <FeatureExplain content={explanationContent} />}
                   {activeFeature === "notes" && <FeatureNotes notes={notesContent} loading={isLoading} />}
                   {activeFeature === "quiz" && <FeatureQuiz quiz={quizContent} quizId={quizId} />}
-                  {activeFeature === "analogy" && <FeatureAnalogy />}
+                  {activeFeature === "analogy" && <FeatureAnalogy analogy={analogyContent} onSelectStyle={handleGenerateAnalogy} isSelectingStyle={isAnalogySelectingStyle} onResetStyle={() => { setAnalogyContent(null); setIsAnalogySelectingStyle(true); }} />}
                   {activeFeature === "interview" && <FeatureInterview questions={interviewQuestionsContent} />}
                   {activeFeature === "mindmap" && <FeatureMindMap mindMap={mindMapContent} />}
                   {activeFeature === "simulation" && <FeatureSimulation />}
@@ -968,27 +1007,116 @@ function FeatureQuiz(props: { quiz: any; quizId: string | null }) {
   );
 }
 
-function FeatureAnalogy() {
+function FeatureAnalogy({ analogy, onSelectStyle, isSelectingStyle, onResetStyle }: { analogy?: any, onSelectStyle?: (style: string) => void, isSelectingStyle?: boolean, onResetStyle?: () => void }) {
+  const styles = [
+    { id: "gaming", label: "Gaming", icon: Gamepad2 },
+    { id: "story", label: "Story", icon: BookOpen },
+    { id: "education", label: "Education", icon: GraduationCap },
+    { id: "real-world", label: "Real World", icon: Globe },
+    { id: "sports", label: "Sports", icon: Swords },
+    { id: "movie", label: "Movie", icon: Film },
+    { id: "eli10", label: "Explain Like I'm 10", icon: Baby },
+  ];
+
+  if (isSelectingStyle && onSelectStyle) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 mb-2">
+          <Sparkles className="h-6 w-6 text-[var(--lf-accent)]" />
+          <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Choose Analogy Style</h2>
+        </div>
+        <p className="text-[14px] text-[var(--lf-text-secondary)]">
+          Select a theme to map these technical concepts into something relatable!
+        </p>
+        <div className="grid grid-cols-2 gap-4 mt-6">
+          {styles.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => onSelectStyle(s.id)}
+              className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border border-[var(--lf-border)] bg-[var(--lf-surface)] hover:bg-[var(--lf-accent)]/5 hover:border-[var(--lf-accent)]/50 transition-all group card-shadow relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--lf-accent)]/0 to-[var(--lf-accent)]/0 group-hover:from-[var(--lf-accent)]/10 group-hover:to-transparent transition-all duration-500" />
+              <div className="p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] text-[var(--lf-text-secondary)] group-hover:bg-[var(--lf-accent)] group-hover:text-white transition-all duration-300 shadow-sm relative z-10">
+                <s.icon className="h-6 w-6" />
+              </div>
+              <span className="font-bold text-[14px] text-[var(--lf-text-primary)] relative z-10">{s.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!analogy) return null;
+
+  const StyleIcon = styles.find(s => s.id === analogy.style)?.icon || Sparkles;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-2">
-        <Globe className="h-6 w-6 text-[var(--lf-accent)]" />
-        <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Real World Analogy</h2>
+    <div className="space-y-8 pb-10">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <StyleIcon className="h-6 w-6 text-[var(--lf-accent)]" />
+          <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Analogy: {analogy.style.toUpperCase()}</h2>
+        </div>
+        {onResetStyle && (
+          <button 
+            onClick={onResetStyle}
+            className="px-3 py-1.5 rounded-lg border border-[var(--lf-border)] text-[12px] font-bold text-[var(--lf-text-secondary)] hover:text-[var(--lf-accent)] hover:bg-[var(--lf-accent)]/10 transition-colors flex items-center gap-2"
+          >
+            Change Style
+          </button>
+        )}
       </div>
 
-      <div className="p-8 rounded-3xl bg-gradient-to-br from-orange-500/10 to-[var(--lf-surface)] border border-orange-500/20 card-shadow-lg relative overflow-hidden">
-        <div className="absolute -right-10 -top-10 w-40 h-40 bg-orange-500/20 blur-3xl rounded-full" />
-        
-        <p className="text-[16px] leading-relaxed text-[var(--lf-text-primary)] font-medium mb-6 relative z-10">
-          Imagine solving a maze and keeping a notebook of every path you've already explored.
+      <div className="space-y-2">
+        <h3 className="text-[28px] font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-500 leading-tight pb-1">
+          {analogy.title}
+        </h3>
+        <p className="text-[15px] leading-relaxed text-[var(--lf-text-secondary)] font-medium">
+          {analogy.summary}
         </p>
-        
-        <p className="text-[15px] leading-relaxed text-[var(--lf-text-secondary)] mb-6 relative z-10">
-          Instead of exploring the same dead-end path again when you reach a crossroad, you simply refer to your notebook.
-        </p>
+      </div>
 
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500 text-white text-[13px] font-bold shadow-lg shadow-orange-500/20">
-          <Sparkles className="h-4 w-4" /> That is exactly how Dynamic Programming works.
+      <div className="space-y-4">
+        <h4 className="text-[12px] font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider mb-2">Concept Mappings</h4>
+        <div className="space-y-4">
+          {analogy.mappings?.map((mapping: any, idx: number) => (
+            <div key={idx} className="group p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow hover:shadow-[0_8px_30px_rgba(249,115,22,0.1)] transition-all duration-300">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="flex-1 px-4 py-2.5 bg-gradient-to-br from-orange-500/10 to-amber-500/5 rounded-xl border border-orange-500/20 flex items-center justify-center text-center shadow-sm">
+                  <span className="font-bold text-orange-600 dark:text-orange-400 text-[14px]">{mapping.analogyElement}</span>
+                </div>
+                <ArrowRight className="h-5 w-5 text-stone-400 shrink-0" />
+                <div className="flex-1 px-4 py-2.5 bg-stone-100 dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 flex items-center justify-center text-center shadow-sm">
+                  <span className="font-bold text-[var(--lf-text-primary)] text-[14px]">{mapping.conceptElement}</span>
+                </div>
+              </div>
+              <p className="text-[14px] text-[var(--lf-text-secondary)] text-center leading-relaxed mt-4 bg-stone-50 dark:bg-stone-900/50 p-3 rounded-xl">
+                {mapping.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+        <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 relative overflow-hidden card-shadow">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl rounded-full" />
+          <h4 className="text-[13px] font-bold text-emerald-600 dark:text-emerald-400 mb-2 flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4" /> Why it works
+          </h4>
+          <p className="text-[13px] text-[var(--lf-text-secondary)] leading-relaxed relative z-10">
+            {analogy.whyItWorks}
+          </p>
+        </div>
+        <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 relative overflow-hidden card-shadow">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 blur-2xl rounded-full" />
+          <h4 className="text-[13px] font-bold text-amber-600 dark:text-amber-400 mb-2 flex items-center gap-2">
+            <Lightbulb className="h-4 w-4" /> Limitations
+          </h4>
+          <p className="text-[13px] text-[var(--lf-text-secondary)] leading-relaxed relative z-10">
+            {analogy.limitations}
+          </p>
         </div>
       </div>
     </div>
