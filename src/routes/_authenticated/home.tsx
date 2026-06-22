@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { DashboardLayout } from "../../components/DashboardLayout";
 
-export const Route = createFileRoute("/_public/home")({
+export const Route = createFileRoute("/_authenticated/home")({
   component: DashboardHomePage,
 });
 

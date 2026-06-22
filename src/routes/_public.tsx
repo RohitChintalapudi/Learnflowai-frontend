@@ -4,10 +4,18 @@ import {
   Outlet,
   Link,
   useLocation,
+  redirect,
 } from "@tanstack/react-router";
 import { Sun, Moon, Mail } from "lucide-react";
 
+import { authStore } from "../store/authStore";
+
 export const Route = createFileRoute("/_public")({
+  beforeLoad: () => {
+    if (authStore.isAuthenticated) {
+      throw redirect({ to: "/home" });
+    }
+  },
   component: PublicLayout,
 });
 

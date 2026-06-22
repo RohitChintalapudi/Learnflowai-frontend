@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import * as docx from "docx-preview";
+import { renderAsync } from "docx-preview";
 
 interface DocxViewerProps {
   fileUrl: string;
@@ -30,7 +30,9 @@ export function DocxViewer({ fileUrl, zoom = 1, onLoadSuccess }: DocxViewerProps
           try {
             const errJson = await response.json();
             if (errJson.error) errorText = errJson.error;
-          } catch(e) {}
+          } catch(e) {
+            // ignore JSON parse errors
+          }
           throw new Error("Failed to fetch document: " + errorText);
         }
         
@@ -42,8 +44,7 @@ export function DocxViewer({ fileUrl, zoom = 1, onLoadSuccess }: DocxViewerProps
         const blob = await response.blob();
         
         if (isMounted && containerRef.current) {
-          // docx-preview requires the container, not the wrapper
-          const renderFn = docx.renderAsync || (docx as any)['default']?.renderAsync;
+          const renderFn = renderAsync;
           if (!renderFn) throw new Error("Could not find renderAsync in docx-preview module");
           
           await renderFn(blob, containerRef.current, undefined, {

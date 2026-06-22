@@ -26,7 +26,7 @@ import {
   PieChart, Pie, Cell
 } from "recharts";
 
-export const Route = createFileRoute('/_public/analytics')({
+export const Route = createFileRoute('/_authenticated/analytics')({
   component: AnalyticsDashboard,
 });
 

@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { useReactToPrint } from "react-to-print";
 
-export const Route = createFileRoute("/_public/notes")({
+export const Route = createFileRoute("/_authenticated/notes")({
   component: NotesPage,
 });
 

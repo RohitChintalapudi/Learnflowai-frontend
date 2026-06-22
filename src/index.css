@@ -296,3 +296,17 @@
   background: rgba(249, 115, 22, 0.5) !important;
   color: transparent !important;
 }
+
+/* ── Custom Shimmer & Dash Animations ── */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+

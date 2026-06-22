@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { ProfileModal } from "./ProfileModal";
+import { authStore } from "../store/authStore";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/home" },
@@ -93,6 +94,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
   const confirmLogout = () => {
     setShowLogoutConfirm(false);
     toast.success("You have been logged out.");
+    authStore.setAuthenticated(false);
     navigate({ to: "/login" });
     fetch("http://localhost:3000/api/auth/sign-out", { method: "POST" }).catch(() => {});
   };

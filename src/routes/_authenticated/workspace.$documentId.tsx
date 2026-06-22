@@ -54,11 +54,12 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { DocxViewer } from "../../components/DocxViewer";
 import { useReactToPrint } from "react-to-print";
+import { SimulationGenerator } from "../../components/SimulationGenerator";
 
 // Configure PDF.js worker using unpkg to strictly match the react-pdf internal version
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-export const Route = createFileRoute("/_public/workspace/$documentId")({
+export const Route = createFileRoute("/_authenticated/workspace/$documentId")({
   component: WorkspacePage,
 });
 
@@ -582,7 +583,7 @@ function WorkspacePage() {
                   {activeFeature === "analogy" && <FeatureAnalogy analogy={analogyContent} onSelectStyle={handleGenerateAnalogy} isSelectingStyle={isAnalogySelectingStyle} onResetStyle={() => { setAnalogyContent(null); setIsAnalogySelectingStyle(true); }} />}
                   {activeFeature === "interview" && <FeatureInterview questions={interviewQuestionsContent} />}
                   {activeFeature === "mindmap" && <FeatureMindMap mindMap={mindMapContent} />}
-                  {activeFeature === "simulation" && <FeatureSimulation />}
+                  {activeFeature === "simulation" && <SimulationGenerator documentId={docId || ""} highlightedText={highlightedText} />}
 
                 </motion.div>
               )}
@@ -1448,79 +1449,4 @@ function FeatureMindMap({ mindMap }: { mindMap: any }) {
   );
 }
 
-function FeatureSimulation() {
-  const [step, setStep] = useState(0);
-  const arr = [2, 4, 8, 12, 16, 20];
-  const target = 16;
-  
-  // Simulation steps for target=16
-  // Step 0: Initial
-  // Step 1: Mid=8 (index 2). 8 < 16. Eliminate left.
-  // Step 2: Mid=16 (index 4). Found!
-  
-  const getBoxStyle = (idx: number) => {
-    if (step === 0) return "bg-[var(--lf-surface)] border-[var(--lf-border)] text-[var(--lf-text-primary)]";
-    if (step === 1) {
-      if (idx < 2) return "bg-stone-500/10 border-stone-500/20 text-stone-500/50 line-through"; // Eliminated
-      if (idx === 2) return "bg-red-500/20 border-red-500 text-red-600 dark:text-red-400"; // Mid (too small)
-      return "bg-[var(--lf-surface)] border-[var(--lf-border)] text-[var(--lf-text-primary)]"; // Remaining
-    }
-    if (step === 2) {
-      if (idx <= 2) return "bg-stone-500/10 border-stone-500/20 text-stone-500/50 line-through";
-      if (idx === 4) return "bg-emerald-500 border-emerald-500 text-white scale-110 shadow-lg shadow-emerald-500/30"; // Found
-      return "bg-[var(--lf-surface)] border-[var(--lf-border)] text-[var(--lf-text-primary)]";
-    }
-  };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-2">
-        <Gamepad2 className="h-6 w-6 text-[var(--lf-accent)]" />
-        <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Interactive Simulation</h2>
-      </div>
-      
-      <p className="text-[14px] text-[var(--lf-text-secondary)]">Binary Search Simulation</p>
-
-      <div className="p-8 rounded-3xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow-lg text-center">
-        <p className="text-[16px] font-bold text-[var(--lf-text-primary)] mb-8">
-          Target Element: <span className="text-[var(--lf-accent)] px-3 py-1 bg-orange-500/10 rounded-lg">{target}</span>
-        </p>
-        
-        <div className="flex justify-center gap-3 mb-8">
-          {arr.map((num, i) => (
-            <motion.div
-              key={i}
-              layout
-              className={`w-12 h-12 flex flex-col items-center justify-center rounded-xl border-2 font-bold text-[16px] transition-all duration-500 ${getBoxStyle(i)}`}
-            >
-              {num}
-              <span className="text-[9px] font-normal opacity-50 absolute -bottom-5">idx:{i}</span>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="h-20 flex items-center justify-center mb-6">
-          {step === 0 && <p className="text-[14px] text-[var(--lf-text-secondary)]">Finding middle element...</p>}
-          {step === 1 && <p className="text-[14px] text-[var(--lf-text-secondary)]">Middle is 8. Target 16 {">"} 8.<br/>Eliminating left half.</p>}
-          {step === 2 && <p className="text-[15px] font-bold text-emerald-500">Target 16 found at index 4!</p>}
-        </div>
-
-        <div className="flex justify-center gap-4">
-          <button 
-            onClick={() => setStep(Math.max(0, step - 1))}
-            disabled={step === 0}
-            className="px-6 py-2 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] font-semibold text-[13px] disabled:opacity-50"
-          >
-            Previous Step
-          </button>
-          <button 
-            onClick={() => setStep(step === 2 ? 0 : step + 1)}
-            className="px-6 py-2 rounded-xl bg-[var(--lf-accent)] text-white font-semibold text-[13px] shadow-lg shadow-orange-500/25"
-          >
-            {step === 2 ? "Reset" : "Next Step"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}

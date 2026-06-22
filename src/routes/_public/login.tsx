@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { authStore } from "../../store/authStore";
 import toast from "react-hot-toast";
 
 export const Route = createFileRoute("/_public/login")({
@@ -51,6 +52,7 @@ function LoginPage() {
         throw new Error(data.message || "Login failed");
       }
 
+      authStore.setAuthenticated(true);
       toast.success("Logged in successfully!");
       navigate({ to: "/home" });
     } catch (err: any) {

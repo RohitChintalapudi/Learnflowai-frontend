@@ -21,7 +21,7 @@ import {
 import { QuizDashboardAPI } from "../../lib/api";
 import toast from "react-hot-toast";
 
-export const Route = createFileRoute("/_public/quizzes")({
+export const Route = createFileRoute("/_authenticated/quizzes")({
   component: QuizDashboardPage,
 });
 
@@ -493,24 +493,24 @@ function QuizDashboardPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={closeDetails}
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-4xl max-h-full flex flex-col bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden"
+              className="relative w-full max-w-4xl max-h-full flex flex-col bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-3xl shadow-2xl overflow-hidden"
             >
               {/* Modal Header */}
-              <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/80 backdrop-blur-md sticky top-0 z-10">
+              <div className="p-6 border-b border-[var(--lf-border)] flex justify-between items-center bg-[var(--lf-card)]/80 backdrop-blur-md sticky top-0 z-10">
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">{selectedQuiz.title || "Quiz Details"}</h2>
-                  <p className="text-sm text-zinc-400">Generated on {formatDate(selectedQuiz.createdAt)}</p>
+                  <h2 className="text-2xl font-bold text-[var(--lf-text-primary)] mb-1">{selectedQuiz.title || "Quiz Details"}</h2>
+                  <p className="text-sm text-[var(--lf-text-secondary)]">Generated on {formatDate(selectedQuiz.createdAt)}</p>
                 </div>
                 <button 
                   onClick={closeDetails}
-                  className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                  className="p-2 rounded-full hover:bg-[var(--lf-surface)] text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)] transition-colors"
                 >
                   <X className="h-6 w-6" />
                 </button>
@@ -523,21 +523,21 @@ function QuizDashboardPage() {
                 {(selectedQuiz.score !== undefined || (selectedQuiz.topicsToImprove && selectedQuiz.topicsToImprove.length > 0)) && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {selectedQuiz.score !== undefined && selectedQuiz.totalQuestionsSubmitted !== undefined && (
-                      <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800">
-                        <p className="text-xs text-zinc-500 uppercase tracking-wider font-bold mb-2">Score</p>
+                      <div className="p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)]">
+                        <p className="text-xs text-[var(--lf-text-secondary)] uppercase tracking-wider font-bold mb-2">Score</p>
                         <div className="flex items-baseline gap-2">
                           <span className={`text-4xl font-black ${scoreColor(selectedQuiz.score, selectedQuiz.totalQuestionsSubmitted)}`}>
                             {Math.round((selectedQuiz.score / selectedQuiz.totalQuestionsSubmitted) * 100)}%
                           </span>
-                          <span className="text-zinc-400 text-sm font-medium">
+                          <span className="text-[var(--lf-text-secondary)] text-sm font-medium">
                             ({selectedQuiz.score}/{selectedQuiz.totalQuestionsSubmitted})
                           </span>
                         </div>
                       </div>
                     )}
                     {selectedQuiz.topicsToImprove && selectedQuiz.topicsToImprove.length > 0 && (
-                      <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800">
-                        <p className="text-xs text-zinc-500 uppercase tracking-wider font-bold mb-2">Topics to Improve</p>
+                      <div className="p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)]">
+                        <p className="text-xs text-[var(--lf-text-secondary)] uppercase tracking-wider font-bold mb-2">Topics to Improve</p>
                         <div className="flex flex-wrap gap-2">
                           {selectedQuiz.topicsToImprove.map((topic, i) => (
                             <span key={i} className="px-3 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-[12px] font-semibold">
@@ -551,24 +551,24 @@ function QuizDashboardPage() {
                 )}
                 
                 {/* Context Snippet */}
-                <div className="p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50 text-zinc-300 italic text-sm">
-                  <span className="font-semibold text-orange-400 not-italic mr-2">Context:</span>
+                <div className="p-4 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] text-[var(--lf-text-secondary)] italic text-sm">
+                  <span className="font-semibold text-orange-500 not-italic mr-2">Context:</span>
                   "{selectedQuiz.highlightedText}"
                 </div>
 
                 {/* MCQs */}
                 {selectedQuiz.quizData?.mcqs && selectedQuiz.quizData.mcqs.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-zinc-800 pb-2">
+                    <h3 className="text-lg font-bold text-[var(--lf-text-primary)] flex items-center gap-2 border-b border-[var(--lf-border)] pb-2">
                       <HelpCircle className="h-5 w-5 text-orange-500" /> Multiple Choice
                     </h3>
                     <div className="grid gap-4">
                       {selectedQuiz.quizData.mcqs.map((mcq, idx) => {
                         const correctAns = mcq.correctAnswer || mcq.answer;
                         return (
-                        <div key={idx} className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800">
-                          <p className="text-white font-medium mb-4 flex gap-3">
-                            <span className="text-zinc-500 font-bold">{idx + 1}.</span> 
+                        <div key={idx} className="p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)]">
+                          <p className="text-[var(--lf-text-primary)] font-medium mb-4 flex gap-3">
+                            <span className="text-[var(--lf-text-secondary)] font-bold">{idx + 1}.</span> 
                             {mcq.question}
                           </p>
                           <div className="space-y-2 pl-7">
@@ -579,8 +579,8 @@ function QuizDashboardPage() {
                                   key={oIdx} 
                                   className={`p-3 rounded-xl border text-sm flex items-center gap-3 transition-colors ${
                                     isCorrect 
-                                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
-                                    : "bg-zinc-900 border-zinc-800 text-zinc-400"
+                                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500" 
+                                    : "bg-[var(--lf-card)] border-[var(--lf-border)] text-[var(--lf-text-secondary)]"
                                   }`}
                                 >
                                   {isCorrect ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <div className="w-4 shrink-0" />}
@@ -598,18 +598,18 @@ function QuizDashboardPage() {
                 {/* True/False */}
                 {selectedQuiz.quizData?.trueFalse && selectedQuiz.quizData.trueFalse.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-zinc-800 pb-2 mt-8">
+                    <h3 className="text-lg font-bold text-[var(--lf-text-primary)] flex items-center gap-2 border-b border-[var(--lf-border)] pb-2 mt-8">
                       <CheckCircle2 className="h-5 w-5 text-blue-500" /> True or False
                     </h3>
                     <div className="grid gap-4 md:grid-cols-2">
                       {selectedQuiz.quizData.trueFalse.map((tf, idx) => (
-                        <div key={idx} className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 flex flex-col justify-between">
-                          <p className="text-white font-medium mb-4 text-sm">
+                        <div key={idx} className="p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] flex flex-col justify-between">
+                          <p className="text-[var(--lf-text-primary)] font-medium mb-4 text-sm">
                             {tf.question}
                           </p>
-                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 self-start text-sm">
-                            <span className="text-zinc-500">Answer:</span>
-                            <span className={`font-bold ${tf.answer ? "text-emerald-400" : "text-red-400"}`}>
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--lf-card)] border border-[var(--lf-border)] self-start text-sm">
+                            <span className="text-[var(--lf-text-secondary)]">Answer:</span>
+                            <span className={`font-bold ${tf.answer ? "text-emerald-500" : "text-red-500"}`}>
                               {tf.answer ? "True" : "False"}
                             </span>
                           </div>
@@ -622,19 +622,19 @@ function QuizDashboardPage() {
                 {/* Short Answer */}
                 {selectedQuiz.quizData?.shortAnswer && selectedQuiz.quizData.shortAnswer.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-zinc-800 pb-2 mt-8">
+                    <h3 className="text-lg font-bold text-[var(--lf-text-primary)] flex items-center gap-2 border-b border-[var(--lf-border)] pb-2 mt-8">
                       <AlertCircle className="h-5 w-5 text-purple-500" /> Short Answer
                     </h3>
                     <div className="grid gap-4">
                       {selectedQuiz.quizData.shortAnswer.map((sa, idx) => (
-                        <div key={idx} className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800">
-                          <p className="text-white font-medium mb-3 flex gap-3 text-sm">
-                            <span className="text-zinc-500 font-bold">{idx + 1}.</span> 
+                        <div key={idx} className="p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)]">
+                          <p className="text-[var(--lf-text-primary)] font-medium mb-3 flex gap-3 text-sm">
+                            <span className="text-[var(--lf-text-secondary)] font-bold">{idx + 1}.</span> 
                             {sa.question}
                           </p>
-                          <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 ml-7">
-                            <p className="text-xs text-zinc-500 uppercase tracking-wider font-bold mb-1">Expected Answer</p>
-                            <p className="text-zinc-300 text-sm">{sa.answer}</p>
+                          <div className="p-4 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] ml-7">
+                            <p className="text-xs text-[var(--lf-text-secondary)] uppercase tracking-wider font-bold mb-1">Expected Answer</p>
+                            <p className="text-[var(--lf-text-primary)] text-sm">{sa.answer}</p>
                           </div>
                         </div>
                       ))}

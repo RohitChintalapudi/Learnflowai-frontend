@@ -13,16 +13,16 @@ import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicSignupRouteImport } from './routes/_public/signup'
-import { Route as PublicQuizzesRouteImport } from './routes/_public/quizzes'
-import { Route as PublicNotesRouteImport } from './routes/_public/notes'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
-import { Route as PublicHome_cleanRouteImport } from './routes/_public/home_clean'
-import { Route as PublicHomeRouteImport } from './routes/_public/home'
-import { Route as PublicDocumentsRouteImport } from './routes/_public/documents'
-import { Route as PublicAnalyticsRouteImport } from './routes/_public/analytics'
+import { Route as AuthenticatedQuizzesRouteImport } from './routes/_authenticated/quizzes'
+import { Route as AuthenticatedNotesRouteImport } from './routes/_authenticated/notes'
+import { Route as AuthenticatedHome_cleanRouteImport } from './routes/_authenticated/home_clean'
+import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as PublicWorkspaceIndexRouteImport } from './routes/_public/workspace.index'
-import { Route as PublicWorkspaceDocumentIdRouteImport } from './routes/_public/workspace.$documentId'
+import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace.index'
+import { Route as AuthenticatedWorkspaceDocumentIdRouteImport } from './routes/_authenticated/workspace.$documentId'
 
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
@@ -42,129 +42,130 @@ const PublicSignupRoute = PublicSignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => PublicRoute,
 } as any)
-const PublicQuizzesRoute = PublicQuizzesRouteImport.update({
-  id: '/quizzes',
-  path: '/quizzes',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicNotesRoute = PublicNotesRouteImport.update({
-  id: '/notes',
-  path: '/notes',
-  getParentRoute: () => PublicRoute,
-} as any)
 const PublicLoginRoute = PublicLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => PublicRoute,
 } as any)
-const PublicHome_cleanRoute = PublicHome_cleanRouteImport.update({
+const AuthenticatedQuizzesRoute = AuthenticatedQuizzesRouteImport.update({
+  id: '/quizzes',
+  path: '/quizzes',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedNotesRoute = AuthenticatedNotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedHome_cleanRoute = AuthenticatedHome_cleanRouteImport.update({
   id: '/home_clean',
   path: '/home_clean',
-  getParentRoute: () => PublicRoute,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
-const PublicHomeRoute = PublicHomeRouteImport.update({
+const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
-  getParentRoute: () => PublicRoute,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
-const PublicDocumentsRoute = PublicDocumentsRouteImport.update({
+const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicAnalyticsRoute = PublicAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => PublicRoute,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const PublicWorkspaceIndexRoute = PublicWorkspaceIndexRouteImport.update({
-  id: '/workspace/',
-  path: '/workspace/',
-  getParentRoute: () => PublicRoute,
+const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
-const PublicWorkspaceDocumentIdRoute =
-  PublicWorkspaceDocumentIdRouteImport.update({
+const AuthenticatedWorkspaceIndexRoute =
+  AuthenticatedWorkspaceIndexRouteImport.update({
+    id: '/workspace/',
+    path: '/workspace/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedWorkspaceDocumentIdRoute =
+  AuthenticatedWorkspaceDocumentIdRouteImport.update({
     id: '/workspace/$documentId',
     path: '/workspace/$documentId',
-    getParentRoute: () => PublicRoute,
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/analytics': typeof PublicAnalyticsRoute
-  '/documents': typeof PublicDocumentsRoute
-  '/home': typeof PublicHomeRoute
-  '/home_clean': typeof PublicHome_cleanRoute
+  '/documents': typeof AuthenticatedDocumentsRoute
+  '/home': typeof AuthenticatedHomeRoute
+  '/home_clean': typeof AuthenticatedHome_cleanRoute
+  '/notes': typeof AuthenticatedNotesRoute
+  '/quizzes': typeof AuthenticatedQuizzesRoute
   '/login': typeof PublicLoginRoute
-  '/notes': typeof PublicNotesRoute
-  '/quizzes': typeof PublicQuizzesRoute
   '/signup': typeof PublicSignupRoute
-  '/workspace/$documentId': typeof PublicWorkspaceDocumentIdRoute
-  '/workspace/': typeof PublicWorkspaceIndexRoute
+  '/workspace/$documentId': typeof AuthenticatedWorkspaceDocumentIdRoute
+  '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/analytics': typeof PublicAnalyticsRoute
-  '/documents': typeof PublicDocumentsRoute
-  '/home': typeof PublicHomeRoute
-  '/home_clean': typeof PublicHome_cleanRoute
+  '/documents': typeof AuthenticatedDocumentsRoute
+  '/home': typeof AuthenticatedHomeRoute
+  '/home_clean': typeof AuthenticatedHome_cleanRoute
+  '/notes': typeof AuthenticatedNotesRoute
+  '/quizzes': typeof AuthenticatedQuizzesRoute
   '/login': typeof PublicLoginRoute
-  '/notes': typeof PublicNotesRoute
-  '/quizzes': typeof PublicQuizzesRoute
   '/signup': typeof PublicSignupRoute
-  '/workspace/$documentId': typeof PublicWorkspaceDocumentIdRoute
-  '/workspace': typeof PublicWorkspaceIndexRoute
+  '/workspace/$documentId': typeof AuthenticatedWorkspaceDocumentIdRoute
+  '/workspace': typeof AuthenticatedWorkspaceIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_public/analytics': typeof PublicAnalyticsRoute
-  '/_public/documents': typeof PublicDocumentsRoute
-  '/_public/home': typeof PublicHomeRoute
-  '/_public/home_clean': typeof PublicHome_cleanRoute
+  '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
+  '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/home_clean': typeof AuthenticatedHome_cleanRoute
+  '/_authenticated/notes': typeof AuthenticatedNotesRoute
+  '/_authenticated/quizzes': typeof AuthenticatedQuizzesRoute
   '/_public/login': typeof PublicLoginRoute
-  '/_public/notes': typeof PublicNotesRoute
-  '/_public/quizzes': typeof PublicQuizzesRoute
   '/_public/signup': typeof PublicSignupRoute
   '/_public/': typeof PublicIndexRoute
-  '/_public/workspace/$documentId': typeof PublicWorkspaceDocumentIdRoute
-  '/_public/workspace/': typeof PublicWorkspaceIndexRoute
+  '/_authenticated/workspace/$documentId': typeof AuthenticatedWorkspaceDocumentIdRoute
+  '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/dashboard'
     | '/analytics'
+    | '/dashboard'
     | '/documents'
     | '/home'
     | '/home_clean'
-    | '/login'
     | '/notes'
     | '/quizzes'
+    | '/login'
     | '/signup'
     | '/workspace/$documentId'
     | '/workspace/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/dashboard'
     | '/analytics'
+    | '/dashboard'
     | '/documents'
     | '/home'
     | '/home_clean'
-    | '/login'
     | '/notes'
     | '/quizzes'
+    | '/login'
     | '/signup'
     | '/workspace/$documentId'
     | '/workspace'
@@ -172,18 +173,18 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/_public'
+    | '/_authenticated/analytics'
     | '/_authenticated/dashboard'
-    | '/_public/analytics'
-    | '/_public/documents'
-    | '/_public/home'
-    | '/_public/home_clean'
+    | '/_authenticated/documents'
+    | '/_authenticated/home'
+    | '/_authenticated/home_clean'
+    | '/_authenticated/notes'
+    | '/_authenticated/quizzes'
     | '/_public/login'
-    | '/_public/notes'
-    | '/_public/quizzes'
     | '/_public/signup'
     | '/_public/'
-    | '/_public/workspace/$documentId'
-    | '/_public/workspace/'
+    | '/_authenticated/workspace/$documentId'
+    | '/_authenticated/workspace/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -221,20 +222,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicSignupRouteImport
       parentRoute: typeof PublicRoute
     }
-    '/_public/quizzes': {
-      id: '/_public/quizzes'
-      path: '/quizzes'
-      fullPath: '/quizzes'
-      preLoaderRoute: typeof PublicQuizzesRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/notes': {
-      id: '/_public/notes'
-      path: '/notes'
-      fullPath: '/notes'
-      preLoaderRoute: typeof PublicNotesRouteImport
-      parentRoute: typeof PublicRoute
-    }
     '/_public/login': {
       id: '/_public/login'
       path: '/login'
@@ -242,33 +229,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicLoginRouteImport
       parentRoute: typeof PublicRoute
     }
-    '/_public/home_clean': {
-      id: '/_public/home_clean'
+    '/_authenticated/quizzes': {
+      id: '/_authenticated/quizzes'
+      path: '/quizzes'
+      fullPath: '/quizzes'
+      preLoaderRoute: typeof AuthenticatedQuizzesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notes': {
+      id: '/_authenticated/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof AuthenticatedNotesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/home_clean': {
+      id: '/_authenticated/home_clean'
       path: '/home_clean'
       fullPath: '/home_clean'
-      preLoaderRoute: typeof PublicHome_cleanRouteImport
-      parentRoute: typeof PublicRoute
+      preLoaderRoute: typeof AuthenticatedHome_cleanRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/_public/home': {
-      id: '/_public/home'
+    '/_authenticated/home': {
+      id: '/_authenticated/home'
       path: '/home'
       fullPath: '/home'
-      preLoaderRoute: typeof PublicHomeRouteImport
-      parentRoute: typeof PublicRoute
+      preLoaderRoute: typeof AuthenticatedHomeRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/_public/documents': {
-      id: '/_public/documents'
+    '/_authenticated/documents': {
+      id: '/_authenticated/documents'
       path: '/documents'
       fullPath: '/documents'
-      preLoaderRoute: typeof PublicDocumentsRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/analytics': {
-      id: '/_public/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof PublicAnalyticsRouteImport
-      parentRoute: typeof PublicRoute
+      preLoaderRoute: typeof AuthenticatedDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
@@ -277,29 +271,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_public/workspace/': {
-      id: '/_public/workspace/'
+    '/_authenticated/analytics': {
+      id: '/_authenticated/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/workspace/': {
+      id: '/_authenticated/workspace/'
       path: '/workspace'
       fullPath: '/workspace/'
-      preLoaderRoute: typeof PublicWorkspaceIndexRouteImport
-      parentRoute: typeof PublicRoute
+      preLoaderRoute: typeof AuthenticatedWorkspaceIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/_public/workspace/$documentId': {
-      id: '/_public/workspace/$documentId'
+    '/_authenticated/workspace/$documentId': {
+      id: '/_authenticated/workspace/$documentId'
       path: '/workspace/$documentId'
       fullPath: '/workspace/$documentId'
-      preLoaderRoute: typeof PublicWorkspaceDocumentIdRouteImport
-      parentRoute: typeof PublicRoute
+      preLoaderRoute: typeof AuthenticatedWorkspaceDocumentIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
+  AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedHome_cleanRoute: typeof AuthenticatedHome_cleanRoute
+  AuthenticatedNotesRoute: typeof AuthenticatedNotesRoute
+  AuthenticatedQuizzesRoute: typeof AuthenticatedQuizzesRoute
+  AuthenticatedWorkspaceDocumentIdRoute: typeof AuthenticatedWorkspaceDocumentIdRoute
+  AuthenticatedWorkspaceIndexRoute: typeof AuthenticatedWorkspaceIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
+  AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedHome_cleanRoute: AuthenticatedHome_cleanRoute,
+  AuthenticatedNotesRoute: AuthenticatedNotesRoute,
+  AuthenticatedQuizzesRoute: AuthenticatedQuizzesRoute,
+  AuthenticatedWorkspaceDocumentIdRoute: AuthenticatedWorkspaceDocumentIdRoute,
+  AuthenticatedWorkspaceIndexRoute: AuthenticatedWorkspaceIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -307,31 +324,15 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 interface PublicRouteChildren {
-  PublicAnalyticsRoute: typeof PublicAnalyticsRoute
-  PublicDocumentsRoute: typeof PublicDocumentsRoute
-  PublicHomeRoute: typeof PublicHomeRoute
-  PublicHome_cleanRoute: typeof PublicHome_cleanRoute
   PublicLoginRoute: typeof PublicLoginRoute
-  PublicNotesRoute: typeof PublicNotesRoute
-  PublicQuizzesRoute: typeof PublicQuizzesRoute
   PublicSignupRoute: typeof PublicSignupRoute
   PublicIndexRoute: typeof PublicIndexRoute
-  PublicWorkspaceDocumentIdRoute: typeof PublicWorkspaceDocumentIdRoute
-  PublicWorkspaceIndexRoute: typeof PublicWorkspaceIndexRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
-  PublicAnalyticsRoute: PublicAnalyticsRoute,
-  PublicDocumentsRoute: PublicDocumentsRoute,
-  PublicHomeRoute: PublicHomeRoute,
-  PublicHome_cleanRoute: PublicHome_cleanRoute,
   PublicLoginRoute: PublicLoginRoute,
-  PublicNotesRoute: PublicNotesRoute,
-  PublicQuizzesRoute: PublicQuizzesRoute,
   PublicSignupRoute: PublicSignupRoute,
   PublicIndexRoute: PublicIndexRoute,
-  PublicWorkspaceDocumentIdRoute: PublicWorkspaceDocumentIdRoute,
-  PublicWorkspaceIndexRoute: PublicWorkspaceIndexRoute,
 }
 
 const PublicRouteWithChildren =
