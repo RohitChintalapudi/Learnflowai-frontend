@@ -84,7 +84,7 @@ function SignupPage() {
       console.log("Sign up successful!", data);
       authStore.setAuthenticated(true);
       toast.success("Account created successfully!");
-      navigate({ to: "/home" });
+      navigate({ to: "/dashboard" });
     } catch (err: any) {
       console.error("Error during sign up:", err.message);
       toast.error(err.message || "An error occurred during sign up.");

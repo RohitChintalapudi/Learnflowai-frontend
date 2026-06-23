@@ -40,10 +40,10 @@ export const Route = createRootRoute({
         The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
       </p>
       <Link
-        to="/home"
+        to="/dashboard"
         className="px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold transition-colors shadow-lg shadow-orange-500/25 active:scale-95"
       >
-        Go to Home
+        Go to Dashboard
       </Link>
     </div>
   )

@@ -22,9 +22,10 @@ import {
 import toast from "react-hot-toast";
 import { ProfileModal } from "./ProfileModal";
 import { authStore } from "../store/authStore";
+import { authClient } from "../lib/auth-client";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", to: "/home" },
+  { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
   { icon: FileText, label: "Documents", to: "/documents" },
   { icon: Brain, label: "AI Workspace", to: "/workspace" },
   { icon: StickyNote, label: "Notes", to: "/notes" },
@@ -95,12 +96,18 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
   const handleLogout = () => setShowLogoutConfirm(true);
 
-  const confirmLogout = () => {
+  const confirmLogout = async () => {
     setShowLogoutConfirm(false);
-    toast.success("You have been logged out.");
-    authStore.setAuthenticated(false);
-    navigate({ to: "/login" });
-    fetch("http://localhost:3000/api/auth/sign-out", { method: "POST" }).catch(() => {});
+    try {
+      await authClient.signOut();
+      authStore.setAuthenticated(false);
+      toast.success("You have been logged out.");
+      navigate({ to: "/login" });
+    } catch (err) {
+      console.error("Logout failed:", err);
+      authStore.setAuthenticated(false);
+      navigate({ to: "/login" });
+    }
   };
 
   return (
@@ -117,7 +124,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
         </button>
 
         <div className="h-16 flex items-center justify-center border-b border-[var(--lf-border)] transition-all">
-          <Link to="/home" className={`flex items-center gap-3 hover:opacity-80 transition-opacity w-full px-6 ${isCollapsed ? "justify-center px-0" : ""}`}>
+          <Link to="/dashboard" className={`flex items-center gap-3 hover:opacity-80 transition-opacity w-full px-6 ${isCollapsed ? "justify-center px-0" : ""}`}>
             <div className="flex items-center justify-center shrink-0">
               <img src="/logo.png" className="block dark:hidden h-6 w-auto object-contain" alt="Learnflow AI Logo" />
               <img src="/logo_dark.png" className="hidden dark:block h-6 w-auto object-contain" alt="Learnflow AI Logo" />
@@ -133,7 +140,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
         <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1.5 no-scrollbar overflow-x-hidden">
           {navItems.map((item, idx) => {
             const Icon = item.icon;
-            const active = location.pathname.startsWith(item.to) && item.to !== "#" && item.to !== "/" && (item.to === "/home" ? location.pathname === "/home" : true);
+            const active = location.pathname.startsWith(item.to) && item.to !== "#" && item.to !== "/" && (item.to === "/dashboard" ? location.pathname === "/dashboard" : true);
             return (
               <Link
                 key={idx}
