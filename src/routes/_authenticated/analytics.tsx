@@ -88,6 +88,19 @@ function DashboardSkeleton() {
 
 // -- Main Component --
 function AnalyticsDashboard() {
+  const [isDark, setIsDark] = React.useState(false);
+
+  React.useEffect(() => {
+    // Check initial state
+    setIsDark(document.documentElement.classList.contains('dark'));
+    // Listen for class changes on HTML element
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
   const { data: overview, isLoading: loadingOverview } = useQuery({ queryKey: ['analytics', 'overview'], queryFn: AnalyticsAPI.getOverview, refetchOnMount: 'always', gcTime: 0 });
   const { data: activity, isLoading: loadingActivity } = useQuery({ queryKey: ['analytics', 'activity'], queryFn: () => AnalyticsAPI.getActivity(30), refetchOnMount: 'always', gcTime: 0 });
   const { data: featureUsage, isLoading: loadingFeatures } = useQuery({ queryKey: ['analytics', 'featureUsage'], queryFn: AnalyticsAPI.getFeatureUsage, refetchOnMount: 'always', gcTime: 0 });
@@ -131,8 +144,8 @@ function AnalyticsDashboard() {
   const calendarData = React.useMemo(() => generateYearData(activityYear), [activityYear, generateYearData]);
 
   const explicitTheme = {
-    light: ['#F3F4F6', '#FFE7C2', '#FFC266', '#FF9A1F', '#EA7A00'],
-    dark: ['#2A2A2A', '#4A3620', '#8B5A1A', '#D97706', '#FF8C00'],
+    light: ['#E5E7EB', '#FFE7C2', '#FFC266', '#FF9A1F', '#EA7A00'],
+    dark: ['#333333', '#4A3620', '#8B5A1A', '#D97706', '#FF8C00'],
   };
 
   const totalActivities = React.useMemo(() => {
@@ -205,6 +218,7 @@ function AnalyticsDashboard() {
             <ActivityCalendar
               data={calendarData}
               theme={explicitTheme}
+              colorScheme={isDark ? 'dark' : 'light'}
               blockSize={12}
               blockRadius={2}
               blockMargin={4}
