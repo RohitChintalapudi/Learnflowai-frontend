@@ -261,15 +261,27 @@ function PublicLayout() {
                 <h3 className="text-base font-bold text-stone-900 dark:text-white mb-6">Company</h3>
                 <ul className="space-y-4">
                   {[
-                    { label: "About Us", type: "anchor", href: "/#hero-section" },
-                    { label: "Features", type: "anchor", href: "/#features-section" },
-                    { label: "Blog", type: "anchor", href: "/#testimonials-section" },
-                    { label: "Careers", type: "anchor", href: "/#cta-section" }
+                    { label: "About Us", type: "anchor", href: "/#about-us" },
+                    { label: "Features", type: "anchor", href: "/#features" },
+                    { label: "Blog", type: "anchor", href: "/#blog" },
+                    { label: "Careers", type: "anchor", href: "/#careers" }
                   ].map((link, i) => (
                     <li key={i}>
                       {link.type === 'anchor' ? (
                         <a 
                           href={link.href} 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const targetId = link.href.split('#')[1];
+                            const target = document.getElementById(targetId);
+                            if (target) {
+                              const offset = 80;
+                              const y = target.getBoundingClientRect().top + window.scrollY - offset;
+                              window.scrollTo({ top: y, behavior: 'smooth' });
+                            } else if (window.location.pathname !== '/') {
+                              window.location.href = link.href;
+                            }
+                          }}
                           className="text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-[#FF7A00] dark:hover:text-[#FF7A00] cursor-pointer transition-colors block"
                         >
                           {link.label}
