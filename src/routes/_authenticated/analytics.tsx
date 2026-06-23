@@ -131,9 +131,14 @@ function AnalyticsDashboard() {
   const calendarData = React.useMemo(() => generateYearData(activityYear), [activityYear, generateYearData]);
 
   const explicitTheme = {
-    light: ['#ebedf0', '#fde68a', '#f59e0b', '#d97706', '#92400e'],
-    dark: ['#1f2937', '#78350f', '#b45309', '#f59e0b', '#fcd34d'],
+    light: ['#F3F4F6', '#FFE7C2', '#FFC266', '#FF9A1F', '#EA7A00'],
+    dark: ['#2A2A2A', '#4A3620', '#8B5A1A', '#D97706', '#FF8C00'],
   };
+
+  const totalActivities = React.useMemo(() => {
+    return calendarData.reduce((sum, day) => sum + day.count, 0);
+  }, [calendarData]);
+  const currentYear = new Date().getFullYear();
 
   if (isLoading) return (
     <DashboardLayout headerTitle="Analytics">
@@ -191,25 +196,35 @@ function AnalyticsDashboard() {
       )}
 
       {/* Heatmap Section */}
-      <section className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-8 card-shadow overflow-x-auto no-scrollbar">
+      <section className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-8 card-shadow">
         <h3 className="text-lg font-semibold text-[var(--lf-text-primary)] mb-6 flex items-center gap-2">
           <Calendar className="h-5 w-5 text-amber-500" /> Learning Consistency
         </h3>
-        <div className="flex justify-center min-w-[800px]">
-          <ActivityCalendar
-            data={calendarData}
-            theme={explicitTheme}
-            blockSize={14}
-            blockRadius={4}
-            blockMargin={4}
-            fontSize={14}
-
-            renderBlock={(block, activity) => React.cloneElement(block as React.ReactElement<any>, {
-              'data-tooltip-id': 'react-tooltip',
-              'data-tooltip-content': `${activity.count} activities on ${activity.date}`,
-            })}
-          />
-          <ReactTooltip id="react-tooltip" className="z-50" />
+        <div className="w-full overflow-x-auto pb-4 no-scrollbar">
+          <div className="min-w-max md:flex md:justify-center">
+            <ActivityCalendar
+              data={calendarData}
+              theme={explicitTheme}
+              blockSize={12}
+              blockRadius={2}
+              blockMargin={4}
+              fontSize={12}
+              showWeekdayLabels={true}
+              labels={{
+                totalCount: `${totalActivities} learning activities in ${currentYear}`,
+                legend: {
+                  less: 'Less',
+                  more: 'More'
+                }
+              }}
+              renderBlock={(block, activity) => React.cloneElement(block as React.ReactElement<any>, {
+                'data-tooltip-id': 'react-tooltip',
+                'data-tooltip-content': `${activity.count} learning activities on ${activity.date}`,
+                className: 'transition-all duration-200 hover:ring-2 hover:ring-orange-400 hover:ring-offset-1 hover:ring-offset-[var(--lf-bg-primary)] cursor-pointer',
+              })}
+            />
+            <ReactTooltip id="react-tooltip" className="z-50" />
+          </div>
         </div>
       </section>
 
