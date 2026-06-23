@@ -202,7 +202,7 @@ function PublicLayout() {
       {!isAppRoute && (
         <footer className="w-full border-t border-stone-200 dark:border-stone-800/60 bg-white dark:bg-black pt-16 pb-8 mt-auto relative z-10 transition-colors duration-300">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-24 mb-16">
               
               {/* Section 1: Brand */}
               <div className="flex flex-col items-start text-left">
@@ -256,37 +256,32 @@ function PublicLayout() {
                 </ul>
               </div>
 
-              {/* Section 3: What People Love */}
-              <div className="flex flex-col text-left">
-                <h3 className="text-base font-bold text-stone-900 dark:text-white mb-6">What People Love</h3>
-                <ul className="space-y-4">
-                  {[
-                    "Instant, accurate solutions",
-                    "Saves hours of study time",
-                    "Simplifies complex topics",
-                    "Boosts exam preparation",
-                    "Clean and distraction-free",
-                    "Built for students"
-                  ].map((text, i) => (
-                    <li key={i} className="flex items-center gap-3">
-                      <CheckCircle2 className="w-4 h-4 text-[#FF7A00]" />
-                      <span className="text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-[#FF7A00] dark:hover:text-[#FF7A00] cursor-pointer transition-colors">
-                        {text}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Section 4: Company */}
+              {/* Section 3: Company */}
               <div className="flex flex-col text-left">
                 <h3 className="text-base font-bold text-stone-900 dark:text-white mb-6">Company</h3>
                 <ul className="space-y-4">
-                  {["About Us", "Pricing", "Blog", "Contact Us", "Careers"].map((text, i) => (
+                  {[
+                    { label: "About Us", type: "anchor", href: "/#hero-section" },
+                    { label: "Features", type: "anchor", href: "/#features-section" },
+                    { label: "Blog", type: "anchor", href: "/#testimonials-section" },
+                    { label: "Careers", type: "anchor", href: "/#cta-section" }
+                  ].map((link, i) => (
                     <li key={i}>
-                      <span className="text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-[#FF7A00] dark:hover:text-[#FF7A00] cursor-pointer transition-colors">
-                        {text}
-                      </span>
+                      {link.type === 'anchor' ? (
+                        <a 
+                          href={link.href} 
+                          className="text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-[#FF7A00] dark:hover:text-[#FF7A00] cursor-pointer transition-colors block"
+                        >
+                          {link.label}
+                        </a>
+                      ) : (
+                        <Link 
+                          to={link.href} 
+                          className="text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-[#FF7A00] dark:hover:text-[#FF7A00] cursor-pointer transition-colors block"
+                        >
+                          {link.label}
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -304,8 +299,6 @@ function PublicLayout() {
                 <span className="hover:text-[#FF7A00] dark:hover:text-[#FF7A00] cursor-pointer transition-colors">Privacy Policy</span>
                 <span className="hidden md:inline text-stone-300 dark:text-stone-700">|</span>
                 <span className="hover:text-[#FF7A00] dark:hover:text-[#FF7A00] cursor-pointer transition-colors">Terms of Service</span>
-                <span className="hidden md:inline text-stone-300 dark:text-stone-700">|</span>
-                <span className="hover:text-[#FF7A00] dark:hover:text-[#FF7A00] cursor-pointer transition-colors">Refund Policy</span>
               </div>
 
               <div className="flex items-center gap-2 text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-[#FF7A00] dark:hover:text-[#FF7A00] transition-colors cursor-pointer">
