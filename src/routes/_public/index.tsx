@@ -1190,7 +1190,7 @@ function HomePage() {
       <div className="absolute top-[30%] left-[20%] w-[300px] h-[300px] bg-orange-500/15 dark:bg-orange-500/10 blur-[100px] rounded-full pointer-events-none" />
 
       {/* Î“Ã¶Ã‡Î“Ã¶Ã‡ HERO SECTION Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡ */}
-      <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-16 pb-12 -mt-20 flex flex-col lg:flex-row items-center gap-16 lg:gap-24 relative z-10">
+      <section id="about-us" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-16 pb-12 -mt-20 flex flex-col lg:flex-row items-center gap-16 lg:gap-24 relative z-10">
         {/* Left Copy */}
         <div className="flex-1 flex flex-col items-start max-w-[500px] shrink-0 scale-[1.05] lg:scale-[1.1] origin-center">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-200 dark:border-orange-900/60 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-semibold mb-6">
@@ -1291,7 +1291,7 @@ function HomePage() {
       </section>
 
       {/* Î“Ã¶Ã‡Î“Ã¶Ã‡ FEATURES ZIGZAG SECTION Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡ */}
-      <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
+      <section id="features" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
         <div className="w-full mb-12">
           <div className="relative h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent mb-12" />
         </div>
@@ -1435,7 +1435,7 @@ function HomePage() {
       </div>
 
       {/* Î“Ã¶Ã‡Î“Ã¶Ã‡ REVIEWS CAROUSEL SECTION Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡ */}
-      <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pb-16">
+      <section id="blog" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pb-16">
         <div className="mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 dark:text-white mb-2">
             What Students Love
@@ -1605,7 +1605,7 @@ function HomePage() {
       </div>
 
       {/* Î“Ã¶Ã‡Î“Ã¶Ã‡ CTA BANNER SECTION Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡ */}
-      <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pb-24">
+      <section id="careers" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pb-24">
         <div className="flex flex-col items-center justify-center text-center gap-6 px-8 py-16 md:py-20 rounded-3xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/40 relative overflow-hidden">
           {/* Decorative Background Elements */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#f9731615_1px,transparent_1px),linear-gradient(to_bottom,#f9731615_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
