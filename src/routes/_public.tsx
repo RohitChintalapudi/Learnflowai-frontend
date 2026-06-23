@@ -4,6 +4,7 @@ import {
   Outlet,
   Link,
   useLocation,
+  redirect,
 } from "@tanstack/react-router";
 import {
   Sun,
@@ -18,7 +19,27 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+import { authStore } from "../store/authStore";
+import { authClient } from "../lib/auth-client";
+
 export const Route = createFileRoute("/_public")({
+  beforeLoad: async () => {
+    let isAuthenticated = authStore.isAuthenticated;
+    if (!isAuthenticated) {
+      try {
+        const { data: session } = await authClient.getSession();
+        if (session) {
+          authStore.setAuthenticated(true);
+          isAuthenticated = true;
+        }
+      } catch (e) {
+        console.error("Failed to check active session:", e);
+      }
+    }
+    if (isAuthenticated) {
+      throw redirect({ to: "/dashboard" });
+    }
+  },
   component: PublicLayout,
 });
 
@@ -83,7 +104,7 @@ function PublicLayout() {
   };
 
   const location = useLocation();
-  const isAppRoute = location.pathname === "/home" || location.pathname === "/documents" || location.pathname.startsWith("/workspace") || location.pathname.startsWith("/notes") || location.pathname.startsWith("/quizzes");
+  const isAppRoute = location.pathname === "/dashboard" || location.pathname === "/documents" || location.pathname.startsWith("/workspace") || location.pathname.startsWith("/notes") || location.pathname.startsWith("/quizzes") || location.pathname.startsWith("/analytics");
   const isLanding = location.pathname === "/";
 
   if (isLoading) {

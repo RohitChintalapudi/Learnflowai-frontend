@@ -22,4 +22,25 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    chunkSizeWarningLimit: 1600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('@tanstack')) {
+              return 'vendor-core';
+            }
+            if (id.includes('react-pdf') || id.includes('pdfjs-dist') || id.includes('docx-preview')) {
+              return 'vendor-docs';
+            }
+            if (id.includes('recharts') || id.includes('d3') || id.includes('@xyflow') || id.includes('dagre')) {
+              return 'vendor-charts-flow';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
+  }
 })
