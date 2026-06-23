@@ -75,7 +75,11 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains("dark");
-    setTheme(isDark ? "dark" : "light");
+    const currentTheme = isDark ? "dark" : "light";
+    const timer = setTimeout(() => {
+      setTheme(currentTheme);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const toggleTheme = () => {

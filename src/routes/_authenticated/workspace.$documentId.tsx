@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { 
   ReactFlow, 
@@ -84,35 +84,84 @@ function WorkspacePage() {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [zoom, setZoom] = useState(1.0);
 
-  const urlParts = window.location.pathname.split("/");
-  const docId = urlParts[urlParts.length - 1];
+  const { documentId: docId } = Route.useParams();
 
-  const { data: documentMetadata } = useQuery({
+  const { data: documentMetadata, isError: isMetadataError, error: metadataError } = useQuery({
     queryKey: ['document', docId],
     queryFn: async () => {
-      if (!docId) return null;
-      try {
-        return await DocumentAPI.getDocument(docId);
-      } catch (err: any) {
-        toast.error("Failed to load document: " + err.message);
-        return null;
-      }
+      if (!docId) throw new Error("No document ID specified");
+      return await DocumentAPI.getDocument(docId);
     },
     enabled: !!docId,
+    retry: 1,
   });
 
-  // Memoize the file configuration to prevent react-pdf from refreshing endlessly on re-renders
-  const pdfFile = useMemo(() => {
-    if (!documentMetadata?.fileUrl) return null;
-    return {
-      url: documentMetadata.fileUrl.startsWith('http') ? documentMetadata.fileUrl : `${BACKEND_URL}${documentMetadata.fileUrl}`
+  useEffect(() => {
+    if (isMetadataError && metadataError) {
+      toast.error("Failed to load document metadata: " + (metadataError as Error).message, {
+        id: "load-document-metadata-error",
+      });
+    }
+  }, [isMetadataError, metadataError]);
+
+  // Fetch the PDF blob via backend proxy to completely avoid CORS issues
+  const { data: pdfBlob, isError: isPdfBlobError, error: pdfBlobError, isLoading: isPdfBlobLoading } = useQuery({
+    queryKey: ['pdf-blob', docId],
+    queryFn: async () => {
+      if (!docId) throw new Error("No document ID specified");
+      const response = await fetch(`${BACKEND_URL}/api/documents/${docId}/download`, {
+        credentials: "include"
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to download PDF (status ${response.status})`);
+      }
+      return await response.blob();
+    },
+    enabled: !!docId && documentMetadata?.fileType === "pdf",
+    retry: 1,
+  });
+
+  const [pdfFileUrl, setPdfFileUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pdfBlob) {
+      setPdfFileUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(pdfBlob);
+    setPdfFileUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
     };
-  }, [documentMetadata?.fileUrl]);
+  }, [pdfBlob]);
+
+  useEffect(() => {
+    if (isPdfBlobError && pdfBlobError) {
+      toast.error("PDF Download Error: " + (pdfBlobError as Error).message, {
+        id: "pdf-download-error",
+      });
+    }
+  }, [isPdfBlobError, pdfBlobError]);
 
   const safeDocxUrl = useMemo(() => {
     if (!docId) return null;
     return `${BACKEND_URL}/api/documents/${docId}/download`;
   }, [docId]);
+
+  const handlePdfLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+  }, []);
+
+  const handlePdfLoadError = useCallback((error: Error) => {
+    console.error("PDF Load Error:", error);
+    toast.error("PDF Render Error: " + error.message, {
+      id: "pdf-render-error"
+    });
+  }, []);
+
+  const handleDocxLoadSuccess = useCallback((numPages: number) => {
+    setNumPages(numPages);
+  }, []);
 
   // Handle text selection
   const handleTextSelect = () => {
@@ -159,11 +208,6 @@ function WorkspacePage() {
 
       setIsLoading(true);
       try {
-        // We can extract documentId from the route path in a real scenario
-        // Assuming Route.useParams() provides it:
-        const urlParts = window.location.pathname.split("/");
-        const docId = urlParts[urlParts.length - 1];
-        
         const res = await WorkflowAPI.generateExplanation(docId, highlightedText);
         setExplanationContent(res.explanation);
         toast.success("Explanation generated successfully!");
@@ -187,9 +231,6 @@ function WorkspacePage() {
 
       setIsLoading(true);
       try {
-        const urlParts = window.location.pathname.split("/");
-        const docId = urlParts[urlParts.length - 1];
-        
         const res = await WorkflowAPI.generateNotes(docId, highlightedText);
         setNotesContent(res.notes);
         
@@ -214,9 +255,6 @@ function WorkspacePage() {
 
       setIsLoading(true);
       try {
-        const urlParts = window.location.pathname.split("/");
-        const docId = urlParts[urlParts.length - 1];
-        
         const res = await WorkflowAPI.generateInterviewQuestions(docId, highlightedText);
         setInterviewQuestionsContent(res.questions);
         toast.success("Interview questions generated successfully!");
@@ -240,9 +278,6 @@ function WorkspacePage() {
 
       setIsLoading(true);
       try {
-        const urlParts = window.location.pathname.split("/");
-        const docId = urlParts[urlParts.length - 1];
-        
         const res = await WorkflowAPI.generateQuiz(docId, highlightedText);
         setQuizContent(res.quiz);
         setQuizId(res.id || null);
@@ -267,9 +302,6 @@ function WorkspacePage() {
 
       setIsLoading(true);
       try {
-        const urlParts = window.location.pathname.split("/");
-        const docId = urlParts[urlParts.length - 1];
-        
         const res = await WorkflowAPI.generateMindMap(docId, highlightedText);
         setMindMapContent(res.mindMap);
         toast.success("Mind map generated successfully!");
@@ -305,9 +337,6 @@ function WorkspacePage() {
     setIsAnalogySelectingStyle(false);
     setIsLoading(true);
     try {
-      const urlParts = window.location.pathname.split("/");
-      const docId = urlParts[urlParts.length - 1];
-      
       const res = await WorkflowAPI.generateAnalogy(docId, highlightedText, style);
       setAnalogyContent(res.analogy);
       toast.success("Analogy generated successfully!");
@@ -430,60 +459,76 @@ function WorkspacePage() {
 
           {/* Document Viewer (PDF or DocViewer) */}
           <div className="flex-1 relative bg-stone-100 dark:bg-stone-900 overflow-y-auto overflow-x-hidden flex flex-col items-center py-8">
-            {pdfFile ? (
-              documentMetadata?.fileType === "pdf" ? (
-              <Document
-                file={pdfFile}
-                onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-                onLoadError={(error) => {
-                  console.error("PDF Load Error:", error);
-                  toast.error("PDF Error: " + error.message);
-                }}
-                loading={
-                  <div className="flex items-center justify-center p-12 text-stone-500 animate-pulse">
-                    Loading PDF Document...
-                  </div>
-                }
-                error={
-                  <div className="flex flex-col items-center justify-center p-12 text-red-500">
-                    <p className="font-bold text-lg">Failed to load PDF.</p>
-                    <p className="text-sm mt-2 opacity-80">This could be a CORS issue with the backend. Check the console or toast message.</p>
-                  </div>
-                }
-              >
-                {numPages && Array.from(new Array(numPages), (_, index) => (
-                  <Page
-                    key={`page_${index + 1}`}
-                    pageNumber={index + 1}
-                    className="mb-8 shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden bg-white"
-                    scale={zoom}
-                    renderTextLayer={true}
-                    renderAnnotationLayer={true}
-                  />
-                ))}
-              </Document>
-              ) : documentMetadata?.fileType === "docx" || documentMetadata?.fileType === "doc" ? (
-                <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
-                  <DocxViewer 
-                    fileUrl={safeDocxUrl || ""} 
-                    zoom={zoom} 
-                    onLoadSuccess={(numPages) => setNumPages(numPages)} 
-                  />
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-stone-500 p-8 text-center space-y-4">
-                  <FileText className="h-12 w-12 text-stone-400" />
-                  <p className="font-medium text-[var(--lf-text-primary)]">
-                    Local Preview not natively supported for .{documentMetadata?.fileType}
-                  </p>
-                  <p className="text-sm">
-                    Only PDF and DOCX files support offline local rendering. PPTX and other formats may require third-party server-side rendering or Microsoft Office Online access which is not available in local development.
-                  </p>
-                </div>
-              )
-            ) : (
+            {!documentMetadata && !isMetadataError ? (
               <div className="flex items-center justify-center h-full text-stone-500">
                 Loading Document Metadata...
+              </div>
+            ) : isMetadataError ? (
+              <div className="flex flex-col items-center justify-center p-12 text-red-500 text-center">
+                <FileText className="h-12 w-12 text-red-400 mb-4" />
+                <p className="font-bold text-lg">Failed to load document.</p>
+                <p className="text-sm mt-2 opacity-80">{(metadataError as Error)?.message || "Check server connection."}</p>
+              </div>
+            ) : documentMetadata?.fileType === "pdf" ? (
+              isPdfBlobLoading ? (
+                <div className="flex items-center justify-center p-12 text-stone-500 animate-pulse">
+                  Downloading PDF Document...
+                </div>
+              ) : isPdfBlobError ? (
+                <div className="flex flex-col items-center justify-center p-12 text-red-500 text-center">
+                  <p className="font-bold text-lg">Failed to load PDF.</p>
+                  <p className="text-sm mt-2 opacity-80">This document file is missing or cannot be retrieved from the server.</p>
+                </div>
+              ) : pdfFileUrl ? (
+                <Document
+                  file={pdfFileUrl}
+                  onLoadSuccess={handlePdfLoadSuccess}
+                  onLoadError={handlePdfLoadError}
+                  loading={
+                    <div className="flex items-center justify-center p-12 text-stone-500 animate-pulse">
+                      Loading PDF Document...
+                    </div>
+                  }
+                  error={
+                    <div className="flex flex-col items-center justify-center p-12 text-red-500">
+                      <p className="font-bold text-lg">Failed to render PDF.</p>
+                      <p className="text-sm mt-2 opacity-80">An error occurred while parsing the PDF contents.</p>
+                    </div>
+                  }
+                >
+                  {numPages && Array.from(new Array(numPages), (_, index) => (
+                    <Page
+                      key={`page_${index + 1}`}
+                      pageNumber={index + 1}
+                      className="mb-8 shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden bg-white"
+                      scale={zoom}
+                      renderTextLayer={true}
+                      renderAnnotationLayer={true}
+                    />
+                  ))}
+                </Document>
+              ) : (
+                <div className="flex items-center justify-center h-full text-stone-500">
+                  Preparing document...
+                </div>
+              )
+            ) : documentMetadata?.fileType === "docx" || documentMetadata?.fileType === "doc" ? (
+              <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
+                <DocxViewer 
+                  fileUrl={safeDocxUrl || ""} 
+                  zoom={zoom} 
+                  onLoadSuccess={handleDocxLoadSuccess} 
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-stone-500 p-8 text-center space-y-4">
+                <FileText className="h-12 w-12 text-stone-400" />
+                <p className="font-medium text-[var(--lf-text-primary)]">
+                  Local Preview not natively supported for .{documentMetadata?.fileType}
+                </p>
+                <p className="text-sm">
+                  Only PDF and DOCX files support offline local rendering. PPTX and other formats may require third-party server-side rendering or Microsoft Office Online access which is not available in local development.
+                </p>
               </div>
             )}
           </div>
