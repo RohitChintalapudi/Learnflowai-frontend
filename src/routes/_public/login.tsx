@@ -202,7 +202,30 @@ function LoginPage() {
               "Log In"
             )}
           </button>
-        </form>
+
+{/* OR Divider */}
+<div className="flex items-center my-5">
+  <div className="flex-1 border-t border-stone-200 dark:border-stone-700" />
+  <span className="px-4 text-xs font-medium text-stone-500 dark:text-stone-400">
+    OR
+  </span>
+  <div className="flex-1 border-t border-stone-200 dark:border-stone-700" />
+</div>
+
+{/* Google Sign In */}
+<button
+  type="button"
+  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-stone-300 dark:border-stone-700 rounded-lg bg-white dark:bg-stone-900 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all duration-200 text-sm font-semibold text-stone-700 dark:text-white"
+>
+  <img
+    src="https://www.svgrepo.com/show/475656/google-color.svg"
+    alt="Google"
+    className="w-5 h-5"
+  />
+  Sign in with Google
+</button>
+
+</form>
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-stone-500 dark:text-stone-400">
