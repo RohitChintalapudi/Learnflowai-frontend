@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { ProfileAPI } from "../lib/api";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   LayoutDashboard,
   FileText,
@@ -36,6 +37,7 @@ const navItems = [
 export function DashboardLayout({ children, headerTitle, hideHeader = false }: { children: React.ReactNode, headerTitle?: React.ReactNode, hideHeader?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof document !== "undefined") {
       return document.documentElement.classList.contains("dark") ? "dark" : "light";
@@ -90,12 +92,23 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
   const handleLogout = () => setShowLogoutConfirm(true);
 
-  const confirmLogout = () => {
-    setShowLogoutConfirm(false);
-    toast.success("You have been logged out.");
-    navigate({ to: "/login" });
-    fetch("http://localhost:3000/api/auth/sign-out", { method: "POST" }).catch(() => {});
-  };
+  const confirmLogout = async () => {
+  setShowLogoutConfirm(false);
+
+  try {
+    await fetch("http://localhost:3000/api/auth/sign-out", {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (error) {
+    console.error(error);
+  }
+
+  queryClient.clear();
+
+  toast.success("You have been logged out.");
+  navigate({ to: "/login" });
+};
 
   return (
     <div className="h-screen w-full flex bg-[var(--lf-bg)] text-[var(--lf-text-primary)] overflow-hidden selection:bg-[var(--lf-accent)] selection:text-white font-sans relative">
