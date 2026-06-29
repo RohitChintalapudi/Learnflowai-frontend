@@ -32,7 +32,7 @@ const navItems = [
   { icon: HelpCircle, label: "Quizzes", to: "/quizzes" },
   { icon: BarChart3, label: "Analytics", to: "/analytics" },
   { icon: History, label: "Learning History", to: "#" },
-  { icon: Settings, label: "Settings", to: "#" },
+  { icon: Settings, label: "Settings", to: "/settings" },
 ];
 
 export function DashboardLayout({ children, headerTitle, hideHeader = false }: { children: React.ReactNode, headerTitle?: React.ReactNode, hideHeader?: boolean }) {

@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicSignupRouteImport } from './routes/_public/signup'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQuizzesRouteImport } from './routes/_authenticated/quizzes'
 import { Route as AuthenticatedNotesRouteImport } from './routes/_authenticated/notes'
 import { Route as AuthenticatedHome_cleanRouteImport } from './routes/_authenticated/home_clean'
@@ -46,6 +47,11 @@ const PublicLoginRoute = PublicLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => PublicRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedQuizzesRoute = AuthenticatedQuizzesRouteImport.update({
   id: '/quizzes',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/home_clean': typeof AuthenticatedHome_cleanRoute
   '/notes': typeof AuthenticatedNotesRoute
   '/quizzes': typeof AuthenticatedQuizzesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/login': typeof PublicLoginRoute
   '/signup': typeof PublicSignupRoute
   '/workspace/$documentId': typeof AuthenticatedWorkspaceDocumentIdRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/home_clean': typeof AuthenticatedHome_cleanRoute
   '/notes': typeof AuthenticatedNotesRoute
   '/quizzes': typeof AuthenticatedQuizzesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/login': typeof PublicLoginRoute
   '/signup': typeof PublicSignupRoute
   '/workspace/$documentId': typeof AuthenticatedWorkspaceDocumentIdRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/_authenticated/home_clean': typeof AuthenticatedHome_cleanRoute
   '/_authenticated/notes': typeof AuthenticatedNotesRoute
   '/_authenticated/quizzes': typeof AuthenticatedQuizzesRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_public/login': typeof PublicLoginRoute
   '/_public/signup': typeof PublicSignupRoute
   '/_public/': typeof PublicIndexRoute
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/home_clean'
     | '/notes'
     | '/quizzes'
+    | '/settings'
     | '/login'
     | '/signup'
     | '/workspace/$documentId'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/home_clean'
     | '/notes'
     | '/quizzes'
+    | '/settings'
     | '/login'
     | '/signup'
     | '/workspace/$documentId'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home_clean'
     | '/_authenticated/notes'
     | '/_authenticated/quizzes'
+    | '/_authenticated/settings'
     | '/_public/login'
     | '/_public/signup'
     | '/_public/'
@@ -228,6 +240,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/login'
       preLoaderRoute: typeof PublicLoginRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/quizzes': {
       id: '/_authenticated/quizzes'
@@ -303,6 +322,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedHome_cleanRoute: typeof AuthenticatedHome_cleanRoute
   AuthenticatedNotesRoute: typeof AuthenticatedNotesRoute
   AuthenticatedQuizzesRoute: typeof AuthenticatedQuizzesRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedWorkspaceDocumentIdRoute: typeof AuthenticatedWorkspaceDocumentIdRoute
   AuthenticatedWorkspaceIndexRoute: typeof AuthenticatedWorkspaceIndexRoute
 }
@@ -315,6 +335,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedHome_cleanRoute: AuthenticatedHome_cleanRoute,
   AuthenticatedNotesRoute: AuthenticatedNotesRoute,
   AuthenticatedQuizzesRoute: AuthenticatedQuizzesRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedWorkspaceDocumentIdRoute: AuthenticatedWorkspaceDocumentIdRoute,
   AuthenticatedWorkspaceIndexRoute: AuthenticatedWorkspaceIndexRoute,
 }
