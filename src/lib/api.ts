@@ -672,3 +672,134 @@ export const AnalyticsAPI = {
     return response.json();
   }
 };
+
+export interface HistoryQueryOptions {
+  page?: number;
+  limit?: number;
+  search?: string;
+  feature?: string;
+  dateRange?: string;
+  sort?: string;
+}
+
+export interface LearningHistoryItem {
+  id: string;
+  userId: string;
+  documentId: string;
+  highlightedText: string;
+  createdAt: string;
+  activityType: "Explanation" | "GeneratedNote" | "GeneratedQuiz" | "QuizSet" | "InterviewQuestionSet" | "GeneratedMindMap" | "GeneratedAnalogy" | "GeneratedSimulation";
+  document?: {
+    title: string;
+  };
+  explanationText?: string;
+  title?: string;
+  notes?: any;
+  quizData?: any;
+  quizJson?: any;
+  questionsJson?: any;
+  mindMapData?: any;
+  analogyData?: any;
+  simulationData?: any;
+  simulationType?: string;
+  difficulty?: string;
+  style?: string;
+  score?: number;
+  totalQuestions?: number;
+  status?: string;
+  topicsToImprove?: string[];
+}
+
+export interface HistoryListResponse {
+  items: LearningHistoryItem[];
+  total: number;
+  hasMore: boolean;
+  page: number;
+  limit: number;
+}
+
+export interface SuggestionItem {
+  topic: string;
+  reason: string;
+  priority: "High" | "Medium" | "Low";
+}
+
+export const LearningHistoryAPI = {
+  async getHistory(options: HistoryQueryOptions = {}): Promise<HistoryListResponse> {
+    const queryParams = new URLSearchParams();
+    if (options.page) queryParams.append("page", options.page.toString());
+    if (options.limit) queryParams.append("limit", options.limit.toString());
+    if (options.search) queryParams.append("search", options.search);
+    if (options.feature) queryParams.append("feature", options.feature);
+    if (options.dateRange) queryParams.append("dateRange", options.dateRange);
+    if (options.sort) queryParams.append("sort", options.sort);
+
+    const response = await fetch(`${API_BASE_URL}/learning-history?${queryParams.toString()}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch learning history");
+    }
+
+    const resJson = await response.json();
+    return resJson.data;
+  },
+
+  async getHistoryItem(id: string, activityType?: string): Promise<LearningHistoryItem> {
+    const queryParams = new URLSearchParams();
+    if (activityType) queryParams.append("type", activityType);
+
+    const response = await fetch(`${API_BASE_URL}/learning-history/${id}?${queryParams.toString()}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch history details");
+    }
+
+    const resJson = await response.json();
+    return resJson.data;
+  },
+
+  async deleteHistoryItem(id: string, activityType?: string): Promise<{ success: boolean; message: string }> {
+    const queryParams = new URLSearchParams();
+    if (activityType) queryParams.append("type", activityType);
+
+    const response = await fetch(`${API_BASE_URL}/learning-history/${id}?${queryParams.toString()}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to delete history item");
+    }
+
+    return response.json();
+  },
+
+  async getSuggestions(): Promise<SuggestionItem[]> {
+    const response = await fetch(`${API_BASE_URL}/learning-history/suggestions`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch personalized suggestions");
+    }
+
+    const resJson = await response.json();
+    return resJson.data;
+  }
+};
+

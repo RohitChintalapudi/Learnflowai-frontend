@@ -38,7 +38,7 @@ function DashboardSkeleton() {
     <div className="p-8 max-w-[1400px] mx-auto space-y-8 flex-1 overflow-y-auto no-scrollbar">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="h-10 w-64 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-xl animate-pulse"></div>
+        <h1 data-tour="analytics-heading" className="text-3xl font-bold text-[var(--lf-text-primary)]">AI Learning Analytics</h1>
         <div className="h-10 w-32 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-full animate-pulse"></div>
       </div>
       
@@ -164,7 +164,7 @@ function AnalyticsDashboard() {
       <div className="p-8 max-w-[1400px] mx-auto space-y-8 flex-1 overflow-y-auto no-scrollbar">
       
       <header className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-[var(--lf-text-primary)]">AI Learning Analytics</h1>
+        <h1 data-tour="analytics-heading" className="text-3xl font-bold text-[var(--lf-text-primary)]">AI Learning Analytics</h1>
         <div className="flex items-center gap-2 px-4 py-2 bg-[var(--lf-bg-secondary)] border border-[var(--lf-border-primary)] rounded-full text-sm font-medium text-[var(--lf-text-secondary)]">
           <Activity className="h-4 w-4 text-amber-500" />
           Last 30 Days
@@ -251,7 +251,7 @@ function AnalyticsDashboard() {
             </h3>
             <div className="h-72">
               {activity && activity.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 1, height: 1 }}>
                   <AreaChart data={activity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
@@ -304,7 +304,7 @@ function AnalyticsDashboard() {
             </h3>
             {consistency ? (
               <div className="relative w-64 h-64 flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 1, height: 1 }}>
                   <PieChart>
                     <Pie
                       data={[{ value: consistency.score }, { value: 100 - consistency.score }]}
@@ -409,7 +409,7 @@ function AnalyticsDashboard() {
               <Brain className="h-5 w-5 text-purple-500" /> Feature Usage Distribution
             </h3>
             {featureUsage && featureUsage.length > 0 ? (
-              <ResponsiveContainer width="100%" height={350}>
+              <ResponsiveContainer width="100%" height={350} initialDimension={{ width: 1, height: 350 }}>
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={featureUsage}>
                   <PolarGrid stroke="var(--lf-border-primary)" />
                   <PolarAngleAxis dataKey="feature" tick={{ fill: 'var(--lf-text-secondary)', fontSize: 12 }} />

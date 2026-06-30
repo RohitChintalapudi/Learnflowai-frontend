@@ -19,11 +19,13 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  PlayCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { ProfileModal } from "./ProfileModal";
 import { authStore } from "../store/authStore";
 import { authClient } from "../lib/auth-client";
+import { useProductTour } from "../contexts/ProductTourContext";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
@@ -32,13 +34,14 @@ const navItems = [
   { icon: StickyNote, label: "Notes", to: "/notes" },
   { icon: HelpCircle, label: "Quizzes", to: "/quizzes" },
   { icon: BarChart3, label: "Analytics", to: "/analytics" },
-  { icon: History, label: "Learning History", to: "#" },
+  { icon: History, label: "Learning History", to: "/learning-history" },
   { icon: Settings, label: "Settings", to: "#" },
 ];
 
 export function DashboardLayout({ children, headerTitle, hideHeader = false }: { children: React.ReactNode, headerTitle?: React.ReactNode, hideHeader?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { startTour } = useProductTour();
   const queryClient = useQueryClient();
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof document !== "undefined") {
@@ -125,7 +128,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
   return (
     <div className="h-screen w-full flex bg-[var(--lf-bg)] text-[var(--lf-text-primary)] overflow-hidden selection:bg-[var(--lf-accent)] selection:text-white font-sans relative">
       {/* ── SIDEBAR ────────────────────────────────────────────────────────── */}
-      <aside className={`flex-shrink-0 border-r border-[var(--lf-border)] bg-white/80 dark:bg-black/60 backdrop-blur-xl flex flex-col relative z-20 transition-all duration-300 ${isCollapsed ? "w-[76px]" : "w-64"}`}>
+      <aside data-tour="sidebar" className={`flex-shrink-0 border-r border-[var(--lf-border)] bg-white/80 dark:bg-black/60 backdrop-blur-xl flex flex-col relative z-20 transition-all duration-300 ${isCollapsed ? "w-[76px]" : "w-64"}`}>
         
         {/* Toggle Collapse Button */}
         <button 
@@ -154,10 +157,11 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
             const Icon = item.icon;
             const active = location.pathname.startsWith(item.to) && item.to !== "#" && item.to !== "/" && (item.to === "/dashboard" ? location.pathname === "/dashboard" : true);
             return (
-              <Link
-                key={idx}
-                to={item.to}
-                title={isCollapsed ? item.label : undefined}
+                <Link
+                  key={idx}
+                  to={item.to}
+                  title={isCollapsed ? item.label : undefined}
+                  {...(item.label === "Settings" ? { "data-tour": "settings-link" } : {})}
                 className={`w-full flex items-center rounded-xl transition-all duration-200 group relative overflow-hidden ${isCollapsed ? "justify-center p-3" : "gap-3 px-3 py-2.5"} ${active ? "bg-gradient-to-r from-orange-500/15 to-orange-500/5 text-[var(--lf-accent)] shadow-sm shadow-orange-500/10" : "text-[var(--lf-text-secondary)] hover:bg-[var(--lf-surface)] hover:text-[var(--lf-text-primary)] hover:shadow-sm"} active:scale-[0.97]`}
               >
                 {/* Active background glow */}
@@ -191,7 +195,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
         </nav>
 
         {/* Profile Card */}
-        <div className={`p-4 border-t border-[var(--lf-border)] transition-all ${isCollapsed ? "px-2" : ""}`}>
+        <div data-tour="profile-card" className={`p-4 border-t border-[var(--lf-border)] transition-all ${isCollapsed ? "px-2" : ""}`}>
           {isCollapsed ? (
             <button 
               onClick={() => setIsProfileModalOpen(true)}
@@ -229,7 +233,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
       </aside>
 
       {/* ── MAIN CONTENT AREA ──────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col relative z-10 overflow-hidden bg-transparent">
+      <main data-tour="dashboard-content" className="flex-1 flex flex-col relative z-10 overflow-hidden bg-transparent">
 
 
         {/* Top Header */}
@@ -292,6 +296,14 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
                   alt="Profile"
                   className="h-full w-full object-cover"
                 />
+              </button>
+
+              <button
+                onClick={startTour}
+                className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-orange-500 group shrink-0"
+                title="Replay Product Tour"
+              >
+                <PlayCircle className="h-5 w-5" />
               </button>
 
               <button

@@ -197,7 +197,7 @@ function QuizDashboardPage() {
   return (
     <DashboardLayout headerTitle={
       <div className="flex items-center gap-2">
-        <h2 className="text-lg font-bold">Quiz Dashboard</h2>
+        <h2 data-tour="quizzes-heading" className="text-lg font-bold">Quiz Dashboard</h2>
       </div>
     }>
       <div className="flex-1 overflow-y-auto p-8 relative no-scrollbar">

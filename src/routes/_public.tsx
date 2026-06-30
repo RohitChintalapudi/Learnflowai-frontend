@@ -10,13 +10,6 @@ import {
   Sun,
   Moon,
   Mail,
-  BrainCircuit,
-  Wand2,
-  ListTodo,
-  FileText,
-  Layers,
-  LineChart,
-  CheckCircle2,
 } from "lucide-react";
 
 import { authStore } from "../store/authStore";

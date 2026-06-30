@@ -91,7 +91,7 @@ function NotesPage() {
                     <Notebook className="h-6 w-6 text-orange-500" />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-[var(--lf-text-primary)]">Your Recent Notes</h1>
+                    <h1 data-tour="notes-heading" className="text-2xl font-bold text-[var(--lf-text-primary)]">Your Recent Notes</h1>
                     <p className="text-[14px] text-[var(--lf-text-secondary)]">Access, review, and download your AI-generated study notes.</p>
                   </div>
                 </div>

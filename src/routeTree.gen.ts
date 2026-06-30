@@ -16,6 +16,7 @@ import { Route as PublicSignupRouteImport } from './routes/_public/signup'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
 import { Route as AuthenticatedQuizzesRouteImport } from './routes/_authenticated/quizzes'
 import { Route as AuthenticatedNotesRouteImport } from './routes/_authenticated/notes'
+import { Route as AuthenticatedLearningHistoryRouteImport } from './routes/_authenticated/learning-history'
 import { Route as AuthenticatedHome_cleanRouteImport } from './routes/_authenticated/home_clean'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
@@ -57,6 +58,12 @@ const AuthenticatedNotesRoute = AuthenticatedNotesRouteImport.update({
   path: '/notes',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedLearningHistoryRoute =
+  AuthenticatedLearningHistoryRouteImport.update({
+    id: '/learning-history',
+    path: '/learning-history',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedHome_cleanRoute = AuthenticatedHome_cleanRouteImport.update({
   id: '/home_clean',
   path: '/home_clean',
@@ -102,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/documents': typeof AuthenticatedDocumentsRoute
   '/home': typeof AuthenticatedHomeRoute
   '/home_clean': typeof AuthenticatedHome_cleanRoute
+  '/learning-history': typeof AuthenticatedLearningHistoryRoute
   '/notes': typeof AuthenticatedNotesRoute
   '/quizzes': typeof AuthenticatedQuizzesRoute
   '/login': typeof PublicLoginRoute
@@ -116,6 +124,7 @@ export interface FileRoutesByTo {
   '/documents': typeof AuthenticatedDocumentsRoute
   '/home': typeof AuthenticatedHomeRoute
   '/home_clean': typeof AuthenticatedHome_cleanRoute
+  '/learning-history': typeof AuthenticatedLearningHistoryRoute
   '/notes': typeof AuthenticatedNotesRoute
   '/quizzes': typeof AuthenticatedQuizzesRoute
   '/login': typeof PublicLoginRoute
@@ -132,6 +141,7 @@ export interface FileRoutesById {
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/home_clean': typeof AuthenticatedHome_cleanRoute
+  '/_authenticated/learning-history': typeof AuthenticatedLearningHistoryRoute
   '/_authenticated/notes': typeof AuthenticatedNotesRoute
   '/_authenticated/quizzes': typeof AuthenticatedQuizzesRoute
   '/_public/login': typeof PublicLoginRoute
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/home'
     | '/home_clean'
+    | '/learning-history'
     | '/notes'
     | '/quizzes'
     | '/login'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/home'
     | '/home_clean'
+    | '/learning-history'
     | '/notes'
     | '/quizzes'
     | '/login'
@@ -178,6 +190,7 @@ export interface FileRouteTypes {
     | '/_authenticated/documents'
     | '/_authenticated/home'
     | '/_authenticated/home_clean'
+    | '/_authenticated/learning-history'
     | '/_authenticated/notes'
     | '/_authenticated/quizzes'
     | '/_public/login'
@@ -243,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/learning-history': {
+      id: '/_authenticated/learning-history'
+      path: '/learning-history'
+      fullPath: '/learning-history'
+      preLoaderRoute: typeof AuthenticatedLearningHistoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/home_clean': {
       id: '/_authenticated/home_clean'
       path: '/home_clean'
@@ -301,6 +321,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedHome_cleanRoute: typeof AuthenticatedHome_cleanRoute
+  AuthenticatedLearningHistoryRoute: typeof AuthenticatedLearningHistoryRoute
   AuthenticatedNotesRoute: typeof AuthenticatedNotesRoute
   AuthenticatedQuizzesRoute: typeof AuthenticatedQuizzesRoute
   AuthenticatedWorkspaceDocumentIdRoute: typeof AuthenticatedWorkspaceDocumentIdRoute
@@ -313,6 +334,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedHome_cleanRoute: AuthenticatedHome_cleanRoute,
+  AuthenticatedLearningHistoryRoute: AuthenticatedLearningHistoryRoute,
   AuthenticatedNotesRoute: AuthenticatedNotesRoute,
   AuthenticatedQuizzesRoute: AuthenticatedQuizzesRoute,
   AuthenticatedWorkspaceDocumentIdRoute: AuthenticatedWorkspaceDocumentIdRoute,
