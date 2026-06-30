@@ -201,6 +201,10 @@ function QuizDashboardPage() {
       </div>
     }>
       <div className="flex-1 overflow-y-auto p-8 relative no-scrollbar">
+        {/* Orange glow background */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[150px] pointer-events-none translate-x-1/4 -translate-y-1/4" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-500/8 rounded-full blur-[120px] pointer-events-none -translate-x-1/4 translate-y-1/4" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[130px] pointer-events-none" />
         <motion.div 
           variants={containerVariants} 
           initial="hidden" 

@@ -120,26 +120,6 @@ function LoginPage() {
           </p>
         </div>
 
-        {/* Google Sign In Button */}
-        <div className="mb-6">
-          <GoogleSignInButton
-            onClick={handleGoogleSignIn}
-            isLoading={isGoogleLoading}
-            disabled={isLoading}
-          />
-        </div>
-
-        {/* Divider */}
-        <div className="relative mb-6">
-          <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t border-stone-200 dark:border-stone-850" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white dark:bg-stone-950 px-3 text-stone-500 dark:text-stone-400 font-semibold tracking-wider">
-              Or continue with
-            </span>
-          </div>
-        </div>
 
         {/* Error Message banner if any */}
         {error && (
@@ -276,17 +256,12 @@ function LoginPage() {
 </div>
 
 {/* Google Sign In */}
-<button
-  type="button"
-  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-stone-300 dark:border-stone-700 rounded-lg bg-white dark:bg-stone-900 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all duration-200 text-sm font-semibold text-stone-700 dark:text-white"
->
-  <img
-    src="https://www.svgrepo.com/show/475656/google-color.svg"
-    alt="Google"
-    className="w-5 h-5"
-  />
-  Sign in with Google
-</button>
+<GoogleSignInButton
+  onClick={handleGoogleSignIn}
+  isLoading={isGoogleLoading}
+  disabled={isLoading}
+  label="Sign in with Google"
+/>
 
 </form>
 

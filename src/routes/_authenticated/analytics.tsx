@@ -161,7 +161,12 @@ function AnalyticsDashboard() {
 
   return (
     <DashboardLayout headerTitle="Analytics">
-      <div className="p-8 max-w-[1400px] mx-auto space-y-8 flex-1 overflow-y-auto no-scrollbar">
+      <div className="p-8 max-w-[1400px] mx-auto space-y-8 flex-1 overflow-y-auto no-scrollbar relative">
+        
+        {/* Orange glow background */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[150px] pointer-events-none translate-x-1/4 -translate-y-1/4" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-500/8 rounded-full blur-[120px] pointer-events-none -translate-x-1/4 translate-y-1/4" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[130px] pointer-events-none" />
       
       <header className="flex items-center justify-between">
         <h1 data-tour="analytics-heading" className="text-3xl font-bold text-[var(--lf-text-primary)]">AI Learning Analytics</h1>
@@ -209,8 +214,12 @@ function AnalyticsDashboard() {
       )}
 
       {/* Heatmap Section */}
-      <section className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-8 card-shadow">
-        <h3 className="text-lg font-semibold text-[var(--lf-text-primary)] mb-6 flex items-center gap-2">
+      <section className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-8 card-shadow relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-0">
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-orange-500/10 rounded-full blur-[80px]" />
+          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-[80px]" />
+        </div>
+        <h3 className="text-lg font-semibold text-[var(--lf-text-primary)] mb-6 flex items-center gap-2 relative z-10">
           <Calendar className="h-5 w-5 text-amber-500" /> Learning Consistency
         </h3>
         <div className="w-full overflow-x-auto pb-4 no-scrollbar">
@@ -246,7 +255,11 @@ function AnalyticsDashboard() {
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-7 space-y-6">
           <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-6 card-shadow relative overflow-hidden">
-            <h3 className="text-lg font-semibold text-[var(--lf-text-primary)] mb-6 flex items-center gap-2">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-0">
+              <div className="absolute -top-24 -left-24 w-48 h-48 bg-orange-500/10 rounded-full blur-[80px]" />
+              <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-[80px]" />
+            </div>
+            <h3 className="text-lg font-semibold text-[var(--lf-text-primary)] mb-6 flex items-center gap-2 relative z-10">
               <Activity className="h-5 w-5 text-amber-500" /> Activity Timeline
             </h3>
             <div className="h-72">
@@ -278,16 +291,22 @@ function AnalyticsDashboard() {
           {/* Productivity Stats */}
           {productivity && (
             <div className="grid grid-cols-2 gap-6">
-              <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-6 card-shadow flex items-center gap-4">
-                <div className="p-4 bg-blue-500/10 rounded-xl text-blue-500"><Calendar className="h-6 w-6" /></div>
-                <div>
+              <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-6 card-shadow flex items-center gap-4 relative overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-0">
+                  <div className="absolute -top-12 -left-12 w-24 h-24 bg-orange-500/10 rounded-full blur-[40px]" />
+                </div>
+                <div className="p-4 bg-blue-500/10 rounded-xl text-blue-500 relative z-10"><Calendar className="h-6 w-6" /></div>
+                <div className="relative z-10">
                   <p className="text-sm text-[var(--lf-text-secondary)] font-medium">Most Active Day</p>
                   <p className="text-xl font-bold text-[var(--lf-text-primary)]">{productivity.mostActiveDay || "N/A"}</p>
                 </div>
               </div>
-              <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-6 card-shadow flex items-center gap-4">
-                <div className="p-4 bg-purple-500/10 rounded-xl text-purple-500"><Clock className="h-6 w-6" /></div>
-                <div>
+              <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-6 card-shadow flex items-center gap-4 relative overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-0">
+                  <div className="absolute -top-12 -left-12 w-24 h-24 bg-orange-500/10 rounded-full blur-[40px]" />
+                </div>
+                <div className="p-4 bg-purple-500/10 rounded-xl text-purple-500 relative z-10"><Clock className="h-6 w-6" /></div>
+                <div className="relative z-10">
                   <p className="text-sm text-[var(--lf-text-secondary)] font-medium">Peak Hour</p>
                   <p className="text-xl font-bold text-[var(--lf-text-primary)]">{productivity.mostActiveHour || "N/A"}</p>
                 </div>
@@ -298,8 +317,12 @@ function AnalyticsDashboard() {
 
         {/* Consistency Dial */}
         <div className="lg:col-span-5">
-          <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-6 card-shadow h-full flex flex-col items-center justify-center">
-            <h3 className="text-lg font-semibold text-[var(--lf-text-primary)] mb-8 w-full text-left flex items-center gap-2">
+          <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-6 card-shadow h-full flex flex-col items-center justify-center relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-0">
+              <div className="absolute -top-24 -left-24 w-48 h-48 bg-orange-500/10 rounded-full blur-[80px]" />
+              <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-[80px]" />
+            </div>
+            <h3 className="text-lg font-semibold text-[var(--lf-text-primary)] mb-8 w-full text-left flex items-center gap-2 relative z-10">
               <Target className="h-5 w-5 text-emerald-500" /> Consistency Score
             </h3>
             {consistency ? (
@@ -355,8 +378,12 @@ function AnalyticsDashboard() {
         
         {/* Topics & Revisions */}
         <div className="lg:col-span-6 space-y-6">
-          <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-6 card-shadow">
-            <h3 className="text-lg font-semibold text-[var(--lf-text-primary)] mb-6 flex items-center gap-2">
+          <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-6 card-shadow relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-0">
+              <div className="absolute -top-24 -left-24 w-48 h-48 bg-orange-500/10 rounded-full blur-[80px]" />
+              <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-[80px]" />
+            </div>
+            <h3 className="text-lg font-semibold text-[var(--lf-text-primary)] mb-6 flex items-center gap-2 relative z-10">
               <Lightbulb className="h-5 w-5 text-yellow-500" /> Top Topics Focus
             </h3>
             {topics && topics.length > 0 ? (
@@ -376,8 +403,12 @@ function AnalyticsDashboard() {
             ) : <EmptyState message="No topics identified yet." />}
           </div>
 
-          <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-6 card-shadow">
-            <h3 className="text-lg font-semibold text-[var(--lf-text-primary)] mb-6 flex items-center gap-2">
+          <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-6 card-shadow relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-0">
+              <div className="absolute -top-24 -left-24 w-48 h-48 bg-orange-500/10 rounded-full blur-[80px]" />
+              <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-[80px]" />
+            </div>
+            <h3 className="text-lg font-semibold text-[var(--lf-text-primary)] mb-6 flex items-center gap-2 relative z-10">
               <AlertCircle className="h-5 w-5 text-red-500" /> Revision Recommendations
             </h3>
             {revisions && revisions.length > 0 ? (
@@ -404,8 +435,12 @@ function AnalyticsDashboard() {
 
         {/* Radar Chart */}
         <div className="lg:col-span-6">
-          <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-6 card-shadow h-full min-h-[400px] flex flex-col items-center">
-            <h3 className="text-lg font-semibold text-[var(--lf-text-primary)] mb-2 w-full text-left flex items-center gap-2">
+          <div className="bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl p-6 card-shadow h-full min-h-[400px] flex flex-col items-center relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-0">
+              <div className="absolute -top-24 -left-24 w-48 h-48 bg-orange-500/10 rounded-full blur-[80px]" />
+              <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-[80px]" />
+            </div>
+            <h3 className="text-lg font-semibold text-[var(--lf-text-primary)] mb-2 w-full text-left flex items-center gap-2 relative z-10">
               <Brain className="h-5 w-5 text-purple-500" /> Feature Usage Distribution
             </h3>
             {featureUsage && featureUsage.length > 0 ? (

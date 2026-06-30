@@ -250,9 +250,10 @@ function LearningHistoryPage() {
   return (
     <DashboardLayout headerTitle="Learning History">
       <div className="flex-1 overflow-y-auto p-8 relative no-scrollbar">
-        {/* Decorative Ambient glows */}
-        <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-gradient-to-br from-orange-500/10 to-transparent blur-[120px] rounded-full pointer-events-none translate-x-1/3 -translate-y-1/3" />
-        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-orange-500/5 to-transparent blur-[100px] rounded-full pointer-events-none -translate-x-1/3 translate-y-1/3" />
+        {/* Orange glow background */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[150px] pointer-events-none translate-x-1/4 -translate-y-1/4" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-500/8 rounded-full blur-[120px] pointer-events-none -translate-x-1/4 translate-y-1/4" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[130px] pointer-events-none" />
 
         <div className="max-w-[1200px] mx-auto space-y-8 pb-12 relative z-10">
           {/* Header Description */}
