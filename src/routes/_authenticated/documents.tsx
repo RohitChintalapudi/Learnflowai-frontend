@@ -18,7 +18,7 @@ import { DocumentAPI } from "../../lib/api";
 import type { DocumentMetadata } from "../../lib/api";
 import toast from "react-hot-toast";
 
-export const Route = createFileRoute("/_public/documents")({
+export const Route = createFileRoute("/_authenticated/documents")({
   component: DocumentsPage,
 });
 

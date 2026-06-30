@@ -146,7 +146,66 @@ export const DocumentAPI = {
   },
 };
 
+export interface SimulationEntity {
+  id: string;
+  label: string;
+  role: string;
+}
+
+export interface SimulationStep {
+  stepNumber: number;
+  title: string;
+  description: string;
+  activeEntities: string[];
+  explanation: string;
+}
+
+export interface SimulationData {
+  id: string;
+  title: string;
+  simulationType: string;
+  difficulty: string;
+  overview: string;
+  entities: SimulationEntity[];
+  steps: SimulationStep[];
+  summary: string;
+}
+
+export interface GenerateSimulationRequest {
+  documentId: string;
+  highlightedText: string;
+  simulationType: "visual-flow" | "step-by-step" | "real-world";
+  difficulty: "beginner" | "intermediate" | "advanced";
+}
+
+export interface GenerateSimulationResponse {
+  success: boolean;
+  message: string;
+  simulation?: SimulationData;
+}
+
 export const WorkflowAPI = {
+  /**
+   * Generate an AI Educational Simulation
+   */
+  async generateSimulation(data: GenerateSimulationRequest): Promise<GenerateSimulationResponse> {
+    const response = await fetch(`${API_BASE_URL}/workflow/simulation`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate simulation");
+    }
+
+    return response.json();
+  },
+
   /**
    * Generate an AI explanation for highlighted text
    */
@@ -163,6 +222,27 @@ export const WorkflowAPI = {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || "Failed to generate explanation");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Generate an AI analogy for highlighted text based on a specific style
+   */
+  async generateAnalogy(documentId: string, highlightedText: string, style: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/analogy`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText, style }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate analogy");
     }
 
     return response.json();
@@ -291,6 +371,49 @@ export const WorkflowAPI = {
 
     return response.json();
   },
+
+  /**
+   * Generate an AI mind map for highlighted text
+   */
+  async generateMindMap(documentId: string, highlightedText: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/mindmap`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate mind map");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Explain an AI generated mind map
+   */
+  async explainMindMap(mindMapId: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/mindmap/explain`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ mindMapId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to explain mind map");
+    }
+
+    return response.json();
+  },
+
 
   /**
    * Get all AI generated notes for the user
@@ -442,6 +565,110 @@ export const ProfileAPI = {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || "Failed to delete avatar");
     }
+    return response.json();
+  }
+};
+
+// --- Analytics Types & API ---
+
+export interface OverviewStats {
+  documentsUploaded: number;
+  notesGenerated: number;
+  quizzesGenerated: number;
+  explanationsGenerated: number;
+  interviewQuestionsGenerated: number;
+  mindMapsGenerated: number;
+  analogiesGenerated: number;
+  totalAiInteractions: number;
+}
+
+export interface ActivityTimelineItem {
+  date: string;
+  count: number;
+}
+
+export interface FeatureUsageItem {
+  feature: string;
+  count: number;
+}
+
+export interface TopicItem {
+  topic: string;
+  frequency: number;
+}
+
+export interface ConsistencyScore {
+  score: number;
+  level: "Poor" | "Average" | "Good" | "Excellent";
+  reason: string;
+}
+
+export interface ProductivityStats {
+  mostActiveDay: string;
+  mostActiveHour: string;
+  averageDailyInteractions: number;
+  totalLearningSessions: number;
+}
+
+export interface RevisionCandidate {
+  topic: string;
+  daysSinceLastReview: number;
+  priority: "High" | "Medium" | "Low";
+}
+
+export interface AIInsights {
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  nextActions: string[];
+}
+
+export const AnalyticsAPI = {
+  async getOverview(): Promise<OverviewStats> {
+    const response = await fetch(`${API_BASE_URL}/analytics/overview`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch analytics overview");
+    return response.json();
+  },
+
+  async getActivity(days: number = 30): Promise<ActivityTimelineItem[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/activity?days=${days}`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch activity timeline");
+    return response.json();
+  },
+
+  async getFeatureUsage(): Promise<FeatureUsageItem[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/feature-usage`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch feature usage");
+    return response.json();
+  },
+
+  async getTopics(): Promise<TopicItem[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/topics`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch topics");
+    return response.json();
+  },
+
+  async getConsistency(): Promise<ConsistencyScore> {
+    const response = await fetch(`${API_BASE_URL}/analytics/consistency`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch consistency score");
+    return response.json();
+  },
+
+  async getProductivity(): Promise<ProductivityStats> {
+    const response = await fetch(`${API_BASE_URL}/analytics/productivity`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch productivity stats");
+    return response.json();
+  },
+
+  async getRevisions(): Promise<RevisionCandidate[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/revisions`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch revision recommendations");
+    return response.json();
+  },
+
+  async getInsights(): Promise<AIInsights> {
+    const response = await fetch(`${API_BASE_URL}/analytics/insights`, { credentials: "include" });
+    if (!response.ok) throw new Error("Failed to fetch AI insights");
     return response.json();
   }
 };

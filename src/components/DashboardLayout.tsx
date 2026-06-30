@@ -22,14 +22,16 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { ProfileModal } from "./ProfileModal";
+import { authStore } from "../store/authStore";
+import { authClient } from "../lib/auth-client";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", to: "/home" },
+  { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
   { icon: FileText, label: "Documents", to: "/documents" },
   { icon: Brain, label: "AI Workspace", to: "/workspace" },
   { icon: StickyNote, label: "Notes", to: "/notes" },
   { icon: HelpCircle, label: "Quizzes", to: "/quizzes" },
-  { icon: BarChart3, label: "Analytics", to: "#" },
+  { icon: BarChart3, label: "Analytics", to: "/analytics" },
   { icon: History, label: "Learning History", to: "#" },
   { icon: Settings, label: "Settings", to: "#" },
 ];
@@ -76,7 +78,11 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains("dark");
-    setTheme(isDark ? "dark" : "light");
+    const currentTheme = isDark ? "dark" : "light";
+    const timer = setTimeout(() => {
+      setTheme(currentTheme);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const toggleTheme = () => {
@@ -93,23 +99,29 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
   const handleLogout = () => setShowLogoutConfirm(true);
 
   const confirmLogout = async () => {
-  setShowLogoutConfirm(false);
+ setShowLogoutConfirm(false);
 
   try {
-    await fetch("http://localhost:3000/api/auth/sign-out", {
-      method: "POST",
-      credentials: "include",
-    });
-  } catch (error) {
-    console.error(error);
+    await authClient.signOut();
+
+    // Clear cached queries
+    queryClient.clear();
+
+    // Update auth state
+    authStore.setAuthenticated(false);
+
+    toast.success("You have been logged out.");
+    navigate({ to: "/login" });
+  } catch (err) {
+    console.error("Logout failed:", err);
+
+    // Ensure local state is cleared even if request fails
+    queryClient.clear();
+    authStore.setAuthenticated(false);
+
+    navigate({ to: "/login" });
   }
-
-  queryClient.clear();
-
-  toast.success("You have been logged out.");
-  navigate({ to: "/login" });
 };
-
   return (
     <div className="h-screen w-full flex bg-[var(--lf-bg)] text-[var(--lf-text-primary)] overflow-hidden selection:bg-[var(--lf-accent)] selection:text-white font-sans relative">
       {/* ── SIDEBAR ────────────────────────────────────────────────────────── */}
@@ -124,7 +136,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
         </button>
 
         <div className="h-16 flex items-center justify-center border-b border-[var(--lf-border)] transition-all">
-          <Link to="/home" className={`flex items-center gap-3 hover:opacity-80 transition-opacity w-full px-6 ${isCollapsed ? "justify-center px-0" : ""}`}>
+          <Link to="/dashboard" className={`flex items-center gap-3 hover:opacity-80 transition-opacity w-full px-6 ${isCollapsed ? "justify-center px-0" : ""}`}>
             <div className="flex items-center justify-center shrink-0">
               <img src="/logo.png" className="block dark:hidden h-6 w-auto object-contain" alt="Learnflow AI Logo" />
               <img src="/logo_dark.png" className="hidden dark:block h-6 w-auto object-contain" alt="Learnflow AI Logo" />
@@ -140,7 +152,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
         <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1.5 no-scrollbar overflow-x-hidden">
           {navItems.map((item, idx) => {
             const Icon = item.icon;
-            const active = location.pathname.startsWith(item.to) && item.to !== "#" && item.to !== "/" && (item.to === "/home" ? location.pathname === "/home" : true);
+            const active = location.pathname.startsWith(item.to) && item.to !== "#" && item.to !== "/" && (item.to === "/dashboard" ? location.pathname === "/dashboard" : true);
             return (
               <Link
                 key={idx}
