@@ -234,7 +234,11 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
       {/* ── MAIN CONTENT AREA ──────────────────────────────────────────────── */}
       <main data-tour="dashboard-content" className="flex-1 flex flex-col relative z-10 overflow-hidden bg-transparent">
-
+        {/* Background Ambient Glows */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
+          <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] rounded-full bg-orange-500/[0.03] dark:bg-orange-500/[0.06] blur-[130px]" />
+          <div className="absolute bottom-[20%] right-[10%] w-[600px] h-[600px] rounded-full bg-amber-500/[0.02] dark:bg-amber-600/[0.04] blur-[150px]" />
+        </div>
 
         {/* Top Header */}
         {!hideHeader && (

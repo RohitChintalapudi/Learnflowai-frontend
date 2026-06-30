@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGenerateSimulation } from "../hooks/useGenerateSimulation";
-import { Settings } from "lucide-react";
 import {
   Play,
   Pause,
   RotateCcw,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
   Loader2,
   AlertTriangle,
   Activity,
@@ -602,7 +600,7 @@ export const SimulationGenerator: React.FC<SimulationGeneratorProps> = ({
                 </h4>
 
                 <div className={`py-1 flex flex-wrap justify-center gap-2`}>
-                  {simulation.entities.map((entity, index) => {
+                  {simulation.entities.map((entity) => {
                     const currentStepData = simulation.steps[activeStep];
 
                     const isActive = currentStepData?.activeEntities.includes(
