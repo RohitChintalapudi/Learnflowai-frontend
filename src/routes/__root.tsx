@@ -1,10 +1,11 @@
 import { createRootRoute, Outlet, Link } from "@tanstack/react-router";
 import { Toaster } from "react-hot-toast";
+import { ProductTourProvider } from "../contexts/ProductTourContext";
 // import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 
 export const Route = createRootRoute({
   component: () => (
-    <>
+    <ProductTourProvider>
       <Outlet />
       <Toaster
         position="top-right"
@@ -30,7 +31,7 @@ export const Route = createRootRoute({
         }}
       />
       {/* {import.meta.env.DEV && <TanStackRouterDevtools />} */}
-    </>
+    </ProductTourProvider>
   ),
   notFoundComponent: () => (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center bg-gray-50 dark:bg-zinc-950 font-sans">

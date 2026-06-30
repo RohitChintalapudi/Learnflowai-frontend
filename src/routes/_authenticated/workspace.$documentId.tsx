@@ -388,6 +388,7 @@ function WorkspacePage() {
               {features.map((feature) => (
                 <button
                   key={feature.id}
+                  data-tour={`ai-${feature.id === "analogy" ? "analogies" : feature.id === "simulation" ? "simulations" : feature.id}`}
                   onClick={() => handleFeatureClick(feature.id)}
                   className="flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all duration-300 group min-w-[70px] relative overflow-hidden hover:bg-orange-500/10 hover:shadow-[0_0_20px_rgba(255,122,24,0.25)] active:scale-90"
                 >
