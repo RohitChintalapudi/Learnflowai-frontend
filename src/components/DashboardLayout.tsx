@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { ProfileAPI } from "../lib/api";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   LayoutDashboard,
   FileText,
@@ -41,6 +42,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
   const navigate = useNavigate();
   const location = useLocation();
   const { startTour } = useProductTour();
+  const queryClient = useQueryClient();
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof document !== "undefined") {
       return document.documentElement.classList.contains("dark") ? "dark" : "light";
@@ -100,19 +102,29 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
   const handleLogout = () => setShowLogoutConfirm(true);
 
   const confirmLogout = async () => {
-    setShowLogoutConfirm(false);
-    try {
-      await authClient.signOut();
-      authStore.setAuthenticated(false);
-      toast.success("You have been logged out.");
-      navigate({ to: "/login" });
-    } catch (err) {
-      console.error("Logout failed:", err);
-      authStore.setAuthenticated(false);
-      navigate({ to: "/login" });
-    }
-  };
+ setShowLogoutConfirm(false);
 
+  try {
+    await authClient.signOut();
+
+    // Clear cached queries
+    queryClient.clear();
+
+    // Update auth state
+    authStore.setAuthenticated(false);
+
+    toast.success("You have been logged out.");
+    navigate({ to: "/login" });
+  } catch (err) {
+    console.error("Logout failed:", err);
+
+    // Ensure local state is cleared even if request fails
+    queryClient.clear();
+    authStore.setAuthenticated(false);
+
+    navigate({ to: "/login" });
+  }
+};
   return (
     <div className="h-screen w-full flex bg-[var(--lf-bg)] text-[var(--lf-text-primary)] overflow-hidden selection:bg-[var(--lf-accent)] selection:text-white font-sans relative">
       {/* ── SIDEBAR ────────────────────────────────────────────────────────── */}
