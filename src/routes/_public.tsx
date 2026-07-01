@@ -209,12 +209,12 @@ function PublicLayout() {
                 <Link to="/" className="flex items-center gap-2.5 mb-6 group">
                   <img
                     src="/logo.png"
-                    className="block dark:hidden h-8 w-auto object-contain transition-transform group-hover:scale-105"
+                    className="block dark:hidden h-12 w-auto object-contain transition-transform group-hover:scale-105"
                     alt="Learnflow AI Logo"
                   />
                   <img
                     src="/logo_dark.png"
-                    className="hidden dark:block h-8 w-auto object-contain transition-transform group-hover:scale-105"
+                    className="hidden dark:block h-12 w-auto object-contain transition-transform group-hover:scale-105"
                     alt="Learnflow AI Logo"
                   />
                   <span className="text-2xl font-extrabold tracking-tight text-stone-900 dark:text-white">
