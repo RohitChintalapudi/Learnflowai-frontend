@@ -913,5 +913,18 @@ export const SettingsAPI = {
     }
 
     return data as { success: boolean; message: string };
+  },
+
+  async deleteAccount(payload: { password?: string }): Promise<{ success: boolean; message: string }> {
+    const { data, error } = await authClient.$fetch(`${API_BASE_URL}/settings/delete-account`, {
+      method: "DELETE",
+      body: payload
+    });
+
+    if (error) {
+      throw new Error(error.message || "Unable to delete account. Please try again.");
+    }
+
+    return data as { success: boolean; message: string };
   }
 };
