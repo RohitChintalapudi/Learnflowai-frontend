@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicSignupRouteImport } from './routes/_public/signup'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQuizzesRouteImport } from './routes/_authenticated/quizzes'
 import { Route as AuthenticatedNotesRouteImport } from './routes/_authenticated/notes'
 import { Route as AuthenticatedLearningHistoryRouteImport } from './routes/_authenticated/learning-history'
@@ -47,6 +48,11 @@ const PublicLoginRoute = PublicLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => PublicRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedQuizzesRoute = AuthenticatedQuizzesRouteImport.update({
   id: '/quizzes',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/learning-history': typeof AuthenticatedLearningHistoryRoute
   '/notes': typeof AuthenticatedNotesRoute
   '/quizzes': typeof AuthenticatedQuizzesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/login': typeof PublicLoginRoute
   '/signup': typeof PublicSignupRoute
   '/workspace/$documentId': typeof AuthenticatedWorkspaceDocumentIdRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/learning-history': typeof AuthenticatedLearningHistoryRoute
   '/notes': typeof AuthenticatedNotesRoute
   '/quizzes': typeof AuthenticatedQuizzesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/login': typeof PublicLoginRoute
   '/signup': typeof PublicSignupRoute
   '/workspace/$documentId': typeof AuthenticatedWorkspaceDocumentIdRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/_authenticated/learning-history': typeof AuthenticatedLearningHistoryRoute
   '/_authenticated/notes': typeof AuthenticatedNotesRoute
   '/_authenticated/quizzes': typeof AuthenticatedQuizzesRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_public/login': typeof PublicLoginRoute
   '/_public/signup': typeof PublicSignupRoute
   '/_public/': typeof PublicIndexRoute
@@ -162,6 +171,7 @@ export interface FileRouteTypes {
     | '/learning-history'
     | '/notes'
     | '/quizzes'
+    | '/settings'
     | '/login'
     | '/signup'
     | '/workspace/$documentId'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/learning-history'
     | '/notes'
     | '/quizzes'
+    | '/settings'
     | '/login'
     | '/signup'
     | '/workspace/$documentId'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/_authenticated/learning-history'
     | '/_authenticated/notes'
     | '/_authenticated/quizzes'
+    | '/_authenticated/settings'
     | '/_public/login'
     | '/_public/signup'
     | '/_public/'
@@ -241,6 +253,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/login'
       preLoaderRoute: typeof PublicLoginRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/quizzes': {
       id: '/_authenticated/quizzes'
@@ -324,6 +343,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedLearningHistoryRoute: typeof AuthenticatedLearningHistoryRoute
   AuthenticatedNotesRoute: typeof AuthenticatedNotesRoute
   AuthenticatedQuizzesRoute: typeof AuthenticatedQuizzesRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedWorkspaceDocumentIdRoute: typeof AuthenticatedWorkspaceDocumentIdRoute
   AuthenticatedWorkspaceIndexRoute: typeof AuthenticatedWorkspaceIndexRoute
 }
@@ -337,6 +357,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedLearningHistoryRoute: AuthenticatedLearningHistoryRoute,
   AuthenticatedNotesRoute: AuthenticatedNotesRoute,
   AuthenticatedQuizzesRoute: AuthenticatedQuizzesRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedWorkspaceDocumentIdRoute: AuthenticatedWorkspaceDocumentIdRoute,
   AuthenticatedWorkspaceIndexRoute: AuthenticatedWorkspaceIndexRoute,
 }
