@@ -926,5 +926,26 @@ export const SettingsAPI = {
     }
 
     return data as { success: boolean; message: string };
+  },
+
+  async exportData(): Promise<{ blob: Blob, filename: string }> {
+    let filename = "learnflow-data.zip";
+    const { data, error } = await authClient.$fetch<Blob>(`${API_BASE_URL}/settings/export`, {
+      method: "GET",
+      responseType: "blob",
+      onResponse: (context: any) => {
+        const cd = context.response?.headers?.get("Content-Disposition");
+        if (cd) {
+          const match = cd.match(/filename="?([^"]+)"?/);
+          if (match && match[1]) filename = match[1];
+        }
+      }
+    } as any);
+
+    if (error) {
+      throw new Error(error.message || "Unable to export your data. Please try again.");
+    }
+
+    return { blob: data as Blob, filename };
   }
 };
