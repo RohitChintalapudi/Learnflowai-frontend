@@ -1,6 +1,8 @@
 export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 const API_BASE_URL = `${BACKEND_URL}/api`;
 
+import { authClient } from "./auth-client";
+
 export interface DocumentMetadata {
   id: string;
   title: string;
@@ -873,5 +875,30 @@ export const LearningHistoryAPI = {
     return resJson.data;
   }
 };
+export interface AccountSettingsData {
+  id: string;
+  fullName: string;
+  email: string;
+  avatarUrl: string;
+  provider: string;
+  memberSince: string;
+}
 
-;
+export interface AccountSettingsResponse {
+  success: boolean;
+  data: AccountSettingsData;
+}
+
+export const SettingsAPI = {
+  async getAccountSettings(): Promise<AccountSettingsResponse> {
+    const { data, error } = await authClient.$fetch(`${API_BASE_URL}/settings/account`, {
+      method: "GET",
+    });
+
+    if (error) {
+      throw new Error(error.message || "Failed to fetch account settings");
+    }
+
+    return data as AccountSettingsResponse;
+  }
+};
