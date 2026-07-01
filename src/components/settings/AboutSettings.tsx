@@ -8,8 +8,9 @@ export function AboutSettings() {
       <SettingsCard className="text-center py-12">
         <div className="flex justify-center mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
-              <span className="text-white font-bold text-2xl">L</span>
+            <div className="flex items-center justify-center shrink-0">
+              <img src="/logo.png" className="block dark:hidden h-12 w-auto object-contain" alt="Learnflow AI Logo" />
+              <img src="/logo_dark.png" className="hidden dark:block h-12 w-auto object-contain" alt="Learnflow AI Logo" />
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-stone-900 dark:text-white">LearnFlow <span className="text-orange-500">AI</span></h2>
           </div>
