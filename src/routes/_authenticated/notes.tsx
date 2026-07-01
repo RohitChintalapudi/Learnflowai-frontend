@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { useReactToPrint } from "react-to-print";
 
-export const Route = createFileRoute("/_public/notes")({
+export const Route = createFileRoute("/_authenticated/notes")({
   component: NotesPage,
 });
 
@@ -24,7 +24,7 @@ function NotesPage() {
   const [selectedNote, setSelectedNote] = useState<SavedNote | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   
-  const { data: savedNotes = [] } = useQuery({
+  const { data: savedNotes = [], isLoading } = useQuery({
     queryKey: ['notes'],
     queryFn: async () => {
       const response = await WorkflowAPI.getNotes();
@@ -83,20 +83,32 @@ function NotesPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="flex-1 overflow-y-auto p-8 no-scrollbar"
+              className="flex-1 overflow-y-auto p-8 relative no-scrollbar"
             >
-              <div className="max-w-6xl mx-auto space-y-8">
+              {/* Orange glow background */}
+              <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[150px] pointer-events-none translate-x-1/4 -translate-y-1/4" />
+              <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-500/8 rounded-full blur-[120px] pointer-events-none -translate-x-1/4 translate-y-1/4" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[130px] pointer-events-none" />
+              <div className="max-w-6xl mx-auto space-y-8 relative z-10">
                 <div className="flex items-center gap-4 border-b border-[var(--lf-border)] pb-6">
                   <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center">
                     <Notebook className="h-6 w-6 text-orange-500" />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-[var(--lf-text-primary)]">Your Recent Notes</h1>
+                    <h1 data-tour="notes-heading" className="text-2xl font-bold text-[var(--lf-text-primary)]">Your Recent Notes</h1>
                     <p className="text-[14px] text-[var(--lf-text-secondary)]">Access, review, and download your AI-generated study notes.</p>
                   </div>
                 </div>
 
-                {savedNotes.length === 0 ? (
+                {isLoading ? (
+                  <div className="text-center py-20 bg-[var(--lf-surface)] rounded-3xl border border-[var(--lf-border)] border-dashed card-shadow">
+                    <div className="animate-pulse flex flex-col items-center">
+                      <div className="w-12 h-12 rounded-full bg-orange-500/20 mb-4" />
+                      <div className="h-4 bg-stone-200 dark:bg-stone-800 rounded w-48 mx-auto mb-2" />
+                      <div className="h-3 bg-stone-200 dark:bg-stone-800 rounded w-64 mx-auto" />
+                    </div>
+                  </div>
+                ) : savedNotes.length === 0 ? (
                   <div className="text-center py-20 bg-[var(--lf-surface)] rounded-3xl border border-[var(--lf-border)] border-dashed card-shadow">
                     <FileText className="h-12 w-12 text-[var(--lf-text-secondary)]/50 mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-[var(--lf-text-primary)] mb-2">No notes yet</h3>
@@ -201,9 +213,9 @@ function NotesPage() {
                         <Lightbulb className="h-6 w-6" /> Key Points
                       </h3>
                       <ul className="space-y-4">
-                        {selectedNote.data.keyPoints.map((point, i) => (
+                        {selectedNote.data.keyPoints.map((point: any, i: number) => (
                           <li key={i} className="text-[15px] leading-relaxed text-[var(--lf-text-primary)] flex items-start gap-3">
-                            <span className="text-amber-500 mt-1 flex-shrink-0">•</span> {point}
+                            <span className="text-amber-500 mt-1 flex-shrink-0">•</span> {typeof point === "object" && point !== null ? Object.values(point).join(": ") : point}
                           </li>
                         ))}
                       </ul>
@@ -214,9 +226,9 @@ function NotesPage() {
                         <BookOpen className="h-6 w-6" /> Important Concepts
                       </h3>
                       <ul className="space-y-4">
-                        {(selectedNote.data.importantConcepts || selectedNote.data.relatedConcepts || []).map((concept, i) => (
+                        {(selectedNote.data.importantConcepts || selectedNote.data.relatedConcepts || []).map((concept: any, i: number) => (
                           <li key={i} className="text-[15px] leading-relaxed text-[var(--lf-text-primary)] flex items-start gap-3">
-                            <span className="text-blue-500 mt-1 flex-shrink-0">•</span> {concept}
+                            <span className="text-blue-500 mt-1 flex-shrink-0">•</span> {typeof concept === "object" && concept !== null ? Object.values(concept).join(": ") : concept}
                           </li>
                         ))}
                       </ul>
@@ -227,9 +239,9 @@ function NotesPage() {
                         <GraduationCap className="h-6 w-6" /> Exam Tips
                       </h3>
                       <ul className="space-y-4">
-                        {selectedNote.data.examTips.map((tip, i) => (
+                        {selectedNote.data.examTips.map((tip: any, i: number) => (
                           <li key={i} className="text-[15px] leading-relaxed text-[var(--lf-text-primary)] flex items-start gap-3">
-                            <span className="text-emerald-500 mt-1 flex-shrink-0">•</span> {tip}
+                            <span className="text-emerald-500 mt-1 flex-shrink-0">•</span> {typeof tip === "object" && tip !== null ? Object.values(tip).join(": ") : tip}
                           </li>
                         ))}
                       </ul>
@@ -240,9 +252,9 @@ function NotesPage() {
                         <FileText className="h-6 w-6" /> Revision Notes
                       </h3>
                       <ul className="space-y-4">
-                        {selectedNote.data.revisionNotes.map((note, i) => (
+                        {selectedNote.data.revisionNotes.map((note: any, i: number) => (
                           <li key={i} className="text-[15px] leading-relaxed text-[var(--lf-text-primary)] flex items-start gap-3">
-                            <span className="text-purple-500 mt-1 flex-shrink-0">•</span> {note}
+                            <span className="text-purple-500 mt-1 flex-shrink-0">•</span> {typeof note === "object" && note !== null ? Object.values(note).join(": ") : note}
                           </li>
                         ))}
                       </ul>

@@ -18,7 +18,7 @@ import { DocumentAPI } from "../../lib/api";
 import type { DocumentMetadata } from "../../lib/api";
 import toast from "react-hot-toast";
 
-export const Route = createFileRoute("/_public/documents")({
+export const Route = createFileRoute("/_authenticated/documents")({
   component: DocumentsPage,
 });
 
@@ -170,7 +170,7 @@ function DocumentsPage() {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-[var(--lf-text-primary)] mb-2">
+              <h1 data-tour="documents-heading" className="text-3xl font-extrabold tracking-tight text-[var(--lf-text-primary)] mb-2">
                 Documents
               </h1>
               <p className="text-[15px] text-[var(--lf-text-secondary)]">

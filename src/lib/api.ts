@@ -146,7 +146,66 @@ export const DocumentAPI = {
   },
 };
 
+export interface SimulationEntity {
+  id: string;
+  label: string;
+  role: string;
+}
+
+export interface SimulationStep {
+  stepNumber: number;
+  title: string;
+  description: string;
+  activeEntities: string[];
+  explanation: string;
+}
+
+export interface SimulationData {
+  id: string;
+  title: string;
+  simulationType: string;
+  difficulty: string;
+  overview: string;
+  entities: SimulationEntity[];
+  steps: SimulationStep[];
+  summary: string;
+}
+
+export interface GenerateSimulationRequest {
+  documentId: string;
+  highlightedText: string;
+  simulationType: "visual-flow" | "step-by-step" | "real-world";
+  difficulty: "beginner" | "intermediate" | "advanced";
+}
+
+export interface GenerateSimulationResponse {
+  success: boolean;
+  message: string;
+  simulation?: SimulationData;
+}
+
 export const WorkflowAPI = {
+  /**
+   * Generate an AI Educational Simulation
+   */
+  async generateSimulation(data: GenerateSimulationRequest): Promise<GenerateSimulationResponse> {
+    const response = await fetch(`${API_BASE_URL}/workflow/simulation`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate simulation");
+    }
+
+    return response.json();
+  },
+
   /**
    * Generate an AI explanation for highlighted text
    */
@@ -163,6 +222,27 @@ export const WorkflowAPI = {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || "Failed to generate explanation");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Generate an AI analogy for highlighted text based on a specific style
+   */
+  async generateAnalogy(documentId: string, highlightedText: string, style: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/analogy`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText, style }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate analogy");
     }
 
     return response.json();
@@ -291,6 +371,49 @@ export const WorkflowAPI = {
 
     return response.json();
   },
+
+  /**
+   * Generate an AI mind map for highlighted text
+   */
+  async generateMindMap(documentId: string, highlightedText: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/mindmap`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ documentId, highlightedText }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to generate mind map");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Explain an AI generated mind map
+   */
+  async explainMindMap(mindMapId: string) {
+    const response = await fetch(`${API_BASE_URL}/workflow/mindmap/explain`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ mindMapId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to explain mind map");
+    }
+
+    return response.json();
+  },
+
 
   /**
    * Get all AI generated notes for the user
@@ -445,3 +568,310 @@ export const ProfileAPI = {
     return response.json();
   }
 };
+
+// --- Analytics Types & API ---
+
+export interface OverviewStats {
+  documentsUploaded: number;
+  notesGenerated: number;
+  quizzesGenerated: number;
+  explanationsGenerated: number;
+  interviewQuestionsGenerated: number;
+  mindMapsGenerated: number;
+  analogiesGenerated: number;
+  totalAiInteractions: number;
+}
+
+export interface ActivityTimelineItem {
+  date: string;
+  count: number;
+}
+
+export interface FeatureUsageItem {
+  feature: string;
+  count: number;
+}
+
+export interface TopicItem {
+  topic: string;
+  frequency: number;
+}
+
+export interface ConsistencyScore {
+  score: number;
+  level: "Poor" | "Average" | "Good" | "Excellent";
+  reason: string;
+}
+
+export interface ProductivityStats {
+  mostActiveDay: string;
+  mostActiveHour: string;
+  averageDailyInteractions: number;
+  totalLearningSessions: number;
+}
+
+export interface RevisionCandidate {
+  topic: string;
+  daysSinceLastReview: number;
+  priority: "High" | "Medium" | "Low";
+}
+
+export interface AIInsights {
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  nextActions: string[];
+}
+
+export const AnalyticsAPI = {
+  async getOverview(): Promise<OverviewStats> {
+    const response = await fetch(`${API_BASE_URL}/analytics/overview`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch analytics overview");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
+  },
+
+  async getActivity(days: number = 30): Promise<ActivityTimelineItem[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/activity?days=${days}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch activity timeline");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
+  },
+
+  async getFeatureUsage(): Promise<FeatureUsageItem[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/feature-usage`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch feature usage");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
+  },
+
+  async getTopics(): Promise<TopicItem[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/topics`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch topics");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
+  },
+
+  async getConsistency(): Promise<ConsistencyScore> {
+    const response = await fetch(`${API_BASE_URL}/analytics/consistency`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch consistency score");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
+  },
+
+  async getProductivity(): Promise<ProductivityStats> {
+    const response = await fetch(`${API_BASE_URL}/analytics/productivity`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch productivity stats");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
+  },
+
+  async getRevisions(): Promise<RevisionCandidate[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/revisions`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch revision recommendations");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
+  },
+
+  async getInsights(): Promise<AIInsights> {
+    const response = await fetch(`${API_BASE_URL}/analytics/insights`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch AI insights");
+    }
+    const res = await response.json();
+    const data = res.data !== undefined ? res.data : res;
+
+    return {
+      strengths: data.strengths || [],
+      weaknesses: data.weaknesses || data.areasToImprove || [],
+      recommendations: data.recommendations || [],
+      nextActions: data.nextActions || (data.recommendations ? data.recommendations.map((r: string) => r.startsWith("Action:") ? r : `Focus: ${r}`) : []),
+    };
+  }
+};
+
+export interface HistoryQueryOptions {
+  page?: number;
+  limit?: number;
+  search?: string;
+  feature?: string;
+  dateRange?: string;
+  sort?: string;
+}
+
+export interface LearningHistoryItem {
+  id: string;
+  userId: string;
+  documentId: string;
+  highlightedText: string;
+  createdAt: string;
+  activityType: "Explanation" | "GeneratedNote" | "GeneratedQuiz" | "QuizSet" | "InterviewQuestionSet" | "GeneratedMindMap" | "GeneratedAnalogy" | "GeneratedSimulation";
+  document?: {
+    title: string;
+  };
+  explanationText?: string;
+  title?: string;
+  notes?: any;
+  quizData?: any;
+  quizJson?: any;
+  questionsJson?: any;
+  mindMapData?: any;
+  analogyData?: any;
+  simulationData?: any;
+  simulationType?: string;
+  difficulty?: string;
+  style?: string;
+  score?: number;
+  totalQuestions?: number;
+  status?: string;
+  topicsToImprove?: string[];
+}
+
+export interface HistoryListResponse {
+  items: LearningHistoryItem[];
+  total: number;
+  hasMore: boolean;
+  page: number;
+  limit: number;
+}
+
+export interface SuggestionItem {
+  topic: string;
+  reason: string;
+  priority: "High" | "Medium" | "Low";
+}
+
+export const LearningHistoryAPI = {
+  async getHistory(options: HistoryQueryOptions = {}): Promise<HistoryListResponse> {
+    const queryParams = new URLSearchParams();
+    if (options.page) queryParams.append("page", options.page.toString());
+    if (options.limit) queryParams.append("limit", options.limit.toString());
+    if (options.search) queryParams.append("search", options.search);
+    if (options.feature) queryParams.append("feature", options.feature);
+    if (options.dateRange) queryParams.append("dateRange", options.dateRange);
+    if (options.sort) queryParams.append("sort", options.sort);
+
+    const response = await fetch(`${API_BASE_URL}/learning-history?${queryParams.toString()}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch learning history");
+    }
+
+    const resJson = await response.json();
+    return resJson.data;
+  },
+
+  async getHistoryItem(id: string, activityType?: string): Promise<LearningHistoryItem> {
+    const queryParams = new URLSearchParams();
+    if (activityType) queryParams.append("type", activityType);
+
+    const response = await fetch(`${API_BASE_URL}/learning-history/${id}?${queryParams.toString()}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch history details");
+    }
+
+    const resJson = await response.json();
+    return resJson.data;
+  },
+
+  async deleteHistoryItem(id: string, activityType?: string): Promise<{ success: boolean; message: string }> {
+    const queryParams = new URLSearchParams();
+    if (activityType) queryParams.append("type", activityType);
+
+    const response = await fetch(`${API_BASE_URL}/learning-history/${id}?${queryParams.toString()}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to delete history item");
+    }
+
+    return response.json();
+  },
+
+  async getSuggestions(): Promise<SuggestionItem[]> {
+    const response = await fetch(`${API_BASE_URL}/learning-history/suggestions`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch personalized suggestions");
+    }
+
+    const resJson = await response.json();
+    return resJson.data;
+  }
+};
+
+;

@@ -1,19 +1,60 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { authStore } from "../../store/authStore";
+import { authClient } from "../../lib/auth-client";
+import { GoogleSignInButton } from "../../components/GoogleSignInButton";
 import toast from "react-hot-toast";
 
+type LoginSearch = {
+  redirect?: string;
+  error?: string;
+};
+
 export const Route = createFileRoute("/_public/login")({
+  validateSearch: (search: Record<string, unknown>): LoginSearch => {
+    return {
+      redirect: search.redirect as string | undefined,
+      error: search.error as string | undefined,
+    };
+  },
   component: LoginPage,
 });
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { error: searchError } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchError) {
+      if (searchError === "account_not_linked" || searchError === "AccountNotLinked") {
+        setError("This email is already associated with an email/password account. Please sign in with your email/password instead.");
+      } else {
+        setError(decodeURIComponent(searchError).replace(/_/g, " "));
+      }
+    }
+  }, [searchError]);
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    setError(null);
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "http://localhost:5173/dashboard",
+      });
+    } catch (err: any) {
+      toast.error(err.message || "Google Sign-In failed");
+      setError(err.message || "Google Sign-In failed");
+      setIsGoogleLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,8 +92,9 @@ function LoginPage() {
         throw new Error(data.message || "Login failed");
       }
 
+      authStore.setAuthenticated(true);
       toast.success("Logged in successfully!");
-      navigate({ to: "/home" });
+      navigate({ to: "/dashboard" });
     } catch (err: any) {
       toast.error(err.message || "Invalid email or password");
       setError(err.message || "Invalid email or password");
@@ -77,6 +119,7 @@ function LoginPage() {
             </span>
           </p>
         </div>
+
 
         {/* Error Message banner if any */}
         {error && (
@@ -202,7 +245,25 @@ function LoginPage() {
               "Log In"
             )}
           </button>
-        </form>
+
+{/* OR Divider */}
+<div className="flex items-center my-5">
+  <div className="flex-1 border-t border-stone-200 dark:border-stone-700" />
+  <span className="px-4 text-xs font-medium text-stone-500 dark:text-stone-400">
+    OR
+  </span>
+  <div className="flex-1 border-t border-stone-200 dark:border-stone-700" />
+</div>
+
+{/* Google Sign In */}
+<GoogleSignInButton
+  onClick={handleGoogleSignIn}
+  isLoading={isGoogleLoading}
+  disabled={isLoading}
+  label="Sign in with Google"
+/>
+
+</form>
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-stone-500 dark:text-stone-400">

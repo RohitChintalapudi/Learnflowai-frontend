@@ -1,5 +1,21 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { 
+  ReactFlow, 
+  ReactFlowProvider, 
+  Controls, 
+  Background, 
+  useNodesState, 
+  useEdgesState, 
+  useReactFlow,
+  MarkerType,
+  type Node,
+  type Edge
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import * as dagre from "dagre";
+import { CustomMindMapNode } from "../../components/CustomMindMapNode";
+import { toPng } from "html-to-image";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -23,7 +39,11 @@ import {
   Download,
   Lightbulb,
   GraduationCap,
-  BookOpen
+  BookOpen,
+  Film,
+  Baby,
+  Swords,
+  ArrowRight
 } from "lucide-react";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import ReactMarkdown from "react-markdown";
@@ -34,14 +54,12 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { DocxViewer } from "../../components/DocxViewer";
 import { useReactToPrint } from "react-to-print";
+import { SimulationGenerator } from "../../components/SimulationGenerator";
 
-// Configure PDF.js worker to use the local bundled worker
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).toString();
+// Configure PDF.js worker using unpkg to strictly match the react-pdf internal version
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-export const Route = createFileRoute("/_public/workspace/$documentId")({
+export const Route = createFileRoute("/_authenticated/workspace/$documentId")({
   component: WorkspacePage,
 });
 
@@ -66,31 +84,84 @@ function WorkspacePage() {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [zoom, setZoom] = useState(1.0);
 
-  const urlParts = window.location.pathname.split("/");
-  const docId = urlParts[urlParts.length - 1];
+  const { documentId: docId } = Route.useParams();
 
-  const { data: documentMetadata } = useQuery({
+  const { data: documentMetadata, isError: isMetadataError, error: metadataError } = useQuery({
     queryKey: ['document', docId],
     queryFn: async () => {
-      if (!docId) return null;
-      try {
-        return await DocumentAPI.getDocument(docId);
-      } catch (err: any) {
-        toast.error("Failed to load document: " + err.message);
-        return null;
-      }
+      if (!docId) throw new Error("No document ID specified");
+      return await DocumentAPI.getDocument(docId);
     },
     enabled: !!docId,
+    retry: 1,
   });
 
-  // Memoize the file configuration to prevent react-pdf from refreshing endlessly on re-renders
-  const pdfFile = useMemo(() => {
-    if (!documentMetadata?.fileUrl) return null;
-    return {
-      url: documentMetadata.fileUrl.startsWith('http') ? documentMetadata.fileUrl : `${BACKEND_URL}${documentMetadata.fileUrl}`,
-      withCredentials: true
+  useEffect(() => {
+    if (isMetadataError && metadataError) {
+      toast.error("Failed to load document metadata: " + (metadataError as Error).message, {
+        id: "load-document-metadata-error",
+      });
+    }
+  }, [isMetadataError, metadataError]);
+
+  // Fetch the PDF blob via backend proxy to completely avoid CORS issues
+  const { data: pdfBlob, isError: isPdfBlobError, error: pdfBlobError, isLoading: isPdfBlobLoading } = useQuery({
+    queryKey: ['pdf-blob', docId],
+    queryFn: async () => {
+      if (!docId) throw new Error("No document ID specified");
+      const response = await fetch(`${BACKEND_URL}/api/documents/${docId}/download`, {
+        credentials: "include"
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to download PDF (status ${response.status})`);
+      }
+      return await response.blob();
+    },
+    enabled: !!docId && documentMetadata?.fileType === "pdf",
+    retry: 1,
+  });
+
+  const [pdfFileUrl, setPdfFileUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pdfBlob) {
+      setPdfFileUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(pdfBlob);
+    setPdfFileUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
     };
-  }, [documentMetadata]);
+  }, [pdfBlob]);
+
+  useEffect(() => {
+    if (isPdfBlobError && pdfBlobError) {
+      toast.error("PDF Download Error: " + (pdfBlobError as Error).message, {
+        id: "pdf-download-error",
+      });
+    }
+  }, [isPdfBlobError, pdfBlobError]);
+
+  const safeDocxUrl = useMemo(() => {
+    if (!docId) return null;
+    return `${BACKEND_URL}/api/documents/${docId}/download`;
+  }, [docId]);
+
+  const handlePdfLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+  }, []);
+
+  const handlePdfLoadError = useCallback((error: Error) => {
+    console.error("PDF Load Error:", error);
+    toast.error("PDF Render Error: " + error.message, {
+      id: "pdf-render-error"
+    });
+  }, []);
+
+  const handleDocxLoadSuccess = useCallback((numPages: number) => {
+    setNumPages(numPages);
+  }, []);
 
   // Handle text selection
   const handleTextSelect = () => {
@@ -111,10 +182,13 @@ function WorkspacePage() {
   };
 
   const [explanationContent, setExplanationContent] = useState<string>("");
+  const [analogyContent, setAnalogyContent] = useState<any | null>(null);
+  const [isAnalogySelectingStyle, setIsAnalogySelectingStyle] = useState(false);
   const [interviewQuestionsContent, setInterviewQuestionsContent] = useState<any>(null);
   const [quizContent, setQuizContent] = useState<any>(null);
   const [quizId, setQuizId] = useState<string | null>(null);
   const [notesContent, setNotesContent] = useState<GeneratedNotes | null>(null);
+  const [mindMapContent, setMindMapContent] = useState<any>(null);
 
   const handleFeatureClick = async (featureId: FeatureType) => {
     setIsMenuOpen(false);
@@ -134,11 +208,6 @@ function WorkspacePage() {
 
       setIsLoading(true);
       try {
-        // We can extract documentId from the route path in a real scenario
-        // Assuming Route.useParams() provides it:
-        const urlParts = window.location.pathname.split("/");
-        const docId = urlParts[urlParts.length - 1];
-        
         const res = await WorkflowAPI.generateExplanation(docId, highlightedText);
         setExplanationContent(res.explanation);
         toast.success("Explanation generated successfully!");
@@ -162,9 +231,6 @@ function WorkspacePage() {
 
       setIsLoading(true);
       try {
-        const urlParts = window.location.pathname.split("/");
-        const docId = urlParts[urlParts.length - 1];
-        
         const res = await WorkflowAPI.generateNotes(docId, highlightedText);
         setNotesContent(res.notes);
         
@@ -189,9 +255,6 @@ function WorkspacePage() {
 
       setIsLoading(true);
       try {
-        const urlParts = window.location.pathname.split("/");
-        const docId = urlParts[urlParts.length - 1];
-        
         const res = await WorkflowAPI.generateInterviewQuestions(docId, highlightedText);
         setInterviewQuestionsContent(res.questions);
         toast.success("Interview questions generated successfully!");
@@ -215,9 +278,6 @@ function WorkspacePage() {
 
       setIsLoading(true);
       try {
-        const urlParts = window.location.pathname.split("/");
-        const docId = urlParts[urlParts.length - 1];
-        
         const res = await WorkflowAPI.generateQuiz(docId, highlightedText);
         setQuizContent(res.quiz);
         setQuizId(res.id || null);
@@ -228,12 +288,63 @@ function WorkspacePage() {
       } finally {
         setIsLoading(false);
       }
+    } else if (featureId === "mindmap") {
+      if (highlightedText.trim().length < 5) {
+        toast.error("Please highlight at least 5 characters to generate a mind map.");
+        setActiveFeature(null);
+        return;
+      }
+      if (highlightedText.trim().length > 5000) {
+        toast.error("Highlighted text is too long (max 5000 characters).");
+        setActiveFeature(null);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const res = await WorkflowAPI.generateMindMap(docId, highlightedText);
+        setMindMapContent(res.mindMap);
+        toast.success("Mind map generated successfully!");
+      } catch (error: any) {
+        toast.error(error.message || "Failed to generate mind map");
+        setActiveFeature(null);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (featureId === "analogy") {
+      if (highlightedText.trim().length < 5) {
+        toast.error("Please highlight at least 5 characters to generate an analogy.");
+        setActiveFeature(null);
+        return;
+      }
+      if (highlightedText.trim().length > 5000) {
+        toast.error("Highlighted text is too long (max 5000 characters).");
+        setActiveFeature(null);
+        return;
+      }
+      setIsAnalogySelectingStyle(true);
+      setAnalogyContent(null);
     } else {
       // Mock for other features
       setIsLoading(true);
       setTimeout(() => {
         setIsLoading(false);
       }, 300);
+    }
+  };
+
+  const handleGenerateAnalogy = async (style: string) => {
+    setIsAnalogySelectingStyle(false);
+    setIsLoading(true);
+    try {
+      const res = await WorkflowAPI.generateAnalogy(docId, highlightedText, style);
+      setAnalogyContent(res.analogy);
+      toast.success("Analogy generated successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to generate analogy");
+      setActiveFeature(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -277,6 +388,7 @@ function WorkspacePage() {
               {features.map((feature) => (
                 <button
                   key={feature.id}
+                  data-tour={`ai-${feature.id === "analogy" ? "analogies" : feature.id === "simulation" ? "simulations" : feature.id}`}
                   onClick={() => handleFeatureClick(feature.id)}
                   className="flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all duration-300 group min-w-[70px] relative overflow-hidden hover:bg-orange-500/10 hover:shadow-[0_0_20px_rgba(255,122,24,0.25)] active:scale-90"
                 >
@@ -348,60 +460,76 @@ function WorkspacePage() {
 
           {/* Document Viewer (PDF or DocViewer) */}
           <div className="flex-1 relative bg-stone-100 dark:bg-stone-900 overflow-y-auto overflow-x-hidden flex flex-col items-center py-8">
-            {pdfFile ? (
-              documentMetadata?.fileType === "pdf" ? (
-              <Document
-                file={pdfFile}
-                onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-                onLoadError={(error) => {
-                  console.error("PDF Load Error:", error);
-                  toast.error("PDF Error: " + error.message);
-                }}
-                loading={
-                  <div className="flex items-center justify-center p-12 text-stone-500 animate-pulse">
-                    Loading PDF Document...
-                  </div>
-                }
-                error={
-                  <div className="flex flex-col items-center justify-center p-12 text-red-500">
-                    <p className="font-bold text-lg">Failed to load PDF.</p>
-                    <p className="text-sm mt-2 opacity-80">This could be a CORS issue with the backend. Check the console or toast message.</p>
-                  </div>
-                }
-              >
-                {numPages && Array.from(new Array(numPages), (_, index) => (
-                  <Page
-                    key={`page_${index + 1}`}
-                    pageNumber={index + 1}
-                    className="mb-8 shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden bg-white"
-                    scale={zoom}
-                    renderTextLayer={true}
-                    renderAnnotationLayer={true}
-                  />
-                ))}
-              </Document>
-              ) : documentMetadata?.fileType === "docx" || documentMetadata?.fileType === "doc" ? (
-                <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
-                  <DocxViewer 
-                    fileUrl={pdfFile.url} 
-                    zoom={zoom} 
-                    onLoadSuccess={(numPages) => setNumPages(numPages)} 
-                  />
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-stone-500 p-8 text-center space-y-4">
-                  <FileText className="h-12 w-12 text-stone-400" />
-                  <p className="font-medium text-[var(--lf-text-primary)]">
-                    Local Preview not natively supported for .{documentMetadata?.fileType}
-                  </p>
-                  <p className="text-sm">
-                    Only PDF and DOCX files support offline local rendering. PPTX and other formats may require third-party server-side rendering or Microsoft Office Online access which is not available in local development.
-                  </p>
-                </div>
-              )
-            ) : (
+            {!documentMetadata && !isMetadataError ? (
               <div className="flex items-center justify-center h-full text-stone-500">
                 Loading Document Metadata...
+              </div>
+            ) : isMetadataError ? (
+              <div className="flex flex-col items-center justify-center p-12 text-red-500 text-center">
+                <FileText className="h-12 w-12 text-red-400 mb-4" />
+                <p className="font-bold text-lg">Failed to load document.</p>
+                <p className="text-sm mt-2 opacity-80">{(metadataError as Error)?.message || "Check server connection."}</p>
+              </div>
+            ) : documentMetadata?.fileType === "pdf" ? (
+              isPdfBlobLoading ? (
+                <div className="flex items-center justify-center p-12 text-stone-500 animate-pulse">
+                  Downloading PDF Document...
+                </div>
+              ) : isPdfBlobError ? (
+                <div className="flex flex-col items-center justify-center p-12 text-red-500 text-center">
+                  <p className="font-bold text-lg">Failed to load PDF.</p>
+                  <p className="text-sm mt-2 opacity-80">This document file is missing or cannot be retrieved from the server.</p>
+                </div>
+              ) : pdfFileUrl ? (
+                <Document
+                  file={pdfFileUrl}
+                  onLoadSuccess={handlePdfLoadSuccess}
+                  onLoadError={handlePdfLoadError}
+                  loading={
+                    <div className="flex items-center justify-center p-12 text-stone-500 animate-pulse">
+                      Loading PDF Document...
+                    </div>
+                  }
+                  error={
+                    <div className="flex flex-col items-center justify-center p-12 text-red-500">
+                      <p className="font-bold text-lg">Failed to render PDF.</p>
+                      <p className="text-sm mt-2 opacity-80">An error occurred while parsing the PDF contents.</p>
+                    </div>
+                  }
+                >
+                  {numPages && Array.from(new Array(numPages), (_, index) => (
+                    <Page
+                      key={`page_${index + 1}`}
+                      pageNumber={index + 1}
+                      className="mb-8 shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden bg-white"
+                      scale={zoom}
+                      renderTextLayer={true}
+                      renderAnnotationLayer={true}
+                    />
+                  ))}
+                </Document>
+              ) : (
+                <div className="flex items-center justify-center h-full text-stone-500">
+                  Preparing document...
+                </div>
+              )
+            ) : documentMetadata?.fileType === "docx" || documentMetadata?.fileType === "doc" ? (
+              <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
+                <DocxViewer 
+                  fileUrl={safeDocxUrl || ""} 
+                  zoom={zoom} 
+                  onLoadSuccess={handleDocxLoadSuccess} 
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-stone-500 p-8 text-center space-y-4">
+                <FileText className="h-12 w-12 text-stone-400" />
+                <p className="font-medium text-[var(--lf-text-primary)]">
+                  Local Preview not natively supported for .{documentMetadata?.fileType}
+                </p>
+                <p className="text-sm">
+                  Only PDF and DOCX files support offline local rendering. PPTX and other formats may require third-party server-side rendering or Microsoft Office Online access which is not available in local development.
+                </p>
               </div>
             )}
           </div>
@@ -451,10 +579,17 @@ function WorkspacePage() {
                   </div>
                   <div className="text-center space-y-2">
                     <h3 className="text-[16px] font-bold text-[var(--lf-text-primary)] animate-pulse">
-                      Analyzing Context...
+                      {activeFeature === "mindmap" ? "Generating Mind Map..." : 
+                       activeFeature === "quiz" ? "Generating Quiz..." : 
+                       activeFeature === "notes" ? "Generating Notes..." : 
+                       activeFeature === "interview" ? "Generating Questions..." : 
+                       activeFeature === "analogy" ? "Crafting the perfect analogy..." : 
+                       "Analyzing Context..."}
                     </h3>
                     <p className="text-[13px] text-[var(--lf-text-secondary)] animate-pulse">
-                      Searching the document to generate your explanation.
+                      {activeFeature === "mindmap" ? "Structuring your text into a visual hierarchy." : 
+                       activeFeature === "analogy" ? "Mapping technical concepts to relatable themes." :
+                       "Searching the document to generate your content."}
                     </p>
                   </div>
                   <div className="w-full max-w-xs h-1 bg-[var(--lf-surface)] rounded-full overflow-hidden mt-4">
@@ -472,29 +607,15 @@ function WorkspacePage() {
                   transition={{ duration: 0.2, ease: "easeOut" }}
                   className="space-y-6 pb-20"
                 >
-                  {/* Context Header */}
-                  <div className="p-4 rounded-2xl border border-[var(--lf-border)] bg-[var(--lf-surface)] flex gap-4 card-shadow">
-                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
-                      <FileText className="h-5 w-5 text-orange-500" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider mb-1">
-                        Selected Context
-                      </p>
-                      <p className="text-[13px] text-[var(--lf-text-primary)] italic border-l-2 border-[var(--lf-accent)] pl-3 line-clamp-3">
-                        "{highlightedText || "Dynamic Programming is a problem-solving technique..."}"
-                      </p>
-                    </div>
-                  </div>
-
+                 
                   {/* Feature Content */}
                   {activeFeature === "explain" && <FeatureExplain content={explanationContent} />}
                   {activeFeature === "notes" && <FeatureNotes notes={notesContent} loading={isLoading} />}
                   {activeFeature === "quiz" && <FeatureQuiz quiz={quizContent} quizId={quizId} />}
-                  {activeFeature === "analogy" && <FeatureAnalogy />}
+                  {activeFeature === "analogy" && <FeatureAnalogy analogy={analogyContent} onSelectStyle={handleGenerateAnalogy} isSelectingStyle={isAnalogySelectingStyle} onResetStyle={() => { setAnalogyContent(null); setIsAnalogySelectingStyle(true); }} />}
                   {activeFeature === "interview" && <FeatureInterview questions={interviewQuestionsContent} />}
-                  {activeFeature === "mindmap" && <FeatureMindMap />}
-                  {activeFeature === "simulation" && <FeatureSimulation />}
+                  {activeFeature === "mindmap" && <FeatureMindMap mindMap={mindMapContent} />}
+                  {activeFeature === "simulation" && <SimulationGenerator documentId={docId || ""} highlightedText={highlightedText} />}
 
                 </motion.div>
               )}
@@ -681,9 +802,9 @@ function FeatureNotes({
               <Lightbulb className="h-5 w-5" /> Key Points
             </h3>
             <ul className="space-y-2">
-              {notes.keyPoints.map((point, i) => (
+              {notes.keyPoints.map((point: any, i: number) => (
                 <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
-                  <span className="text-amber-500 mt-0.5">•</span> {point}
+                  <span className="text-amber-500 mt-0.5">•</span> {typeof point === "object" && point !== null ? Object.values(point).join(": ") : point}
                 </li>
               ))}
             </ul>
@@ -694,9 +815,9 @@ function FeatureNotes({
               <BookOpen className="h-5 w-5" /> Important Concepts
             </h3>
             <ul className="space-y-2">
-              {(notes.importantConcepts || notes.relatedConcepts || []).map((concept, i) => (
+              {(notes.importantConcepts || notes.relatedConcepts || []).map((concept: any, i: number) => (
                 <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
-                  <span className="text-blue-500 mt-0.5">•</span> {concept}
+                  <span className="text-blue-500 mt-0.5">•</span> {typeof concept === "object" && concept !== null ? Object.values(concept).join(": ") : concept}
                 </li>
               ))}
             </ul>
@@ -707,9 +828,9 @@ function FeatureNotes({
               <GraduationCap className="h-5 w-5" /> Exam Tips
             </h3>
             <ul className="space-y-2">
-              {notes.examTips.map((tip, i) => (
+              {notes.examTips.map((tip: any, i: number) => (
                 <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
-                  <span className="text-emerald-500 mt-0.5">•</span> {tip}
+                  <span className="text-emerald-500 mt-0.5">•</span> {typeof tip === "object" && tip !== null ? Object.values(tip).join(": ") : tip}
                 </li>
               ))}
             </ul>
@@ -720,9 +841,9 @@ function FeatureNotes({
               <FileText className="h-5 w-5" /> Revision Notes
             </h3>
             <ul className="space-y-2">
-              {notes.revisionNotes.map((note, i) => (
+              {notes.revisionNotes.map((note: any, i: number) => (
                 <li key={i} className="text-[14px] text-[var(--lf-text-primary)] flex items-start gap-2">
-                  <span className="text-purple-500 mt-0.5">•</span> {note}
+                  <span className="text-purple-500 mt-0.5">•</span> {typeof note === "object" && note !== null ? Object.values(note).join(": ") : note}
                 </li>
               ))}
             </ul>
@@ -924,27 +1045,116 @@ function FeatureQuiz(props: { quiz: any; quizId: string | null }) {
   );
 }
 
-function FeatureAnalogy() {
+function FeatureAnalogy({ analogy, onSelectStyle, isSelectingStyle, onResetStyle }: { analogy?: any, onSelectStyle?: (style: string) => void, isSelectingStyle?: boolean, onResetStyle?: () => void }) {
+  const styles = [
+    { id: "gaming", label: "Gaming", icon: Gamepad2 },
+    { id: "story", label: "Story", icon: BookOpen },
+    { id: "education", label: "Education", icon: GraduationCap },
+    { id: "real-world", label: "Real World", icon: Globe },
+    { id: "sports", label: "Sports", icon: Swords },
+    { id: "movie", label: "Movie", icon: Film },
+    { id: "eli10", label: "Explain Like I'm 10", icon: Baby },
+  ];
+
+  if (isSelectingStyle && onSelectStyle) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 mb-2">
+          <Sparkles className="h-6 w-6 text-[var(--lf-accent)]" />
+          <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Choose Analogy Style</h2>
+        </div>
+        <p className="text-[14px] text-[var(--lf-text-secondary)]">
+          Select a theme to map these technical concepts into something relatable!
+        </p>
+        <div className="grid grid-cols-2 gap-4 mt-6">
+          {styles.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => onSelectStyle(s.id)}
+              className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border border-[var(--lf-border)] bg-[var(--lf-surface)] hover:bg-[var(--lf-accent)]/5 hover:border-[var(--lf-accent)]/50 transition-all group card-shadow relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--lf-accent)]/0 to-[var(--lf-accent)]/0 group-hover:from-[var(--lf-accent)]/10 group-hover:to-transparent transition-all duration-500" />
+              <div className="p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] text-[var(--lf-text-secondary)] group-hover:bg-[var(--lf-accent)] group-hover:text-white transition-all duration-300 shadow-sm relative z-10">
+                <s.icon className="h-6 w-6" />
+              </div>
+              <span className="font-bold text-[14px] text-[var(--lf-text-primary)] relative z-10">{s.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!analogy) return null;
+
+  const StyleIcon = styles.find(s => s.id === analogy.style)?.icon || Sparkles;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-2">
-        <Globe className="h-6 w-6 text-[var(--lf-accent)]" />
-        <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Real World Analogy</h2>
+    <div className="space-y-8 pb-10">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <StyleIcon className="h-6 w-6 text-[var(--lf-accent)]" />
+          <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Analogy: {analogy.style.toUpperCase()}</h2>
+        </div>
+        {onResetStyle && (
+          <button 
+            onClick={onResetStyle}
+            className="px-3 py-1.5 rounded-lg border border-[var(--lf-border)] text-[12px] font-bold text-[var(--lf-text-secondary)] hover:text-[var(--lf-accent)] hover:bg-[var(--lf-accent)]/10 transition-colors flex items-center gap-2"
+          >
+            Change Style
+          </button>
+        )}
       </div>
 
-      <div className="p-8 rounded-3xl bg-gradient-to-br from-orange-500/10 to-[var(--lf-surface)] border border-orange-500/20 card-shadow-lg relative overflow-hidden">
-        <div className="absolute -right-10 -top-10 w-40 h-40 bg-orange-500/20 blur-3xl rounded-full" />
-        
-        <p className="text-[16px] leading-relaxed text-[var(--lf-text-primary)] font-medium mb-6 relative z-10">
-          Imagine solving a maze and keeping a notebook of every path you've already explored.
+      <div className="space-y-2">
+        <h3 className="text-[28px] font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-500 leading-tight pb-1">
+          {analogy.title}
+        </h3>
+        <p className="text-[15px] leading-relaxed text-[var(--lf-text-secondary)] font-medium">
+          {analogy.summary}
         </p>
-        
-        <p className="text-[15px] leading-relaxed text-[var(--lf-text-secondary)] mb-6 relative z-10">
-          Instead of exploring the same dead-end path again when you reach a crossroad, you simply refer to your notebook.
-        </p>
+      </div>
 
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500 text-white text-[13px] font-bold shadow-lg shadow-orange-500/20">
-          <Sparkles className="h-4 w-4" /> That is exactly how Dynamic Programming works.
+      <div className="space-y-4">
+        <h4 className="text-[12px] font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider mb-2">Concept Mappings</h4>
+        <div className="space-y-4">
+          {analogy.mappings?.map((mapping: any, idx: number) => (
+            <div key={idx} className="group p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow hover:shadow-[0_8px_30px_rgba(249,115,22,0.1)] transition-all duration-300">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="flex-1 px-4 py-2.5 bg-gradient-to-br from-orange-500/10 to-amber-500/5 rounded-xl border border-orange-500/20 flex items-center justify-center text-center shadow-sm">
+                  <span className="font-bold text-orange-600 dark:text-orange-400 text-[14px]">{mapping.analogyElement}</span>
+                </div>
+                <ArrowRight className="h-5 w-5 text-stone-400 shrink-0" />
+                <div className="flex-1 px-4 py-2.5 bg-stone-100 dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 flex items-center justify-center text-center shadow-sm">
+                  <span className="font-bold text-[var(--lf-text-primary)] text-[14px]">{mapping.conceptElement}</span>
+                </div>
+              </div>
+              <p className="text-[14px] text-[var(--lf-text-secondary)] text-center leading-relaxed mt-4 bg-stone-50 dark:bg-stone-900/50 p-3 rounded-xl">
+                {mapping.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+        <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 relative overflow-hidden card-shadow">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl rounded-full" />
+          <h4 className="text-[13px] font-bold text-emerald-600 dark:text-emerald-400 mb-2 flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4" /> Why it works
+          </h4>
+          <p className="text-[13px] text-[var(--lf-text-secondary)] leading-relaxed relative z-10">
+            {analogy.whyItWorks}
+          </p>
+        </div>
+        <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 relative overflow-hidden card-shadow">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 blur-2xl rounded-full" />
+          <h4 className="text-[13px] font-bold text-amber-600 dark:text-amber-400 mb-2 flex items-center gap-2">
+            <Lightbulb className="h-4 w-4" /> Limitations
+          </h4>
+          <p className="text-[13px] text-[var(--lf-text-secondary)] leading-relaxed relative z-10">
+            {analogy.limitations}
+          </p>
         </div>
       </div>
     </div>
@@ -1032,115 +1242,243 @@ function FeatureInterview({ questions }: { questions: any }) {
   );
 }
 
-function FeatureMindMap() {
-  return (
-    <div className="space-y-6 h-full flex flex-col">
-      <div className="flex items-center gap-3 mb-2 shrink-0">
-        <GitMerge className="h-6 w-6 text-[var(--lf-accent)]" />
-        <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Mind Map</h2>
-      </div>
+const nodeTypes = {
+  custom: CustomMindMapNode,
+};
 
-      <div className="flex-1 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow flex items-center justify-center p-8 min-h-[400px]">
-        {/* Simple CSS-based mind map representation */}
-        <div className="flex items-center gap-8">
-          <div className="px-6 py-4 rounded-2xl bg-orange-500 text-white font-bold card-shadow-lg">
-            Dynamic Programming
-          </div>
-          
-          <div className="flex flex-col gap-6 relative">
-            {/* Connecting Lines */}
-            <div className="absolute right-[100%] top-[20px] bottom-[20px] w-8 border-l-2 border-t-2 border-b-2 border-orange-500/30 rounded-l-xl" />
-            <div className="absolute right-[100%] top-1/2 w-8 border-t-2 border-orange-500/30" />
-            
-            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow font-medium text-[13px] text-[var(--lf-text-primary)] relative">
-              Memoization (Top-Down)
-            </div>
-            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow font-medium text-[13px] text-[var(--lf-text-primary)] relative">
-              Tabulation (Bottom-Up)
-            </div>
-            <div className="px-5 py-3 rounded-xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow font-medium text-[13px] text-[var(--lf-text-primary)] relative">
-              Optimal Substructure
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+const dagreGraph = new dagre.graphlib.Graph();
+dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+const nodeWidth = 220;
+const nodeHeight = 60;
+
+const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
+  dagreGraph.setGraph({ rankdir: direction });
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  const layoutedNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    const newNode = { ...node };
+
+    newNode.targetPosition = direction === 'TB' ? 'top' : 'left' as any;
+    newNode.sourcePosition = direction === 'TB' ? 'bottom' : 'right' as any;
+
+    // We are shifting the dagre node position (anchor=center center) to the top left
+    // so it matches the React Flow node anchor point (top left).
+    newNode.position = {
+      x: nodeWithPosition.x - nodeWidth / 2,
+      y: nodeWithPosition.y - nodeHeight / 2,
+    };
+
+    return newNode;
+  });
+
+  return { nodes: layoutedNodes, edges };
+};
+
+function MindMapFlow({ mindMap }: { mindMap: any }) {
+  const { fitView } = useReactFlow();
+  
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  useEffect(() => {
+    if (!mindMap?.nodes || !mindMap?.edges) return;
+
+    // Determine root node (usually the first one or node with no incoming edges)
+    // For simplicity, we can assume the first node is the root or check edge targets
+    const targetIds = new Set(mindMap.edges.map((e: any) => e.target));
+    
+    const initialNodes: Node[] = mindMap.nodes.map((n: any) => ({
+      id: n.id,
+      type: 'custom',
+      data: { 
+        label: n.label, 
+        isRoot: !targetIds.has(n.id) 
+      },
+      position: { x: 0, y: 0 }, // Will be calculated by dagre
+    }));
+
+    const initialEdges: Edge[] = mindMap.edges.map((e: any, idx: number) => ({
+      id: `e-${e.source}-${e.target}-${idx}`,
+      source: e.source,
+      target: e.target,
+      animated: true,
+      style: { stroke: 'rgba(249, 115, 22, 0.5)', strokeWidth: 2 },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: 'rgba(249, 115, 22, 0.5)',
+      },
+    }));
+
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      initialNodes,
+      initialEdges
+    );
+
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
+
+    // Give React Flow a frame to render the new nodes before fitting the view
+    setTimeout(() => {
+      fitView({ duration: 800, padding: 0.2 });
+    }, 50);
+  }, [mindMap, setNodes, setEdges, fitView]);
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      nodeTypes={nodeTypes}
+      fitView
+      className="bg-white/50 dark:bg-black/20"
+      style={{ width: '100%', height: '100%' }}
+      minZoom={0.1}
+      maxZoom={2}
+    >
+      <Background color="#ccc" gap={16} />
+      <Controls className="!bg-white dark:!bg-[#1a1a1a] !border-[var(--lf-border)] !shadow-lg !rounded-xl overflow-hidden [&>button]:!border-b-[var(--lf-border)] [&>button]:!bg-transparent dark:[&_path]:!fill-[var(--lf-text-primary)]" />
+    </ReactFlow>
   );
 }
 
-function FeatureSimulation() {
-  const [step, setStep] = useState(0);
-  const arr = [2, 4, 8, 12, 16, 20];
-  const target = 16;
-  
-  // Simulation steps for target=16
-  // Step 0: Initial
-  // Step 1: Mid=8 (index 2). 8 < 16. Eliminate left.
-  // Step 2: Mid=16 (index 4). Found!
-  
-  const getBoxStyle = (idx: number) => {
-    if (step === 0) return "bg-[var(--lf-surface)] border-[var(--lf-border)] text-[var(--lf-text-primary)]";
-    if (step === 1) {
-      if (idx < 2) return "bg-stone-500/10 border-stone-500/20 text-stone-500/50 line-through"; // Eliminated
-      if (idx === 2) return "bg-red-500/20 border-red-500 text-red-600 dark:text-red-400"; // Mid (too small)
-      return "bg-[var(--lf-surface)] border-[var(--lf-border)] text-[var(--lf-text-primary)]"; // Remaining
+function FeatureMindMap({ mindMap }: { mindMap: any }) {
+  const [explanation, setExplanation] = useState<string | null>(null);
+  const [isExplaining, setIsExplaining] = useState(false);
+
+  if (!mindMap) {
+    return (
+      <div className="text-[14px] text-[var(--lf-text-secondary)] italic">
+        No mind map generated yet.
+      </div>
+    );
+  }
+
+  const handleExplainFlow = async () => {
+    if (!mindMap?.id) {
+      toast.error("Mind map ID not found.");
+      return;
     }
-    if (step === 2) {
-      if (idx <= 2) return "bg-stone-500/10 border-stone-500/20 text-stone-500/50 line-through";
-      if (idx === 4) return "bg-emerald-500 border-emerald-500 text-white scale-110 shadow-lg shadow-emerald-500/30"; // Found
-      return "bg-[var(--lf-surface)] border-[var(--lf-border)] text-[var(--lf-text-primary)]";
+    
+    setIsExplaining(true);
+    setExplanation(null);
+    
+    try {
+      const res = await WorkflowAPI.explainMindMap(mindMap.id);
+      setExplanation(res.explanation);
+    } catch (err: any) {
+      console.error("Explanation failed:", err);
+      toast.error(err.message || "Failed to generate explanation.");
+    } finally {
+      setIsExplaining(false);
     }
   };
 
+  const handleDownloadPNG = () => {
+    const rfElement = document.querySelector('.react-flow') as HTMLElement;
+    if (!rfElement) return;
+    
+    // Add a slight toast to show processing
+    const loadingToast = toast.loading("Generating PNG...");
+
+    toPng(rfElement, {
+      backgroundColor: document.documentElement.classList.contains('dark') ? '#000000' : '#ffffff',
+      pixelRatio: 2, // higher res
+    }).then((dataUrl) => {
+      const link = document.createElement('a');
+      link.download = mindMap?.title ? `${mindMap.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_mindmap.png` : 'mindmap.png';
+      link.href = dataUrl;
+      link.click();
+      toast.success("Mind map downloaded successfully!", { id: loadingToast });
+    }).catch((err) => {
+      console.error(err);
+      toast.error("Failed to download mind map.", { id: loadingToast });
+    });
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-2">
-        <Gamepad2 className="h-6 w-6 text-[var(--lf-accent)]" />
-        <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">Interactive Simulation</h2>
+    <div className="space-y-6 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-2 shrink-0">
+        <div className="flex items-center gap-3">
+          <GitMerge className="h-6 w-6 text-[var(--lf-accent)]" />
+          <h2 className="text-2xl font-bold text-[var(--lf-text-primary)]">AI Mind Map</h2>
+        </div>
+        <button 
+          onClick={handleDownloadPNG}
+          className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-lg text-[13px] font-bold transition-colors"
+        >
+          <Download className="h-4 w-4" /> Download PNG
+        </button>
       </div>
-      
-      <p className="text-[14px] text-[var(--lf-text-secondary)]">Binary Search Simulation</p>
 
-      <div className="p-8 rounded-3xl bg-[var(--lf-card)] border border-[var(--lf-border)] card-shadow-lg text-center">
-        <p className="text-[16px] font-bold text-[var(--lf-text-primary)] mb-8">
-          Target Element: <span className="text-[var(--lf-accent)] px-3 py-1 bg-orange-500/10 rounded-lg">{target}</span>
-        </p>
-        
-        <div className="flex justify-center gap-3 mb-8">
-          {arr.map((num, i) => (
+      <div className="flex-1 rounded-3xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow overflow-hidden min-h-[500px] flex flex-col relative">
+        <div className="p-4 border-b border-[var(--lf-border)] shrink-0 bg-white/50 dark:bg-black/20 backdrop-blur-md z-10">
+          <h3 className="font-bold text-[var(--lf-text-primary)]">{mindMap.title}</h3>
+        </div>
+        <div className="flex-1 relative w-full h-full cursor-grab active:cursor-grabbing">
+          <ReactFlowProvider>
+            <div className="w-full h-full absolute inset-0">
+              <MindMapFlow mindMap={mindMap} />
+            </div>
+          </ReactFlowProvider>
+        </div>
+      </div>
+
+      <div className="shrink-0 flex flex-col gap-4">
+        {!explanation && !isExplaining && (
+          <button
+            onClick={handleExplainFlow}
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-orange-500/10 to-amber-500/10 hover:from-orange-500/20 hover:to-amber-500/20 border border-orange-500/20 text-orange-600 dark:text-orange-400 font-bold text-[15px] flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(249,115,22,0.15)] group"
+          >
+            <Sparkles className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+            ✨ Explain the Flow
+          </button>
+        )}
+
+        {isExplaining && (
+          <div className="w-full py-4 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] flex items-center justify-center gap-3">
+            <div className="w-5 h-5 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+            <span className="text-[14px] font-medium text-[var(--lf-text-secondary)] animate-pulse">
+              Analyzing structural logic...
+            </span>
+          </div>
+        )}
+
+        <AnimatePresence>
+          {explanation && (
             <motion.div
-              key={i}
-              layout
-              className={`w-12 h-12 flex flex-col items-center justify-center rounded-xl border-2 font-bold text-[16px] transition-all duration-500 ${getBoxStyle(i)}`}
+              initial={{ opacity: 0, height: 0, y: 10 }}
+              animate={{ opacity: 1, height: "auto", y: 0 }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="overflow-hidden"
             >
-              {num}
-              <span className="text-[9px] font-normal opacity-50 absolute -bottom-5">idx:{i}</span>
+              <div className="p-6 rounded-3xl bg-[var(--lf-surface)] border border-orange-500/30 card-shadow-lg relative backdrop-blur-md">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="h-5 w-5 text-orange-500" />
+                  <h3 className="font-bold text-[16px] text-[var(--lf-text-primary)]">Flow Explanation</h3>
+                </div>
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-p:text-[var(--lf-text-secondary)]">
+                  <ReactMarkdown>{explanation}</ReactMarkdown>
+                </div>
+              </div>
             </motion.div>
-          ))}
-        </div>
-
-        <div className="h-20 flex items-center justify-center mb-6">
-          {step === 0 && <p className="text-[14px] text-[var(--lf-text-secondary)]">Finding middle element...</p>}
-          {step === 1 && <p className="text-[14px] text-[var(--lf-text-secondary)]">Middle is 8. Target 16 {">"} 8.<br/>Eliminating left half.</p>}
-          {step === 2 && <p className="text-[15px] font-bold text-emerald-500">Target 16 found at index 4!</p>}
-        </div>
-
-        <div className="flex justify-center gap-4">
-          <button 
-            onClick={() => setStep(Math.max(0, step - 1))}
-            disabled={step === 0}
-            className="px-6 py-2 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] font-semibold text-[13px] disabled:opacity-50"
-          >
-            Previous Step
-          </button>
-          <button 
-            onClick={() => setStep(step === 2 ? 0 : step + 1)}
-            className="px-6 py-2 rounded-xl bg-[var(--lf-accent)] text-white font-semibold text-[13px] shadow-lg shadow-orange-500/25"
-          >
-            {step === 2 ? "Reset" : "Next Step"}
-          </button>
-        </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
 }
+
+

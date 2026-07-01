@@ -4,7 +4,7 @@ import { DocumentAPI } from '../../lib/api'
 import { DashboardLayout } from '../../components/DashboardLayout'
 import { Loader2, FileText } from 'lucide-react'
 
-export const Route = createFileRoute('/_public/workspace/')({
+export const Route = createFileRoute('/_authenticated/workspace/')({
   component: WorkspaceIndexRoute,
 })
 
