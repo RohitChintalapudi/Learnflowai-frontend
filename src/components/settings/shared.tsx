@@ -97,6 +97,7 @@ export function SettingsInput({
   value,
   onChange,
   className = '',
+  ...props
 }: {
   label?: string;
   type?: string;
@@ -104,7 +105,7 @@ export function SettingsInput({
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
-}) {
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value' | 'type' | 'placeholder' | 'className'>) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && <label className="text-sm font-medium text-stone-700 dark:text-stone-300">{label}</label>}
@@ -114,6 +115,7 @@ export function SettingsInput({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        {...props}
       />
     </div>
   );

@@ -900,5 +900,18 @@ export const SettingsAPI = {
     }
 
     return data as AccountSettingsResponse;
+  },
+
+  async changePassword(payload: { currentPassword: string; newPassword: string; confirmPassword: string }): Promise<{ success: boolean; message: string }> {
+    const { data, error } = await authClient.$fetch(`${API_BASE_URL}/settings/change-password`, {
+      method: "PATCH",
+      body: payload
+    });
+
+    if (error) {
+      throw new Error(error.message || "Unable to update password. Please try again.");
+    }
+
+    return data as { success: boolean; message: string };
   }
 };
