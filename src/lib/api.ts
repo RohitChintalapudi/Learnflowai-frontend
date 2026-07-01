@@ -1,6 +1,8 @@
 export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 const API_BASE_URL = `${BACKEND_URL}/api`;
 
+import { authClient } from "./auth-client";
+
 export interface DocumentMetadata {
   id: string;
   title: string;
@@ -873,6 +875,79 @@ export const LearningHistoryAPI = {
     return resJson.data;
   }
 };
+export interface AccountSettingsData {
+  id: string;
+  fullName: string;
+  email: string;
+  avatarUrl: string;
+  provider: string;
+  memberSince: string;
+}
+
+export interface AccountSettingsResponse {
+  success: boolean;
+  data: AccountSettingsData;
+}
+
+export const SettingsAPI = {
+  async getAccountSettings(): Promise<AccountSettingsResponse> {
+    const { data, error } = await authClient.$fetch(`${API_BASE_URL}/settings/account`, {
+      method: "GET",
+    });
+
+
+    if (error) {
+      throw new Error(error.message || "Failed to fetch account settings");
+    }
+
+    return data as AccountSettingsResponse;
+  },
+
+  async changePassword(payload: { currentPassword: string; newPassword: string; confirmPassword: string }): Promise<{ success: boolean; message: string }> {
+    const { data, error } = await authClient.$fetch(`${API_BASE_URL}/settings/change-password`, {
+      method: "PATCH",
+      body: payload
+    });
+
+    if (error) {
+      throw new Error(error.message || "Unable to update password. Please try again.");
+    }
+
+    return data as { success: boolean; message: string };
+  },
+
+  async deleteAccount(payload: { password?: string }): Promise<{ success: boolean; message: string }> {
+    const { data, error } = await authClient.$fetch(`${API_BASE_URL}/settings/delete-account`, {
+      method: "DELETE",
+      body: payload
+    });
+
+    if (error) {
+      throw new Error(error.message || "Unable to delete account. Please try again.");
+    }
+
+    return data as { success: boolean; message: string };
+  },
+
+  async exportData(): Promise<{ blob: Blob, filename: string }> {
+    let filename = "learnflow-data.zip";
+    const { data, error } = await authClient.$fetch<Blob>(`${API_BASE_URL}/settings/export`, {
+      method: "GET",
+      responseType: "blob",
+      onResponse: (context: any) => {
+        const cd = context.response?.headers?.get("Content-Disposition");
+        if (cd) {
+          const match = cd.match(/filename="?([^"]+)"?/);
+          if (match && match[1]) filename = match[1];
+        }
+      }
+    } as any);
+
+    if (error) {
+      throw new Error(error.message || "Unable to export your data. Please try again.");
+    }
+
+    return { blob: data as Blob, filename };
 
 export interface Alert {
   id: string;
@@ -944,5 +1019,6 @@ export const AlertsAPI = {
     }
 
     return response.json();
+
   }
 };

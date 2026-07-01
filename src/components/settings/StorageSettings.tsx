@@ -1,9 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SettingsCard, SettingsSectionHeader, SettingsButton } from './shared';
-import { File, MessageSquare, Database, FileText, Download, Trash2, Settings } from 'lucide-react';
+import { File, MessageSquare, Database, FileText, Download, Trash2, Settings, CheckCircle2, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { SettingsAPI } from '../../lib/api';
+import toast from 'react-hot-toast';
 
 export function StorageSettings() {
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const { blob, filename } = await SettingsAPI.exportData();
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success("Your data has been exported successfully.");
+    } catch (error: any) {
+      toast.error(error.message || "Unable to export your data. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="w-full space-y-8">
       <SettingsCard>
@@ -97,6 +125,50 @@ export function StorageSettings() {
             <p className="text-sm font-bold text-stone-900 dark:text-white">105 MB</p>
           </div>
         </div>
+      </SettingsCard>
+
+      <SettingsCard>
+        <SettingsSectionHeader 
+          title="Export Your Data" 
+          description="Download a complete archive of your LearnFlow account. The exported ZIP includes all supported learning resources and profile information." 
+        />
+        
+        <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          {[
+            "Profile",
+            "Documents",
+            "Notes",
+            "Quizzes",
+            "Interview Questions",
+            "Mind Maps",
+            "Analogies",
+            "Simulations",
+            "Learning History",
+            "Analytics"
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-2 text-stone-700 dark:text-stone-300">
+              <CheckCircle2 className="w-4 h-4 text-orange-500 shrink-0" />
+              <span className="text-sm font-medium">{item}</span>
+            </div>
+          ))}
+        </div>
+
+        <SettingsButton 
+          variant="primary" 
+          className="gap-2 font-bold" 
+          onClick={handleExport}
+          disabled={isExporting}
+        >
+          {isExporting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" /> Exporting...
+            </>
+          ) : (
+            <>
+              <Download className="w-4 h-4" /> Export My Data
+            </>
+          )}
+        </SettingsButton>
       </SettingsCard>
     </div>
   );

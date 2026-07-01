@@ -2,14 +2,22 @@ import React from 'react';
 import { Mail, ShieldCheck, Clock, ExternalLink } from 'lucide-react';
 import { SettingsCard, SettingsSectionHeader, SettingsButton } from './shared';
 import { useQuery } from '@tanstack/react-query';
-import { ProfileAPI } from '../../lib/api';
+import { SettingsAPI, ProfileAPI } from '../../lib/api';
 
 export function AccountSettings() {
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
       const res = await ProfileAPI.getProfile();
       return res.success && res.profile ? res.profile : null;
+    }
+  });
+
+  const { data: account, isLoading, error } = useQuery({
+    queryKey: ['accountSettings'],
+    queryFn: async () => {
+      const res = await SettingsAPI.getAccountSettings();
+      return res.success ? res.data : null;
     }
   });
 
@@ -22,17 +30,28 @@ export function AccountSettings() {
     );
   }
 
-  const name = profile?.name || "LearnFlow User";
-  const email = profile?.email || "Not Provided";
-  const authProvider = profile?.provider || "Standard Authentication";
+  if (error) {
+    return (
+      <div className="w-full p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl border border-red-100 dark:border-red-900/30 mb-8">
+        Failed to load account settings.
+      </div>
+    );
+  }
+
+  const name = account?.fullName || profile?.name || "";
+  const email = account?.email || profile?.email || "";
+  const authProvider = account?.provider || "";
   
-  const joinedDate = profile?.created_at 
-    ? new Date(profile.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-    : "Recently Joined";
+  const joinedDate = account?.memberSince 
+    ? new Date(account.memberSince).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : profile?.createdAt 
+      ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) 
+      : "";
 
   const getAvatarUrl = () => {
+    if (account?.avatarUrl) return account.avatarUrl;
     if (!profile) return "https://api.dicebear.com/7.x/notionists/svg?seed=User&backgroundColor=FF7A18";
-    return profile.profileImage || `https://api.dicebear.com/7.x/notionists/svg?seed=${profile.name}&backgroundColor=FF7A18`;
+    return profile.profileImage || profile.image || `https://api.dicebear.com/7.x/notionists/svg?seed=${profile.name}&backgroundColor=FF7A18`;
   };
 
   return (
