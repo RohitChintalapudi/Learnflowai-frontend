@@ -895,6 +895,7 @@ export const SettingsAPI = {
       method: "GET",
     });
 
+
     if (error) {
       throw new Error(error.message || "Failed to fetch account settings");
     }
@@ -947,5 +948,77 @@ export const SettingsAPI = {
     }
 
     return { blob: data as Blob, filename };
+
+export interface Alert {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  read: boolean;
+  type: "info" | "success" | "warning" | "error";
+  createdAt: string;
+}
+
+export const AlertsAPI = {
+  async getAlerts(): Promise<Alert[]> {
+    const response = await fetch(`${API_BASE_URL}/alerts`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch alerts");
+    }
+
+    const resJson = await response.json();
+    return resJson.alerts;
+  },
+
+  async markAllRead(): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${API_BASE_URL}/alerts/mark-all-read`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to mark alerts as read");
+    }
+
+    return response.json();
+  },
+
+  async deleteAlert(id: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${API_BASE_URL}/alerts/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to delete alert");
+    }
+
+    return response.json();
+  },
+
+  async seedAlerts(): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${API_BASE_URL}/alerts/seed`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to seed alerts");
+    }
+
+    return response.json();
+
   }
 };
