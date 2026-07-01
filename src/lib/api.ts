@@ -1,7 +1,7 @@
-export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+import { authClient, BACKEND_URL } from "./auth-client";
 const API_BASE_URL = `${BACKEND_URL}/api`;
 
-import { authClient } from "./auth-client";
+export { BACKEND_URL };
 
 export interface DocumentMetadata {
   id: string;
@@ -948,6 +948,8 @@ export const SettingsAPI = {
     }
 
     return { blob: data as Blob, filename };
+  }
+};
 
 export interface Alert {
   id: string;
@@ -1022,3 +1024,5 @@ export const AlertsAPI = {
 
   }
 };
+
+// End of file
