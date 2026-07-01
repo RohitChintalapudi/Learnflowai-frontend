@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_public/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { error: searchError } = Route.useSearch();
+  const { error: searchError, redirect: redirectPath } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -47,7 +47,7 @@ function LoginPage() {
     try {
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "http://localhost:5173/dashboard",
+        callbackURL: `${window.location.origin}${redirectPath || "/dashboard"}`,
       });
     } catch (err: any) {
       toast.error(err.message || "Google Sign-In failed");
@@ -93,8 +93,12 @@ function LoginPage() {
       }
 
       authStore.setAuthenticated(true);
+      if (data && data.user) {
+        localStorage.setItem("lf_user_name", data.user.name || "");
+        localStorage.setItem("lf_user_image", data.user.image || "");
+      }
       toast.success("Logged in successfully!");
-      navigate({ to: "/dashboard" });
+      navigate({ to: (redirectPath || "/dashboard") as any });
     } catch (err: any) {
       toast.error(err.message || "Invalid email or password");
       setError(err.message || "Invalid email or password");

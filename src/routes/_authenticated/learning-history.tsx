@@ -80,7 +80,11 @@ function LearningHistoryPage() {
 
   // Consolidate list items from infinite scroll pages
   const allItems = useMemo(() => {
-    return historyPages ? historyPages.pages.flatMap((page) => page.items) : [];
+    if (!historyPages) return [];
+    return historyPages.pages.flatMap((page: any) => {
+      if (Array.isArray(page)) return page;
+      return page?.items || [];
+    }).filter(Boolean);
   }, [historyPages]);
 
   // Aggregate stats totals

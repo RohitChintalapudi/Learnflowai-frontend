@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { ProfileAPI, AlertsAPI } from "../lib/api";
 import type { Alert } from "../lib/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { getFirstLetterOfFirstName } from "../lib/utils";
 import {
   LayoutDashboard,
   FileText,
@@ -47,13 +48,15 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
   const location = useLocation();
   const { startTour } = useProductTour();
   const queryClient = useQueryClient();
+  const { data: session } = authClient.useSession();
   const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof document !== "undefined") {
-      return document.documentElement.classList.contains("dark") ? "dark" : "light";
+    if (typeof localStorage !== "undefined") {
+      return (localStorage.getItem("theme") as "light" | "dark") || "light";
     }
     return "light";
   });
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof localStorage !== "undefined") {
@@ -83,6 +86,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
     queryKey: ['alerts'],
     queryFn: AlertsAPI.getAlerts,
     refetchInterval: 10000,
+    enabled: !!session && !isLoggingOut,
   });
 
   const unreadCount = alerts.filter(a => !a.read).length;
@@ -144,14 +148,21 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
     queryKey: ['profile'],
     queryFn: async () => {
       const res = await ProfileAPI.getProfile();
-      return res.success && res.profile ? res.profile : null;
-    }
+      if (res.success && res.profile) {
+        localStorage.setItem("lf_user_name", res.profile.name || "");
+        localStorage.setItem("lf_user_image", res.profile.profileImage || "");
+        return res.profile;
+      }
+      return null;
+    },
+    enabled: !!session && !isLoggingOut,
   });
 
-  const getAvatarUrl = () => {
-    if (!profile) return "https://api.dicebear.com/7.x/notionists/svg?seed=User&backgroundColor=FF7A18";
-    return profile.profileImage || `https://api.dicebear.com/7.x/notionists/svg?seed=${profile.name}&backgroundColor=FF7A18`;
-  };
+  const cachedName = typeof window !== "undefined" ? localStorage.getItem("lf_user_name") || "" : "";
+  const cachedImage = typeof window !== "undefined" ? localStorage.getItem("lf_user_image") || "" : "";
+
+  const displayName = profile?.name || cachedName || "User";
+  const displayImage = profile?.profileImage || cachedImage || "";
 
   const toggleSidebar = () => {
     setIsCollapsed(prev => {
@@ -184,29 +195,34 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
   const handleLogout = () => setShowLogoutConfirm(true);
 
   const confirmLogout = async () => {
- setShowLogoutConfirm(false);
+    setShowLogoutConfirm(false);
+    setIsLoggingOut(true);
 
-  try {
-    await authClient.signOut();
+    try {
+      await authClient.signOut();
 
-    // Clear cached queries
-    queryClient.clear();
+      // Clear cached queries
+      queryClient.clear();
 
-    // Update auth state
-    authStore.setAuthenticated(false);
+      // Update auth state
+      authStore.setAuthenticated(false);
+      localStorage.removeItem("lf_user_name");
+      localStorage.removeItem("lf_user_image");
 
-    toast.success("You have been logged out.");
-    navigate({ to: "/login" });
-  } catch (err) {
-    console.error("Logout failed:", err);
+      toast.success("You have been logged out.");
+      navigate({ to: "/login" });
+    } catch (err) {
+      console.error("Logout failed:", err);
 
-    // Ensure local state is cleared even if request fails
-    queryClient.clear();
-    authStore.setAuthenticated(false);
+      // Ensure local state is cleared even if request fails
+      queryClient.clear();
+      authStore.setAuthenticated(false);
+      localStorage.removeItem("lf_user_name");
+      localStorage.removeItem("lf_user_image");
 
-    navigate({ to: "/login" });
-  }
-};
+      navigate({ to: "/login" });
+    }
+  };
   return (
     <div className="h-screen w-full flex bg-[var(--lf-bg)] text-[var(--lf-text-primary)] overflow-hidden selection:bg-[var(--lf-accent)] selection:text-white font-sans relative">
       {/* ── SIDEBAR ────────────────────────────────────────────────────────── */}
@@ -284,26 +300,38 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
               className="w-full flex items-center justify-center p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/50 group transition-all card-shadow" 
               title="Profile"
             >
-              <img
-                src={getAvatarUrl()}
-                alt="Profile"
-                className="h-6 w-6 rounded-full object-cover"
-              />
+              {displayImage ? (
+                <img
+                  src={displayImage}
+                  alt="Profile"
+                  className="h-6 w-6 rounded-full object-cover"
+                />
+              ) : (
+                <div className="h-6 w-6 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 text-white font-bold text-[10px] flex items-center justify-center shadow-sm select-none">
+                  {getFirstLetterOfFirstName(displayName)}
+                </div>
+              )}
             </button>
           ) : (
             <button 
               onClick={() => setIsProfileModalOpen(true)}
               className="w-full flex items-center gap-3 p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/30 card-shadow hover:shadow-[0_0_15px_rgba(255,122,24,0.15)] transition-all duration-300 group"
             >
-              <div className="h-9 w-9 rounded-full border border-[var(--lf-border)] overflow-hidden shrink-0 group-hover:ring-2 ring-orange-500/50 transition-all">
-                <img
-                  src={getAvatarUrl()}
-                  alt="Profile"
-                  className="h-full w-full object-cover"
-                />
+              <div className="h-9 w-9 rounded-full border border-[var(--lf-border)] overflow-hidden shrink-0 group-hover:ring-2 ring-orange-500/50 transition-all flex items-center justify-center bg-stone-100 dark:bg-stone-900">
+                {displayImage ? (
+                  <img
+                    src={displayImage}
+                    alt="Profile"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-gradient-to-br from-orange-500 to-amber-500 text-white font-extrabold text-sm flex items-center justify-center shadow-inner select-none">
+                    {getFirstLetterOfFirstName(displayName)}
+                  </div>
+                )}
               </div>
               <div className="flex-1 text-left">
-                <p className="text-sm font-semibold text-[var(--lf-text-primary)] group-hover:text-[var(--lf-accent)] transition-colors">{profile?.name || "User"}</p>
+                <p className="text-sm font-semibold text-[var(--lf-text-primary)] group-hover:text-[var(--lf-accent)] transition-colors">{displayName}</p>
                 <p className="text-[11px] text-[var(--lf-text-secondary)]">Edit Profile</p>
               </div>
               <div className="w-6 h-6 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
@@ -328,7 +356,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
             <div className="flex items-center gap-2">
               {headerTitle === undefined ? (
                 <h2 className="text-lg font-bold">
-                  Welcome back, {profile?.name || "User"}
+                  Welcome back, {displayName}
                 </h2>
               ) : typeof headerTitle === "string" ? (
                 <h2 className="text-lg font-bold">
@@ -478,13 +506,19 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
               <button 
                 onClick={() => setIsProfileModalOpen(true)}
-                className="h-8 w-8 rounded-full border border-[var(--lf-border)] overflow-hidden cursor-pointer hover:ring-2 ring-orange-500/50 transition-all shrink-0"
+                className="h-8 w-8 rounded-full border border-[var(--lf-border)] overflow-hidden cursor-pointer hover:ring-2 ring-orange-500/50 transition-all shrink-0 flex items-center justify-center bg-stone-100 dark:bg-stone-900"
               >
-                <img
-                  src={getAvatarUrl()}
-                  alt="Profile"
-                  className="h-full w-full object-cover"
-                />
+                {displayImage ? (
+                  <img
+                    src={displayImage}
+                    alt="Profile"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-gradient-to-br from-orange-500 to-amber-500 text-white font-bold text-xs flex items-center justify-center shadow-inner select-none">
+                    {getFirstLetterOfFirstName(displayName)}
+                  </div>
+                )}
               </button>
 
               <button

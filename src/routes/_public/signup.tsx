@@ -83,6 +83,10 @@ function SignupPage() {
 
       console.log("Sign up successful!", data);
       authStore.setAuthenticated(true);
+      if (data && data.user) {
+        localStorage.setItem("lf_user_name", data.user.name || "");
+        localStorage.setItem("lf_user_image", data.user.image || "");
+      }
       toast.success("Account created successfully!");
       navigate({ to: "/dashboard" });
     } catch (err: any) {
