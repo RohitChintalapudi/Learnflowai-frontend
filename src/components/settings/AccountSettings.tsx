@@ -1,4 +1,3 @@
-import React from 'react';
 import { Mail, ShieldCheck, Clock, ExternalLink } from 'lucide-react';
 import { SettingsCard, SettingsSectionHeader, SettingsButton } from './shared';
 import { useQuery } from '@tanstack/react-query';

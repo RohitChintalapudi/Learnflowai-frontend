@@ -1,7 +1,7 @@
-import { authClient, BACKEND_URL } from "./auth-client";
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 const API_BASE_URL = `${BACKEND_URL}/api`;
 
-export { BACKEND_URL };
+import { authClient } from "./auth-client";
 
 export interface DocumentMetadata {
   id: string;

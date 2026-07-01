@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { SettingsCard, SettingsSectionHeader, SettingsButton } from './shared';
 import { File, MessageSquare, Database, FileText, Download, Trash2, Settings, CheckCircle2, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';

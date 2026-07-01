@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SettingsCard, SettingsSectionHeader, SettingsButton, SettingsInput } from './shared';
-import { Shield, Key, Smartphone, Laptop, CheckCircle2, AlertTriangle, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Shield, Smartphone, Laptop, CheckCircle2, AlertTriangle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { SettingsAPI } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { useNavigate } from '@tanstack/react-router';

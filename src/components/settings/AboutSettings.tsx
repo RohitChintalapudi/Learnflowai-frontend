@@ -1,5 +1,4 @@
-import React from 'react';
-import { SettingsCard, SettingsSectionHeader, SettingsButton } from './shared';
+import { SettingsCard, SettingsButton } from './shared';
 import { ExternalLink, GitBranch, Book, FileText, CheckCircle2, Code } from 'lucide-react';
 
 export function AboutSettings() {
