@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
-import { ProfileAPI } from "../lib/api";
+import { ProfileAPI, AlertsAPI } from "../lib/api";
+import type { Alert } from "../lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   LayoutDashboard,
@@ -20,6 +21,9 @@ import {
   ChevronLeft,
   ChevronRight,
   PlayCircle,
+  CheckCheck,
+  Trash2,
+  Inbox,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { ProfileModal } from "./ProfileModal";
@@ -56,6 +60,84 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
       return localStorage.getItem("sidebar_collapsed") === "true";
     }
     return false;
+  });
+
+  const [isAlertsOpen, setIsAlertsOpen] = useState(false);
+  const alertsDropdownRef = useRef<HTMLDivElement>(null);
+  const toastedAlertsRef = useRef<Set<string>>(new Set());
+  const isFirstLoad = useRef(true);
+
+  // Click outside to close notifications dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (alertsDropdownRef.current && !alertsDropdownRef.current.contains(event.target as Node)) {
+        setIsAlertsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Fetch alerts with polling (every 10 seconds)
+  const { data: alerts = [] } = useQuery<Alert[]>({
+    queryKey: ['alerts'],
+    queryFn: AlertsAPI.getAlerts,
+    refetchInterval: 10000,
+  });
+
+  const unreadCount = alerts.filter(a => !a.read).length;
+
+  // React Hot Toast notification for new alerts
+  useEffect(() => {
+    if (!alerts || alerts.length === 0) return;
+    if (isFirstLoad.current) {
+      alerts.forEach(alert => toastedAlertsRef.current.add(alert.id));
+      isFirstLoad.current = false;
+      return;
+    }
+    alerts.forEach(alert => {
+      if (!alert.read && !toastedAlertsRef.current.has(alert.id)) {
+        toastedAlertsRef.current.add(alert.id);
+        if (alert.type === "success") {
+          toast.success(alert.message, { id: alert.id });
+        } else if (alert.type === "error") {
+          toast.error(alert.message, { id: alert.id });
+        } else {
+          toast(alert.message, { icon: "🔔", id: alert.id });
+        }
+      }
+    });
+  }, [alerts]);
+
+  const markAllReadMutation = useMutation({
+    mutationFn: AlertsAPI.markAllRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to mark alerts as read");
+    }
+  });
+
+  const deleteAlertMutation = useMutation({
+    mutationFn: AlertsAPI.deleteAlert,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to delete alert");
+    }
+  });
+
+  const seedAlertsMutation = useMutation({
+    mutationFn: AlertsAPI.seedAlerts,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+      toast.success("Demo alerts successfully seeded");
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to seed demo alerts");
+    }
   });
 
   const { data: profile } = useQuery({
@@ -286,10 +368,113 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
                 )}
               </button>
 
-              <button className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500 border-2 border-[var(--lf-bg)]" />
-              </button>
+              <div className="relative" ref={alertsDropdownRef}>
+                <button
+                  onClick={() => setIsAlertsOpen(!isAlertsOpen)}
+                  className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
+                  title="Notifications"
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-[9px] font-bold text-white flex items-center justify-center border border-[var(--lf-bg)] shadow-[0_0_8px_rgba(244,63,94,0.3)]">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {isAlertsOpen && (
+                  <div className="absolute right-0 mt-2 w-[340px] max-w-[calc(100vw-32px)] bg-white dark:bg-[#111] rounded-2xl border border-[var(--lf-border)] card-shadow-lg overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {/* Header */}
+                    <div className="px-4 py-3 border-b border-[var(--lf-border)] flex items-center justify-between bg-white/50 dark:bg-black/20 backdrop-blur-sm">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[13.5px] font-bold">Notifications</span>
+                        {unreadCount > 0 && (
+                          <span className="text-[10px] bg-orange-500/10 text-orange-500 font-bold px-1.5 py-0.5 rounded-full">
+                            {unreadCount} new
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={() => markAllReadMutation.mutate()}
+                            className="text-[11px] font-medium text-orange-500 hover:text-orange-600 flex items-center gap-1"
+                            title="Mark all as read"
+                          >
+                            <CheckCheck className="h-3 w-3" />
+                            <span>Mark read</span>
+                          </button>
+                        )}
+                        {alerts.length === 0 && (
+                          <button
+                            onClick={() => seedAlertsMutation.mutate()}
+                            className="text-[11px] font-medium text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
+                          >
+                            Seed demo
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Content List */}
+                    <div className="max-h-[300px] overflow-y-auto divide-y divide-[var(--lf-border)] no-scrollbar">
+                      {alerts.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                          <div className="w-10 h-10 rounded-full bg-[var(--lf-surface)] border border-[var(--lf-border)] flex items-center justify-center mb-2">
+                            <Inbox className="h-5 w-5 text-[var(--lf-text-secondary)]" />
+                          </div>
+                          <p className="text-xs font-semibold text-[var(--lf-text-primary)]">All caught up!</p>
+                          <p className="text-[11px] text-[var(--lf-text-secondary)] mt-1">No alerts or notifications yet.</p>
+                          <button
+                            onClick={() => seedAlertsMutation.mutate()}
+                            className="mt-3 px-3 py-1 text-[11px] font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg hover:shadow-md transition-all active:scale-95"
+                          >
+                            Seed Demo Alerts
+                          </button>
+                        </div>
+                      ) : (
+                        alerts.map((alert) => (
+                          <div
+                            key={alert.id}
+                            className={`p-4 flex gap-3 transition-colors hover:bg-[var(--lf-surface)] relative group ${
+                              !alert.read ? "bg-orange-500/[0.015] dark:bg-orange-500/[0.03]" : ""
+                            }`}
+                          >
+                            {/* Type Indicator Dot */}
+                            {!alert.read && (
+                              <span className="absolute left-2.5 top-5.5 h-1.5 w-1.5 rounded-full bg-orange-500 shrink-0" />
+                            )}
+
+                            {/* Icon / Content */}
+                            <div className="flex-1 min-w-0 pl-1.5">
+                              <p className="text-[12.5px] font-semibold text-[var(--lf-text-primary)] truncate">
+                                {alert.title}
+                              </p>
+                              <p className="text-[11.5px] text-[var(--lf-text-secondary)] mt-0.5 leading-normal break-words">
+                                {alert.message}
+                              </p>
+                              <span className="text-[10px] text-[var(--lf-text-secondary)] mt-1 block">
+                                {new Date(alert.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+
+                            {/* Action Buttons (Dismiss/Delete) */}
+                            <div className="flex items-start shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => deleteAlertMutation.mutate(alert.id)}
+                                className="p-1 rounded hover:bg-red-500/10 text-[var(--lf-text-secondary)] hover:text-red-500 transition-colors"
+                                title="Delete notification"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <button 
                 onClick={() => setIsProfileModalOpen(true)}
