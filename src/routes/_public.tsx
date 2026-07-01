@@ -219,20 +219,20 @@ function PublicLayout() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
               
               {/* Section 1: Brand */}
-              <div className="md:col-span-6 lg:col-span-5 flex flex-col items-start text-left max-w-sm">
-                <Link to="/" className="flex flex-col items-start gap-4 mb-4 group">
-                  <div>
-                    <img
-                      src="/logo.png"
-                      className="block dark:hidden h-10 w-auto object-contain transition-transform group-hover:scale-105"
-                      alt="Learnflow AI Logo"
-                    />
-                    <img
-                      src="/logo_dark.png"
-                      className="hidden dark:block h-10 w-auto object-contain transition-transform group-hover:scale-105"
-                      alt="Learnflow AI Logo"
-                    />
-                  </div>
+<div className="md:col-span-6 lg:col-span-5 flex flex-col items-start text-left max-w-sm">
+  <Link to="/" className="flex flex-col items-start gap-4 mb-4 group">
+    <div>
+      <img
+        src="/logo.png"
+        className="block dark:hidden h-12 w-auto object-contain transition-transform group-hover:scale-105"
+        alt="Learnflow AI Logo"
+      />
+      <img
+        src="/logo_dark.png"
+        className="hidden dark:block h-12 w-auto object-contain transition-transform group-hover:scale-105"
+        alt="Learnflow AI Logo"
+      />
+    </div>
                   <span className="text-2xl font-extrabold tracking-tight text-stone-900 dark:text-white">
                     Learnflow <span className="text-[#FF7A00]">AI</span>
                   </span>
