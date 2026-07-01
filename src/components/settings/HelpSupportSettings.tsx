@@ -1,6 +1,5 @@
-import React from 'react';
 import { SettingsCard, SettingsSectionHeader, SettingsButton } from './shared';
-import { HelpCircle, MessageCircle, FileText, Bug, GitBranch, ExternalLink } from 'lucide-react';
+import { HelpCircle, MessageCircle, FileText, Bug, GitBranch } from 'lucide-react';
 
 export function HelpSupportSettings() {
   return (

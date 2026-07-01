@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
 export function SettingsCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -90,7 +89,17 @@ export function SettingsButton({
   );
 }
 
-export function SettingsInput({
+export const SettingsInput = React.forwardRef<
+  HTMLInputElement,
+  {
+    label?: string;
+    type?: string;
+    placeholder?: string;
+    value?: string;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    className?: string;
+  } & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value' | 'type' | 'placeholder' | 'className'>
+>(({
   label,
   type = 'text',
   placeholder,
@@ -98,18 +107,12 @@ export function SettingsInput({
   onChange,
   className = '',
   ...props
-}: {
-  label?: string;
-  type?: string;
-  placeholder?: string;
-  value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  className?: string;
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value' | 'type' | 'placeholder' | 'className'>) {
+}, ref) => {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && <label className="text-sm font-medium text-stone-700 dark:text-stone-300">{label}</label>}
       <input
+        ref={ref}
         type={type}
         className="flex h-10 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#2A2A2A] dark:bg-[#1A1A1A] dark:text-white dark:placeholder:text-stone-500"
         placeholder={placeholder}
@@ -119,7 +122,8 @@ export function SettingsInput({
       />
     </div>
   );
-}
+});
+SettingsInput.displayName = 'SettingsInput';
 
 export function SettingsSelect({
   label,

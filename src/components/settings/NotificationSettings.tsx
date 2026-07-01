@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { SettingsCard, SettingsSectionHeader, SettingsToggle } from './shared';
 
 export function NotificationSettings() {
@@ -27,13 +27,13 @@ export function NotificationSettings() {
         
         <div className="space-y-6">
           <SettingsToggle 
-            title="Email Notifications" 
+            label="Email Notifications" 
             description="Receive important updates and alerts directly to your inbox." 
             checked={settings.emailNotifications}
             onChange={() => toggle('emailNotifications')}
           />
           <SettingsToggle 
-            title="Push Notifications" 
+            label="Push Notifications" 
             description="Receive immediate alerts in your browser when you're online." 
             checked={settings.pushNotifications}
             onChange={() => toggle('pushNotifications')}
@@ -44,37 +44,37 @@ export function NotificationSettings() {
             
             <div className="space-y-6">
               <SettingsToggle 
-                title="Weekly Summary" 
+                label="Weekly Summary" 
                 description="Get a recap of your learning progress every Monday." 
                 checked={settings.weeklySummary}
                 onChange={() => toggle('weeklySummary')}
               />
               <SettingsToggle 
-                title="Quiz Completion Alerts" 
+                label="Quiz Completion Alerts" 
                 description="Notify me as soon as my AI-generated quiz is ready." 
                 checked={settings.quizCompletion}
                 onChange={() => toggle('quizCompletion')}
               />
               <SettingsToggle 
-                title="Learning Reminder" 
+                label="Learning Reminder" 
                 description="Daily reminders to keep up your study streak." 
                 checked={settings.learningReminder}
                 onChange={() => toggle('learningReminder')}
               />
               <SettingsToggle 
-                title="Document Processing Finished" 
+                label="Document Processing Finished" 
                 description="Alert me when large PDFs are fully analyzed by the AI." 
                 checked={settings.documentProcessing}
                 onChange={() => toggle('documentProcessing')}
               />
               <SettingsToggle 
-                title="Security Alerts" 
+                label="Security Alerts" 
                 description="Crucial security updates and unrecognised login attempts." 
                 checked={settings.securityAlerts}
                 onChange={() => toggle('securityAlerts')}
               />
               <SettingsToggle 
-                title="Marketing Emails" 
+                label="Marketing Emails" 
                 description="Receive updates about new LearnFlow AI features and offers." 
                 checked={settings.marketingEmails}
                 onChange={() => toggle('marketingEmails')}
