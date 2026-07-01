@@ -83,15 +83,19 @@ function NotesPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="flex-1 overflow-y-auto p-8 no-scrollbar"
+              className="flex-1 overflow-y-auto p-8 relative no-scrollbar"
             >
-              <div className="max-w-6xl mx-auto space-y-8">
+              {/* Orange glow background */}
+              <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[150px] pointer-events-none translate-x-1/4 -translate-y-1/4" />
+              <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-500/8 rounded-full blur-[120px] pointer-events-none -translate-x-1/4 translate-y-1/4" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[130px] pointer-events-none" />
+              <div className="max-w-6xl mx-auto space-y-8 relative z-10">
                 <div className="flex items-center gap-4 border-b border-[var(--lf-border)] pb-6">
                   <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center">
                     <Notebook className="h-6 w-6 text-orange-500" />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-[var(--lf-text-primary)]">Your Recent Notes</h1>
+                    <h1 data-tour="notes-heading" className="text-2xl font-bold text-[var(--lf-text-primary)]">Your Recent Notes</h1>
                     <p className="text-[14px] text-[var(--lf-text-secondary)]">Access, review, and download your AI-generated study notes.</p>
                   </div>
                 </div>

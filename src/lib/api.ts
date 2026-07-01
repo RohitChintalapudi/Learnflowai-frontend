@@ -625,50 +625,253 @@ export interface AIInsights {
 
 export const AnalyticsAPI = {
   async getOverview(): Promise<OverviewStats> {
-    const response = await fetch(`${API_BASE_URL}/analytics/overview`, { credentials: "include" });
-    if (!response.ok) throw new Error("Failed to fetch analytics overview");
-    return response.json();
+    const response = await fetch(`${API_BASE_URL}/analytics/overview`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch analytics overview");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
   },
 
   async getActivity(days: number = 30): Promise<ActivityTimelineItem[]> {
-    const response = await fetch(`${API_BASE_URL}/analytics/activity?days=${days}`, { credentials: "include" });
-    if (!response.ok) throw new Error("Failed to fetch activity timeline");
-    return response.json();
+    const response = await fetch(`${API_BASE_URL}/analytics/activity?days=${days}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch activity timeline");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
   },
 
   async getFeatureUsage(): Promise<FeatureUsageItem[]> {
-    const response = await fetch(`${API_BASE_URL}/analytics/feature-usage`, { credentials: "include" });
-    if (!response.ok) throw new Error("Failed to fetch feature usage");
-    return response.json();
+    const response = await fetch(`${API_BASE_URL}/analytics/feature-usage`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch feature usage");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
   },
 
   async getTopics(): Promise<TopicItem[]> {
-    const response = await fetch(`${API_BASE_URL}/analytics/topics`, { credentials: "include" });
-    if (!response.ok) throw new Error("Failed to fetch topics");
-    return response.json();
+    const response = await fetch(`${API_BASE_URL}/analytics/topics`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch topics");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
   },
 
   async getConsistency(): Promise<ConsistencyScore> {
-    const response = await fetch(`${API_BASE_URL}/analytics/consistency`, { credentials: "include" });
-    if (!response.ok) throw new Error("Failed to fetch consistency score");
-    return response.json();
+    const response = await fetch(`${API_BASE_URL}/analytics/consistency`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch consistency score");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
   },
 
   async getProductivity(): Promise<ProductivityStats> {
-    const response = await fetch(`${API_BASE_URL}/analytics/productivity`, { credentials: "include" });
-    if (!response.ok) throw new Error("Failed to fetch productivity stats");
-    return response.json();
+    const response = await fetch(`${API_BASE_URL}/analytics/productivity`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch productivity stats");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
   },
 
   async getRevisions(): Promise<RevisionCandidate[]> {
-    const response = await fetch(`${API_BASE_URL}/analytics/revisions`, { credentials: "include" });
-    if (!response.ok) throw new Error("Failed to fetch revision recommendations");
-    return response.json();
+    const response = await fetch(`${API_BASE_URL}/analytics/revisions`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch revision recommendations");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
   },
 
   async getInsights(): Promise<AIInsights> {
-    const response = await fetch(`${API_BASE_URL}/analytics/insights`, { credentials: "include" });
-    if (!response.ok) throw new Error("Failed to fetch AI insights");
-    return response.json();
+    const response = await fetch(`${API_BASE_URL}/analytics/insights`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch AI insights");
+    }
+    const res = await response.json();
+    const data = res.data !== undefined ? res.data : res;
+
+    return {
+      strengths: data.strengths || [],
+      weaknesses: data.weaknesses || data.areasToImprove || [],
+      recommendations: data.recommendations || [],
+      nextActions: data.nextActions || (data.recommendations ? data.recommendations.map((r: string) => r.startsWith("Action:") ? r : `Focus: ${r}`) : []),
+    };
   }
 };
+
+export interface HistoryQueryOptions {
+  page?: number;
+  limit?: number;
+  search?: string;
+  feature?: string;
+  dateRange?: string;
+  sort?: string;
+}
+
+export interface LearningHistoryItem {
+  id: string;
+  userId: string;
+  documentId: string;
+  highlightedText: string;
+  createdAt: string;
+  activityType: "Explanation" | "GeneratedNote" | "GeneratedQuiz" | "QuizSet" | "InterviewQuestionSet" | "GeneratedMindMap" | "GeneratedAnalogy" | "GeneratedSimulation";
+  document?: {
+    title: string;
+  };
+  explanationText?: string;
+  title?: string;
+  notes?: any;
+  quizData?: any;
+  quizJson?: any;
+  questionsJson?: any;
+  mindMapData?: any;
+  analogyData?: any;
+  simulationData?: any;
+  simulationType?: string;
+  difficulty?: string;
+  style?: string;
+  score?: number;
+  totalQuestions?: number;
+  status?: string;
+  topicsToImprove?: string[];
+}
+
+export interface HistoryListResponse {
+  items: LearningHistoryItem[];
+  total: number;
+  hasMore: boolean;
+  page: number;
+  limit: number;
+}
+
+export interface SuggestionItem {
+  topic: string;
+  reason: string;
+  priority: "High" | "Medium" | "Low";
+}
+
+export const LearningHistoryAPI = {
+  async getHistory(options: HistoryQueryOptions = {}): Promise<HistoryListResponse> {
+    const queryParams = new URLSearchParams();
+    if (options.page) queryParams.append("page", options.page.toString());
+    if (options.limit) queryParams.append("limit", options.limit.toString());
+    if (options.search) queryParams.append("search", options.search);
+    if (options.feature) queryParams.append("feature", options.feature);
+    if (options.dateRange) queryParams.append("dateRange", options.dateRange);
+    if (options.sort) queryParams.append("sort", options.sort);
+
+    const response = await fetch(`${API_BASE_URL}/learning-history?${queryParams.toString()}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch learning history");
+    }
+
+    const resJson = await response.json();
+    return resJson.data;
+  },
+
+  async getHistoryItem(id: string, activityType?: string): Promise<LearningHistoryItem> {
+    const queryParams = new URLSearchParams();
+    if (activityType) queryParams.append("type", activityType);
+
+    const response = await fetch(`${API_BASE_URL}/learning-history/${id}?${queryParams.toString()}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch history details");
+    }
+
+    const resJson = await response.json();
+    return resJson.data;
+  },
+
+  async deleteHistoryItem(id: string, activityType?: string): Promise<{ success: boolean; message: string }> {
+    const queryParams = new URLSearchParams();
+    if (activityType) queryParams.append("type", activityType);
+
+    const response = await fetch(`${API_BASE_URL}/learning-history/${id}?${queryParams.toString()}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to delete history item");
+    }
+
+    return response.json();
+  },
+
+  async getSuggestions(): Promise<SuggestionItem[]> {
+    const response = await fetch(`${API_BASE_URL}/learning-history/suggestions`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch personalized suggestions");
+    }
+
+    const resJson = await response.json();
+    return resJson.data;
+  }
+};
+
+;

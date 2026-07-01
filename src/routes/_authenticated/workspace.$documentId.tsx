@@ -388,6 +388,7 @@ function WorkspacePage() {
               {features.map((feature) => (
                 <button
                   key={feature.id}
+                  data-tour={`ai-${feature.id === "analogy" ? "analogies" : feature.id === "simulation" ? "simulations" : feature.id}`}
                   onClick={() => handleFeatureClick(feature.id)}
                   className="flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all duration-300 group min-w-[70px] relative overflow-hidden hover:bg-orange-500/10 hover:shadow-[0_0_20px_rgba(255,122,24,0.25)] active:scale-90"
                 >
@@ -606,21 +607,7 @@ function WorkspacePage() {
                   transition={{ duration: 0.2, ease: "easeOut" }}
                   className="space-y-6 pb-20"
                 >
-                  {/* Context Header */}
-                  <div className="p-4 rounded-2xl border border-[var(--lf-border)] bg-[var(--lf-surface)] flex gap-4 card-shadow">
-                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
-                      <FileText className="h-5 w-5 text-orange-500" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider mb-1">
-                        Selected Context
-                      </p>
-                      <p className="text-[13px] text-[var(--lf-text-primary)] italic border-l-2 border-[var(--lf-accent)] pl-3 line-clamp-3">
-                        "{highlightedText || "Dynamic Programming is a problem-solving technique..."}"
-                      </p>
-                    </div>
-                  </div>
-
+                 
                   {/* Feature Content */}
                   {activeFeature === "explain" && <FeatureExplain content={explanationContent} />}
                   {activeFeature === "notes" && <FeatureNotes notes={notesContent} loading={isLoading} />}

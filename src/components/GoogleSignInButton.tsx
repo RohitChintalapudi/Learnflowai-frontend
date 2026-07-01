@@ -4,19 +4,21 @@ interface GoogleSignInButtonProps {
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   isLoading: boolean;
   disabled?: boolean;
+  label?: string;
 }
 
 export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   onClick,
   isLoading,
   disabled,
+  label,
 }) => {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={isLoading || disabled}
-      aria-label="Continue with Google"
+      aria-label={label || "Continue with Google"}
       className="w-full py-2.5 px-4 bg-white dark:bg-stone-900 hover:bg-stone-50 dark:hover:bg-stone-800/80 border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white font-semibold rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-3 relative focus:outline-none focus:ring-2 focus:ring-orange-500/20"
     >
       {isLoading ? (
@@ -66,7 +68,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
           />
         </svg>
       )}
-      <span>{isLoading ? "Signing in..." : "Continue with Google"}</span>
+      <span>{isLoading ? "Signing in..." : (label || "Continue with Google")}</span>
     </button>
   );
 };

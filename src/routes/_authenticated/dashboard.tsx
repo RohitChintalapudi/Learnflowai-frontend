@@ -75,7 +75,7 @@ function DashboardHomePage() {
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-orange-500/30 bg-orange-500/15 text-[var(--lf-accent)] text-xs font-semibold mb-5">
                 <Brain className="h-3.5 w-3.5" /> AI-Powered Study Assistant
               </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold tracking-tight leading-[1.15] mb-4">
+              <h1 data-tour="dashboard-heading" className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold tracking-tight leading-[1.15] mb-4">
                 Continue Your <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--lf-accent)] to-orange-300">
                   Learning Journey.
