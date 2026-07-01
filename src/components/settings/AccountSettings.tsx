@@ -1,9 +1,13 @@
-import { Mail, ShieldCheck, Clock, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
+import { Mail, ShieldCheck, Clock } from 'lucide-react';
 import { SettingsCard, SettingsSectionHeader, SettingsButton } from './shared';
 import { useQuery } from '@tanstack/react-query';
 import { SettingsAPI, ProfileAPI } from '../../lib/api';
+import { getFirstLetterOfFirstName } from '../../lib/utils';
+import { ProfileModal } from '../ProfileModal';
 
 export function AccountSettings() {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { data: profile } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
@@ -47,11 +51,7 @@ export function AccountSettings() {
       ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) 
       : "";
 
-  const getAvatarUrl = () => {
-    if (account?.avatarUrl) return account.avatarUrl;
-    if (!profile) return "https://api.dicebear.com/7.x/notionists/svg?seed=User&backgroundColor=FF7A18";
-    return profile.profileImage || profile.image || `https://api.dicebear.com/7.x/notionists/svg?seed=${profile.name}&backgroundColor=FF7A18`;
-  };
+  const hasAvatar = account?.avatarUrl || profile?.profileImage || profile?.image;
 
   return (
     <div className="w-full">
@@ -62,19 +62,29 @@ export function AccountSettings() {
         />
         
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-8 p-6 bg-stone-50/50 dark:bg-[#1A1A1A] rounded-2xl border border-stone-100 dark:border-[#2A2A2A]">
-          <div className="w-24 h-24 rounded-full border-4 border-white dark:border-[#2A2A2A] overflow-hidden shadow-xl shrink-0 bg-stone-200 dark:bg-[#333]">
-            <img 
-              src={getAvatarUrl()} 
-              alt="Profile" 
-              className="w-full h-full object-cover"
-            />
+          <div className="w-24 h-24 rounded-full border-4 border-white dark:border-[#2A2A2A] overflow-hidden shadow-xl shrink-0 bg-stone-200 dark:bg-[#333] flex items-center justify-center">
+            {hasAvatar ? (
+              <img 
+                src={account?.avatarUrl || profile?.profileImage || profile?.image} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-orange-500 to-amber-500 text-white font-extrabold text-3xl flex items-center justify-center select-none">
+                {getFirstLetterOfFirstName(name)}
+              </div>
+            )}
           </div>
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-stone-900 dark:text-white">{name}</h2>
             <p className="text-stone-500 dark:text-stone-400">{email}</p>
             <div className="mt-4">
-              <SettingsButton variant="outline" className="text-sm px-4">
-                View Public Profile <ExternalLink className="w-3.5 h-3.5 ml-2 opacity-70" />
+              <SettingsButton 
+                variant="outline" 
+                className="text-sm px-4"
+                onClick={() => setIsEditModalOpen(true)}
+              >
+                Edit Profile
               </SettingsButton>
             </div>
           </div>
@@ -122,8 +132,12 @@ export function AccountSettings() {
             <span className="text-sm font-medium text-stone-700 dark:text-stone-300 sm:text-right">{joinedDate}</span>
           </div>
         </div>
-
       </SettingsCard>
+
+      <ProfileModal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+      />
     </div>
   );
 }

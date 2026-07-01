@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { ProfileAPI } from "../lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { getFirstLetterOfFirstName } from "../lib/utils";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -39,6 +41,7 @@ interface ProfileStats {
 }
 
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
+  const queryClient = useQueryClient();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -101,7 +104,11 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       const res = await ProfileAPI.updateProfile({ name, bio, learningGoals });
       if (res.success && res.profile) {
         setProfile(res.profile);
+        localStorage.setItem("lf_user_name", res.profile.name || "");
+        localStorage.setItem("lf_user_image", res.profile.profileImage || "");
         toast.success("Profile updated successfully!");
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
+        queryClient.invalidateQueries({ queryKey: ['accountSettings'] });
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to update profile");
@@ -132,7 +139,10 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       const res = await ProfileAPI.uploadAvatar(file);
       if (res.success && res.profileImage) {
         setProfile(prev => prev ? { ...prev, profileImage: res.profileImage } : null);
+        localStorage.setItem("lf_user_image", res.profileImage);
         toast.success("Avatar uploaded successfully!");
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
+        queryClient.invalidateQueries({ queryKey: ['accountSettings'] });
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to upload avatar");
@@ -149,18 +159,16 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       const res = await ProfileAPI.deleteAvatar();
       if (res.success) {
         setProfile(prev => prev ? { ...prev, profileImage: undefined } : null);
+        localStorage.setItem("lf_user_image", "");
         toast.success("Avatar removed");
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
+        queryClient.invalidateQueries({ queryKey: ['accountSettings'] });
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to remove avatar");
     } finally {
       setIsDeletingAvatar(false);
     }
-  };
-
-  const getAvatarUrl = () => {
-    if (!profile) return "https://api.dicebear.com/7.x/notionists/svg?seed=User&backgroundColor=FF7A18";
-    return profile.profileImage || profile.image || `https://api.dicebear.com/7.x/notionists/svg?seed=${profile.name}&backgroundColor=FF7A18`;
   };
 
   const hasCustomAvatar = profile?.profileImage || profile?.image;
@@ -216,12 +224,18 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 to-transparent pointer-events-none" />
                     
                     <div className="relative mb-4">
-                      <div className="w-32 h-32 rounded-full border-4 border-[var(--lf-border)] dark:border-zinc-800/80 overflow-hidden bg-[var(--lf-surface)] dark:bg-zinc-900 shadow-xl relative group-hover:border-orange-500/30 transition-colors">
-                        <img 
-                          src={getAvatarUrl()} 
-                          alt="Profile" 
-                          className={`w-full h-full object-cover transition-opacity duration-300 ${isUploading ? 'opacity-30' : 'opacity-100'}`} 
-                        />
+                      <div className="w-32 h-32 rounded-full border-4 border-[var(--lf-border)] dark:border-zinc-800/80 overflow-hidden bg-[var(--lf-surface)] dark:bg-zinc-900 shadow-xl relative group-hover:border-orange-500/30 transition-colors flex items-center justify-center">
+                        {hasCustomAvatar ? (
+                          <img 
+                            src={profile?.profileImage || profile?.image} 
+                            alt="Profile" 
+                            className={`w-full h-full object-cover transition-opacity duration-300 ${isUploading ? 'opacity-30' : 'opacity-100'}`} 
+                          />
+                        ) : (
+                          <div className={`w-full h-full bg-gradient-to-br from-orange-500 to-amber-500 text-white font-extrabold text-4xl flex items-center justify-center select-none transition-opacity duration-300 ${isUploading ? 'opacity-30' : 'opacity-100'}`}>
+                            {getFirstLetterOfFirstName(profile?.name)}
+                          </div>
+                        )}
                         
                         {/* Hover Overlay */}
                         <div 

@@ -2,7 +2,7 @@ import React from 'react';
 
 export function SettingsCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-white dark:bg-[#151515] border border-stone-200 dark:border-[#2A2A2A] rounded-2xl p-6 ${className}`}>
+    <div className={`bg-white dark:bg-black border border-orange-500/20 dark:border-orange-500/15 rounded-2xl p-6 ${className}`}>
       {children}
     </div>
   );
@@ -39,7 +39,7 @@ export function SettingsToggle({
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#151515] ${
+        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black ${
           checked ? 'bg-orange-500' : 'bg-stone-200 dark:bg-stone-700'
         }`}
       >

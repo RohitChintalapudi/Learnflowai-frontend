@@ -12,9 +12,13 @@ export const Route = createFileRoute('/_authenticated')({
 
     if (!isAuthenticated) {
       try {
-        const { data: session } = await authClient.getSession();
-        if (session) {
+        const { data } = await authClient.getSession();
+        if (data && data.session) {
           authStore.setAuthenticated(true);
+          if (data.user) {
+            localStorage.setItem("lf_user_name", data.user.name || "");
+            localStorage.setItem("lf_user_image", data.user.image || "");
+          }
           isAuthenticated = true;
         }
       } catch (e) {
@@ -25,9 +29,9 @@ export const Route = createFileRoute('/_authenticated')({
     if (!isAuthenticated) {
       throw redirect({
         to: '/login',
-        // Preserve the attempted URL so we can redirect back after login.
-        search: { redirect: location.href },
-      })
+        // Preserve the attempted URL path so we can redirect back after login.
+        search: { redirect: location.pathname },
+      } as any)
     }
   },
   component: AuthenticatedLayout,

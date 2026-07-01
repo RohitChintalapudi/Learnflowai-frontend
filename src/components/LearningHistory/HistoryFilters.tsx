@@ -1,4 +1,3 @@
-import { SlidersHorizontal } from "lucide-react";
 
 interface HistoryFiltersProps {
   feature: string;
@@ -20,7 +19,6 @@ export function HistoryFilters({ feature, onChangeFeature }: HistoryFiltersProps
   return (
     <div className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar w-full">
       <div className="flex items-center gap-1.5 shrink-0 pr-3 border-r border-[var(--lf-border)] text-xs font-semibold text-[var(--lf-text-secondary)]">
-        <SlidersHorizontal className="h-3.5 w-3.5" />
         <span>Filter</span>
       </div>
 

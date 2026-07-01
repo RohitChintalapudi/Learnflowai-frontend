@@ -53,7 +53,7 @@ export const DocumentAPI = {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(`${API_BASE_URL}/documents/upload`, {
+    const response = await fetch(`${API_BASE_URL}/documents`, {
       method: "POST",
       credentials: "include", // Uses session cookie
       body: formData,
@@ -948,6 +948,43 @@ export const SettingsAPI = {
     }
 
     return { blob: data as Blob, filename };
+  },
+
+  async getStorageSettings(): Promise<{
+    success: boolean;
+    data: {
+      totalLimit: number;
+      totalUsed: number;
+      percentageUsed: number;
+      breakdown: {
+        documents: { count: number; sizeBytes: number };
+        notes: { count: number; sizeBytes: number };
+        quizzes: { count: number; sizeBytes: number };
+        conversations: { count: number; sizeBytes: number };
+      }
+    }
+  }> {
+    const { data, error } = await authClient.$fetch(`${API_BASE_URL}/settings/storage`, {
+      method: "GET",
+    });
+
+    if (error) {
+      throw new Error(error.message || "Failed to fetch storage settings");
+    }
+
+    return data as any;
+  },
+
+  async deleteCache(): Promise<{ success: boolean; message: string }> {
+    const { data, error } = await authClient.$fetch(`${API_BASE_URL}/settings/storage/delete-cache`, {
+      method: "POST",
+    });
+
+    if (error) {
+      throw new Error(error.message || "Failed to delete cache");
+    }
+
+    return data as any;
   }
 };
 
