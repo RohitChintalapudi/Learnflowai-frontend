@@ -1,32 +1,41 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '../DashboardLayout';
 import { AccountSettings } from './AccountSettings';
 import { SecuritySettings } from './SecuritySettings';
 import { StorageSettings } from './StorageSettings';
 import { DeleteAccountSettings } from './DeleteAccountSettings';
-import { HelpSupportSettings } from './HelpSupportSettings';
-import { AboutSettings } from './AboutSettings';
+import { SettingsAPI } from '../../lib/api';
 import { motion } from 'framer-motion';
 
 export type SettingsTab = 
   | 'account' 
   | 'security' 
   | 'storage' 
-  | 'delete-account'
-  | 'help-support' 
-  | 'about';
+  | 'delete-account';
 
-const TABS: { id: SettingsTab; label: string }[] = [
+const ALL_TABS: { id: SettingsTab; label: string }[] = [
   { id: 'account', label: 'Account' },
   { id: 'security', label: 'Security' },
   { id: 'storage', label: 'Storage' },
   { id: 'delete-account', label: 'Delete Account' },
-  { id: 'help-support', label: 'Help & Support' },
-  { id: 'about', label: 'About' },
 ];
 
 export function SettingsLayout() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
+
+  const { data: account } = useQuery({
+    queryKey: ['accountSettings'],
+    queryFn: async () => {
+      const res = await SettingsAPI.getAccountSettings();
+      return res.success ? res.data : null;
+    },
+  });
+
+  const provider = account?.provider || "";
+  const tabs = provider === "google"
+    ? ALL_TABS.filter(t => t.id !== 'security')
+    : ALL_TABS;
 
   const renderContent = () => {
     switch (activeTab) {
@@ -34,8 +43,6 @@ export function SettingsLayout() {
       case 'security': return <SecuritySettings />;
       case 'storage': return <StorageSettings />;
       case 'delete-account': return <DeleteAccountSettings />;
-      case 'help-support': return <HelpSupportSettings />;
-      case 'about': return <AboutSettings />;
       default: return <AccountSettings />;
     }
   };
@@ -47,7 +54,7 @@ export function SettingsLayout() {
         {/* Horizontal Navigation as Bubble/Pill list */}
         <div className="flex-none px-8 py-3 bg-transparent z-10">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-            {TABS.map((tab) => {
+            {tabs.map((tab) => {
               const active = activeTab === tab.id;
               return (
                 <button

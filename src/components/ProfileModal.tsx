@@ -171,7 +171,14 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     }
   };
 
-  const hasCustomAvatar = profile?.profileImage || profile?.image;
+  const isValidAvatarUrl = (url?: string | null) => {
+    if (!url) return false;
+    if (url.includes("/undefined") || url.includes("/null")) return false;
+    return true;
+  };
+
+  const activeAvatar = [profile?.profileImage, profile?.image].find(isValidAvatarUrl) || "";
+  const hasCustomAvatar = !!activeAvatar;
 
   if (!isOpen) return null;
 
@@ -227,7 +234,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       <div className="w-32 h-32 rounded-full border-4 border-[var(--lf-border)] dark:border-zinc-800/80 overflow-hidden bg-[var(--lf-surface)] dark:bg-zinc-900 shadow-xl relative group-hover:border-orange-500/30 transition-colors flex items-center justify-center">
                         {hasCustomAvatar ? (
                           <img 
-                            src={profile?.profileImage || profile?.image} 
+                            src={activeAvatar} 
                             alt="Profile" 
                             className={`w-full h-full object-cover transition-opacity duration-300 ${isUploading ? 'opacity-30' : 'opacity-100'}`} 
                           />

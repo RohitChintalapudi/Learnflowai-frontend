@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { ProfileAPI, AlertsAPI } from "../lib/api";
@@ -14,7 +15,6 @@ import {
   BarChart3,
   History,
   Settings,
-  Search,
   Bell,
   Sun,
   Moon,
@@ -67,8 +67,6 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const alertsDropdownRef = useRef<HTMLDivElement>(null);
-  const toastedAlertsRef = useRef<Set<string>>(new Set());
-  const isFirstLoad = useRef(true);
 
   // Click outside to close notifications dropdown
   useEffect(() => {
@@ -90,28 +88,6 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
   });
 
   const unreadCount = alerts.filter(a => !a.read).length;
-
-  // React Hot Toast notification for new alerts
-  useEffect(() => {
-    if (!alerts || alerts.length === 0) return;
-    if (isFirstLoad.current) {
-      alerts.forEach(alert => toastedAlertsRef.current.add(alert.id));
-      isFirstLoad.current = false;
-      return;
-    }
-    alerts.forEach(alert => {
-      if (!alert.read && !toastedAlertsRef.current.has(alert.id)) {
-        toastedAlertsRef.current.add(alert.id);
-        if (alert.type === "success") {
-          toast.success(alert.message, { id: alert.id });
-        } else if (alert.type === "error") {
-          toast.error(alert.message, { id: alert.id });
-        } else {
-          toast(alert.message, { icon: "🔔", id: alert.id });
-        }
-      }
-    });
-  }, [alerts]);
 
   const markAllReadMutation = useMutation({
     mutationFn: AlertsAPI.markAllRead,
@@ -158,11 +134,24 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
     enabled: !!session && !isLoggingOut,
   });
 
+  const sessionUser = session?.user;
   const cachedName = typeof window !== "undefined" ? localStorage.getItem("lf_user_name") || "" : "";
   const cachedImage = typeof window !== "undefined" ? localStorage.getItem("lf_user_image") || "" : "";
 
-  const displayName = profile?.name || cachedName || "User";
-  const displayImage = profile?.profileImage || cachedImage || "";
+  const isValidAvatarUrl = (url?: string | null) => {
+    if (!url) return false;
+    if (url.includes("/undefined") || url.includes("/null")) return false;
+    return true;
+  };
+
+  const displayName = sessionUser?.name || profile?.name || cachedName || "User";
+  const displayImage = isValidAvatarUrl(profile?.profileImage)
+    ? profile?.profileImage!
+    : isValidAvatarUrl(sessionUser?.image)
+      ? sessionUser?.image!
+      : isValidAvatarUrl(cachedImage)
+        ? cachedImage
+        : "";
 
   const toggleSidebar = () => {
     setIsCollapsed(prev => {
@@ -171,6 +160,15 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
       return next;
     });
   };
+
+  useEffect(() => {
+    if (sessionUser?.name) {
+      localStorage.setItem("lf_user_name", sessionUser.name);
+    }
+    if (sessionUser?.image) {
+      localStorage.setItem("lf_user_image", sessionUser.image);
+    }
+  }, [sessionUser]);
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains("dark");
@@ -368,23 +366,6 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
             </div>
 
             <div className="flex items-center gap-5">
-              <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--lf-text-secondary)] group-focus-within:text-[var(--lf-accent)] transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Search documents, notes, quizzes..."
-                  className="w-[280px] h-[36px] pl-9 pr-4 rounded-full bg-[var(--lf-surface)] border border-[var(--lf-border)] text-[13px] outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all placeholder:text-[var(--lf-text-secondary)] text-[var(--lf-text-primary)]"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
-                  <kbd className="text-[9px] font-mono font-bold text-[var(--lf-text-secondary)] bg-[var(--lf-bg)] px-1.5 py-0.5 rounded border border-[var(--lf-border)]">
-                    ⌘
-                  </kbd>
-                  <kbd className="text-[9px] font-mono font-bold text-[var(--lf-text-secondary)] bg-[var(--lf-bg)] px-1.5 py-0.5 rounded border border-[var(--lf-border)]">
-                    K
-                  </kbd>
-                </div>
-              </div>
-
               <button
                 onClick={toggleTheme}
                 className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
@@ -531,10 +512,9 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
               <button
                 onClick={handleLogout}
-                className="relative p-2 rounded-full hover:bg-red-500/10 transition-colors text-[var(--lf-text-secondary)] hover:text-red-500 group shrink-0"
-                title="Logout"
+                className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-[13px] font-semibold transition-colors shadow-lg shadow-red-500/20 shrink-0"
               >
-                <LogOut className="h-5 w-5" />
+                Logout
               </button>
             </div>
           </header>
@@ -550,16 +530,28 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
       />
 
       {/* ── LOGOUT CONFIRMATION MODAL ──────────────────────────────────────── */}
+      <AnimatePresence>
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center"
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setShowLogoutConfirm(false)}
           />
-          <div className="relative bg-white dark:bg-[#111] rounded-2xl border border-orange-500/30 card-shadow-lg p-6 w-[320px] max-w-[90vw] overflow-hidden">
-            <div className="absolute -top-8 -right-8 w-40 h-40 bg-gradient-to-bl from-orange-500/20 to-transparent blur-[70px] rounded-full pointer-events-none" />
-            <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-gradient-to-tr from-orange-500/15 to-transparent blur-[60px] rounded-full pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/[0.03] to-transparent pointer-events-none" />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="relative bg-white dark:bg-black rounded-2xl border border-orange-500/40 shadow-2xl shadow-orange-500/20 p-6 w-[320px] max-w-[90vw] overflow-hidden"
+          >
             <div className="text-center relative z-10">
               <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-orange-500/10 flex items-center justify-center">
                 <LogOut className="h-5 w-5 text-orange-500" />
@@ -585,9 +577,10 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

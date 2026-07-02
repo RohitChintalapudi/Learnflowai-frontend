@@ -317,7 +317,7 @@ function QuizDashboardPage() {
 
           {/* Quiz Grid */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map(i => (
                 <div key={i} className="h-48 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl animate-pulse card-shadow" />
               ))}
@@ -341,9 +341,9 @@ function QuizDashboardPage() {
               variants={containerVariants} 
               initial="hidden" 
               animate="show" 
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            >
-              {quizzes.map((quiz: GeneratedQuiz) => (
+               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+             >
+               {quizzes.map((quiz: GeneratedQuiz) => (
                 <motion.div 
                   key={quiz.id}
                   variants={itemVariants}
@@ -353,7 +353,7 @@ function QuizDashboardPage() {
                   <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-orange-400/6 blur-[40px] rounded-full pointer-events-none" />
 
                   <div className="flex justify-between items-start mb-3 relative z-10">
-                    <h3 className="text-[15px] font-bold text-[var(--lf-text-primary)] line-clamp-1 flex-1 pr-2" title={quiz.title}>
+                    <h3 className="text-[15px] font-bold text-[var(--lf-text-primary)] truncate flex-1 pr-2" title={quiz.title}>
                       {quiz.title || "Untitled Quiz"}
                     </h3>
                     <button 
