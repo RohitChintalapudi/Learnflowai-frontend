@@ -5,7 +5,7 @@ import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { ProfileAPI, AlertsAPI } from "../lib/api";
 import type { Alert } from "../lib/api";
 import { useQueryClient } from "@tanstack/react-query";
-import { getFirstLetterOfFirstName } from "../lib/utils";
+
 import {
   LayoutDashboard,
   FileText,
@@ -151,7 +151,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
       ? sessionUser?.image!
       : isValidAvatarUrl(cachedImage)
         ? cachedImage
-        : "";
+        : "/default-avatar.svg";
 
   const toggleSidebar = () => {
     setIsCollapsed(prev => {
@@ -298,17 +298,11 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
               className="w-full flex items-center justify-center p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/50 group transition-all card-shadow" 
               title="Profile"
             >
-              {displayImage ? (
-                <img
-                  src={displayImage}
-                  alt="Profile"
-                  className="h-6 w-6 rounded-full object-cover"
-                />
-              ) : (
-                <div className="h-6 w-6 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 text-white font-bold text-[10px] flex items-center justify-center shadow-sm select-none">
-                  {getFirstLetterOfFirstName(displayName)}
-                </div>
-              )}
+              <img
+                src={displayImage}
+                alt="Profile"
+                className="h-6 w-6 rounded-full object-cover"
+              />
             </button>
           ) : (
             <button 
@@ -316,17 +310,11 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
               className="w-full flex items-center gap-3 p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/30 card-shadow hover:shadow-[0_0_15px_rgba(255,122,24,0.15)] transition-all duration-300 group"
             >
               <div className="h-9 w-9 rounded-full border border-[var(--lf-border)] overflow-hidden shrink-0 group-hover:ring-2 ring-orange-500/50 transition-all flex items-center justify-center bg-stone-100 dark:bg-stone-900">
-                {displayImage ? (
-                  <img
-                    src={displayImage}
-                    alt="Profile"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full w-full bg-gradient-to-br from-orange-500 to-amber-500 text-white font-extrabold text-sm flex items-center justify-center shadow-inner select-none">
-                    {getFirstLetterOfFirstName(displayName)}
-                  </div>
-                )}
+                <img
+                  src={displayImage}
+                  alt="Profile"
+                  className="h-full w-full object-cover"
+                />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-sm font-semibold text-[var(--lf-text-primary)] group-hover:text-[var(--lf-accent)] transition-colors">{displayName}</p>
@@ -489,17 +477,11 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
                 onClick={() => setIsProfileModalOpen(true)}
                 className="h-8 w-8 rounded-full border border-[var(--lf-border)] overflow-hidden cursor-pointer hover:ring-2 ring-orange-500/50 transition-all shrink-0 flex items-center justify-center bg-stone-100 dark:bg-stone-900"
               >
-                {displayImage ? (
-                  <img
-                    src={displayImage}
-                    alt="Profile"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full w-full bg-gradient-to-br from-orange-500 to-amber-500 text-white font-bold text-xs flex items-center justify-center shadow-inner select-none">
-                    {getFirstLetterOfFirstName(displayName)}
-                  </div>
-                )}
+                <img
+                  src={displayImage}
+                  alt="Profile"
+                  className="h-full w-full object-cover"
+                />
               </button>
 
               <button

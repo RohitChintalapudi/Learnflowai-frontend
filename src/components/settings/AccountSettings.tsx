@@ -3,7 +3,7 @@ import { Mail, ShieldCheck, Clock } from 'lucide-react';
 import { SettingsCard, SettingsSectionHeader, SettingsButton } from './shared';
 import { useQuery } from '@tanstack/react-query';
 import { SettingsAPI, ProfileAPI } from '../../lib/api';
-import { getFirstLetterOfFirstName } from '../../lib/utils';
+
 import { ProfileModal } from '../ProfileModal';
 
 export function AccountSettings() {
@@ -57,8 +57,7 @@ export function AccountSettings() {
     return true;
   };
 
-  const activeAvatar = [account?.avatarUrl, profile?.profileImage, profile?.image].find(isValidAvatarUrl) || "";
-  const hasAvatar = !!activeAvatar;
+  const activeAvatar = [account?.avatarUrl, profile?.profileImage, profile?.image].find(isValidAvatarUrl) || "/default-avatar.svg";
 
   return (
     <div className="w-full">
@@ -70,17 +69,11 @@ export function AccountSettings() {
         
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-8 p-6 bg-stone-50/50 dark:bg-[#1A1A1A] rounded-2xl border border-stone-100 dark:border-[#2A2A2A]">
           <div className="w-24 h-24 rounded-full border-4 border-white dark:border-[#2A2A2A] overflow-hidden shadow-xl shrink-0 bg-stone-200 dark:bg-[#333] flex items-center justify-center">
-            {hasAvatar ? (
-              <img 
-                src={activeAvatar} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-orange-500 to-amber-500 text-white font-extrabold text-3xl flex items-center justify-center select-none">
-                {getFirstLetterOfFirstName(name)}
-              </div>
-            )}
+            <img 
+              src={activeAvatar} 
+              alt="Profile" 
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-stone-900 dark:text-white">{name}</h2>
