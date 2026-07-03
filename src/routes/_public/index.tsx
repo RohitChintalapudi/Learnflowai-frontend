@@ -1173,6 +1173,15 @@ function HomePage() {
     }
   };
 
+  const handleExploreFeatures = () => {
+    const target = document.getElementById("features");
+    if (target) {
+      const offset = 80;
+      const y = target.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
+  };
+
   // Prevent TS unused variable errors for WIP code
   void screens;
   void highlightedKeyword;
@@ -1218,7 +1227,10 @@ function HomePage() {
             >
               Start Learning for Free <ArrowRight className="h-3.5 w-3.5" />
             </Link>
-            <button className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 font-semibold text-xs hover:bg-stone-100 dark:hover:bg-stone-900/50 transition-all duration-200">
+            <button
+              onClick={handleExploreFeatures}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 font-semibold text-xs hover:bg-stone-100 dark:hover:bg-stone-900/50 transition-all duration-200"
+            >
               Explore Features <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>

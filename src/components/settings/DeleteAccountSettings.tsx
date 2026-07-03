@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { SettingsCard, SettingsButton, SettingsInput } from './shared';
-import { AlertTriangle, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { SettingsCard, SettingsButton } from './shared';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { SettingsAPI } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { useNavigate } from '@tanstack/react-router';
@@ -13,9 +14,6 @@ export function DeleteAccountSettings() {
   const queryClient = useQueryClient();
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deletePassword, setDeletePassword] = useState('');
-  const [showDeletePassword, setShowDeletePassword] = useState(false);
-  const [deleteError, setDeleteError] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -29,30 +27,20 @@ export function DeleteAccountSettings() {
   }, [showDeleteModal, isDeleting]);
 
   const handleDeleteAccount = async () => {
-    if (!deletePassword) {
-      setDeleteError("Password is required.");
-      return;
-    }
-    
     setIsDeleting(true);
-    setDeleteError('');
 
     try {
-      const res = await SettingsAPI.deleteAccount({ password: deletePassword });
+      const res = await SettingsAPI.deleteAccount({});
       if (res.success) {
         toast.success("Account deleted successfully.");
-        
+
         await authClient.signOut();
         queryClient.clear();
         authStore.setAuthenticated(false);
         navigate({ to: "/login" });
       }
     } catch (error: any) {
-      if (error.message.toLowerCase().includes("invalid password")) {
-        setDeleteError("Invalid password.");
-      } else {
-        toast.error("Unable to delete account. Please try again.");
-      }
+      toast.error("Unable to delete account. Please try again.");
     } finally {
       setIsDeleting(false);
     }
@@ -78,20 +66,28 @@ export function DeleteAccountSettings() {
         <SettingsButton 
           variant="danger" 
           className="font-bold"
-          onClick={() => {
-            setDeletePassword('');
-            setDeleteError('');
-            setShowDeleteModal(true);
-          }}
+          onClick={() => setShowDeleteModal(true)}
         >
           Delete Account
         </SettingsButton>
       </SettingsCard>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-stone-200 dark:border-[#2A2A2A]">
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="bg-white dark:bg-black rounded-2xl w-full max-w-md overflow-hidden shadow-2xl shadow-orange-500/20 border border-orange-500/40"
+            >
             <div className="p-6">
               <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center mb-4 mx-auto">
                 <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-500" />
@@ -102,40 +98,9 @@ export function DeleteAccountSettings() {
                 All of your LearnFlow data will be permanently deleted.<br/>
                 This action cannot be undone.
               </p>
-              
-              <div className="space-y-4">
-                <div className="relative">
-                  <SettingsInput 
-                    label="Please enter your password to confirm:"
-                    type={showDeletePassword ? "text" : "password"} 
-                    placeholder="Enter your password" 
-                    value={deletePassword}
-                    onChange={(e) => {
-                      setDeletePassword(e.target.value);
-                      if (deleteError) setDeleteError('');
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleDeleteAccount();
-                      }
-                    }}
-                    disabled={isDeleting}
-                    autoFocus
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowDeletePassword(!showDeletePassword)}
-                    className="absolute right-3 top-9 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
-                  >
-                    {showDeletePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                  {deleteError && <p className="text-xs text-red-500 mt-1">{deleteError}</p>}
-                </div>
-              </div>
             </div>
-            
-            <div className="p-4 bg-stone-50 dark:bg-[#222] border-t border-stone-200 dark:border-[#2A2A2A] flex justify-end gap-3">
+
+            <div className="p-4 bg-stone-50 dark:bg-[#111] border-t border-orange-500/20 flex justify-end gap-3">
               <SettingsButton 
                 variant="outline" 
                 onClick={() => setShowDeleteModal(false)}
@@ -158,9 +123,10 @@ export function DeleteAccountSettings() {
                 )}
               </SettingsButton>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

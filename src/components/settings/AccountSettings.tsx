@@ -51,7 +51,14 @@ export function AccountSettings() {
       ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) 
       : "";
 
-  const hasAvatar = account?.avatarUrl || profile?.profileImage || profile?.image;
+  const isValidAvatarUrl = (url?: string | null) => {
+    if (!url) return false;
+    if (url.includes("/undefined") || url.includes("/null")) return false;
+    return true;
+  };
+
+  const activeAvatar = [account?.avatarUrl, profile?.profileImage, profile?.image].find(isValidAvatarUrl) || "";
+  const hasAvatar = !!activeAvatar;
 
   return (
     <div className="w-full">
@@ -65,7 +72,7 @@ export function AccountSettings() {
           <div className="w-24 h-24 rounded-full border-4 border-white dark:border-[#2A2A2A] overflow-hidden shadow-xl shrink-0 bg-stone-200 dark:bg-[#333] flex items-center justify-center">
             {hasAvatar ? (
               <img 
-                src={account?.avatarUrl || profile?.profileImage || profile?.image} 
+                src={activeAvatar} 
                 alt="Profile" 
                 className="w-full h-full object-cover"
               />

@@ -153,6 +153,21 @@ function AnalyticsDashboard() {
   }, [calendarData]);
   const currentYear = new Date().getFullYear();
 
+  const topFeature = React.useMemo(() => {
+    if (!featureUsage || featureUsage.length === 0) return null;
+    return featureUsage.reduce((max, item) => item.count > max.count ? item : max, featureUsage[0]);
+  }, [featureUsage]);
+
+  const totalActions = React.useMemo(() => {
+    if (!featureUsage) return 0;
+    return featureUsage.reduce((sum, item) => sum + item.count, 0);
+  }, [featureUsage]);
+
+  const activeCount = React.useMemo(() => {
+    if (!featureUsage) return 0;
+    return featureUsage.filter(item => item.count > 0).length;
+  }, [featureUsage]);
+
   if (isLoading) return (
     <DashboardLayout headerTitle="Analytics">
       <DashboardSkeleton />
@@ -444,17 +459,126 @@ function AnalyticsDashboard() {
               <Brain className="h-5 w-5 text-purple-500" /> Feature Usage Distribution
             </h3>
             {featureUsage && featureUsage.length > 0 ? (
-              <ResponsiveContainer width="100%" height={350} initialDimension={{ width: 1, height: 350 }}>
-                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={featureUsage}>
-                  <PolarGrid stroke="var(--lf-border-primary)" />
-                  <PolarAngleAxis dataKey="feature" tick={{ fill: 'var(--lf-text-secondary)', fontSize: 12 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={false} axisLine={false} />
-                  <RechartsTooltip 
-                    contentStyle={{ backgroundColor: 'var(--lf-bg-primary)', borderColor: 'var(--lf-border-primary)', borderRadius: '8px', color: 'var(--lf-text-primary)' }}
-                  />
-                  <Radar name="Usage" dataKey="count" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.4} />
-                </RadarChart>
-              </ResponsiveContainer>
+              <>
+                <ResponsiveContainer width="100%" height={300} initialDimension={{ width: 1, height: 300 }}>
+                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={featureUsage}>
+                    <PolarGrid stroke="var(--lf-border-primary)" />
+                    <PolarAngleAxis dataKey="feature" tick={{ fill: 'var(--lf-text-secondary)', fontSize: 11 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={false} axisLine={false} />
+                    <RechartsTooltip 
+                      contentStyle={{ backgroundColor: 'var(--lf-bg-primary)', borderColor: 'var(--lf-border-primary)', borderRadius: '8px', color: 'var(--lf-text-primary)' }}
+                    />
+                    <Radar name="Usage" dataKey="count" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.4} />
+                  </RadarChart>
+                </ResponsiveContainer>
+
+                {/* Feature Usage Breakdown List to fill the gap */}
+                <div className="w-full space-y-3 my-6 relative z-10">
+                  <h4 className="text-xs font-semibold text-[var(--lf-text-secondary)] uppercase tracking-wider text-left">
+                    Usage Breakdown
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {featureUsage.map((f, i) => {
+                      const maxCount = Math.max(...featureUsage.map(x => x.count), 1);
+                      const pct = Math.round((f.count / maxCount) * 100);
+                      
+                      // Map feature names to icons and colors
+                      let icon = <Brain className="h-4 w-4" />;
+                      let colorClass = "bg-purple-500/10";
+                      let barColor = "bg-purple-500";
+                      let textColor = "text-purple-500";
+                      let borderClass = "border-purple-500/20";
+                      
+                      const nameLower = f.feature.toLowerCase();
+                      if (nameLower.includes("note")) {
+                        icon = <CheckCircle2 className="h-4 w-4" />;
+                        colorClass = "bg-emerald-500/10";
+                        barColor = "bg-emerald-500";
+                        textColor = "text-emerald-500";
+                        borderClass = "border-emerald-500/20";
+                      } else if (nameLower.includes("quiz")) {
+                        icon = <Target className="h-4 w-4" />;
+                        colorClass = "bg-orange-500/10";
+                        barColor = "bg-orange-500";
+                        textColor = "text-orange-500";
+                        borderClass = "border-orange-500/20";
+                      } else if (nameLower.includes("map")) {
+                        icon = <TrendingUp className="h-4 w-4" />;
+                        colorClass = "bg-blue-500/10";
+                        barColor = "bg-blue-500";
+                        textColor = "text-blue-500";
+                        borderClass = "border-blue-500/20";
+                      } else if (nameLower.includes("question") || nameLower.includes("interview")) {
+                        icon = <Sparkles className="h-4 w-4" />;
+                        colorClass = "bg-amber-500/10";
+                        barColor = "bg-amber-500";
+                        textColor = "text-amber-500";
+                        borderClass = "border-amber-500/20";
+                      } else if (nameLower.includes("analogy")) {
+                        icon = <Lightbulb className="h-4 w-4" />;
+                        colorClass = "bg-pink-500/10";
+                        barColor = "bg-pink-500";
+                        textColor = "text-pink-500";
+                        borderClass = "border-pink-500/20";
+                      }
+
+                      return (
+                        <div key={i} className={`flex items-center gap-3 p-3 rounded-xl border ${borderClass} bg-[var(--lf-bg-primary)]/50 hover:bg-[var(--lf-bg-secondary)] transition-all duration-300 group`}>
+                          <div className={`p-2 rounded-lg ${colorClass} ${textColor} flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                            {icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-[11px] font-bold text-[var(--lf-text-primary)] truncate uppercase tracking-wider">{f.feature}</span>
+                              <span className="text-xs font-bold text-[var(--lf-text-secondary)]">{f.count}x</span>
+                            </div>
+                            <div className="w-full bg-[var(--lf-bg-secondary)] h-1.5 rounded-full overflow-hidden">
+                              <div className={`h-full ${barColor} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }}></div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="w-full mt-auto pt-6 border-t border-[var(--lf-border-primary)] relative z-10">
+                  <h4 className="text-xs font-semibold text-[var(--lf-text-secondary)] uppercase tracking-wider mb-4 text-left">
+                    Feature Insights
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-xl border border-[var(--lf-border-primary)] bg-[var(--lf-bg-primary)]/50 hover:bg-[var(--lf-bg-secondary)] transition-all group">
+                      <p className="text-xs font-medium text-[var(--lf-text-secondary)] mb-1">Favorite Feature</p>
+                      <h5 className="text-sm font-bold text-[var(--lf-text-primary)] truncate">
+                        {topFeature ? topFeature.feature : "N/A"}
+                      </h5>
+                      <p className="text-xs text-purple-500 font-semibold mt-1">
+                        {topFeature ? `${topFeature.count} interactions` : "No data"}
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-[var(--lf-border-primary)] bg-[var(--lf-bg-primary)]/50 hover:bg-[var(--lf-bg-secondary)] transition-all group">
+                      <p className="text-xs font-medium text-[var(--lf-text-secondary)] mb-1">Total Tool Actions</p>
+                      <h5 className="text-lg font-bold text-[var(--lf-text-primary)]">
+                        {totalActions}
+                      </h5>
+                      <p className="text-xs text-[var(--lf-text-secondary)] mt-1">
+                        across all modules
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-[var(--lf-border-primary)] bg-[var(--lf-bg-primary)]/50 hover:bg-[var(--lf-bg-secondary)] transition-all group">
+                      <p className="text-xs font-medium text-[var(--lf-text-secondary)] mb-1">Feature Adoption</p>
+                      <h5 className="text-lg font-bold text-[var(--lf-text-primary)]">
+                        {Math.round((activeCount / (featureUsage.length || 1)) * 100)}%
+                      </h5>
+                      <p className="text-xs text-[var(--lf-text-secondary)] mt-1">
+                        {activeCount} of {featureUsage.length} active
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
             ) : <div className="flex-1 flex items-center"><EmptyState message="No feature usage data" /></div>}
           </div>
         </div>

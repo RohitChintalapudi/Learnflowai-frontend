@@ -96,6 +96,55 @@ function WorkspacePage() {
     retry: 1,
   });
 
+  const { data: txtContent, isError: isTxtError, error: txtError, isLoading: isTxtLoading } = useQuery({
+    queryKey: ['text-file', docId],
+    queryFn: async () => {
+      if (!docId) throw new Error("No document ID specified");
+      const response = await fetch(`${BACKEND_URL}/api/documents/${docId}/download`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch text file (status ${response.status})`);
+      }
+      return await response.text();
+    },
+    enabled: !!docId && documentMetadata?.fileType === "txt",
+    retry: 1,
+  });
+
+  const safeFileDownloadUrl = useMemo(() => {
+    if (!docId) return null;
+    return `${BACKEND_URL}/api/documents/${docId}/download`;
+  }, [docId]);
+
+  const handleDownloadDocument = async () => {
+    if (!docId || !safeFileDownloadUrl) return;
+
+    try {
+      const response = await fetch(safeFileDownloadUrl, {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Download failed with status ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const fileName = documentMetadata?.title || `document-${docId}`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Download started");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to download document");
+    }
+  };
+
   useEffect(() => {
     if (isMetadataError && metadataError) {
       toast.error("Failed to load document metadata: " + (metadataError as Error).message, {
@@ -210,9 +259,9 @@ function WorkspacePage() {
       try {
         const res = await WorkflowAPI.generateExplanation(docId, highlightedText);
         setExplanationContent(res.explanation);
-        toast.success("Explanation generated successfully!");
+        toast.success("Explanation generated successfully!", { id: "explain-success" });
       } catch (error: any) {
-        toast.error(error.message || "Failed to generate explanation");
+        toast.error(error.message || "Failed to generate explanation", { id: "explain-error" });
         setActiveFeature(null);
       } finally {
         setIsLoading(false);
@@ -234,9 +283,9 @@ function WorkspacePage() {
         const res = await WorkflowAPI.generateNotes(docId, highlightedText);
         setNotesContent(res.notes);
         
-        toast.success("Notes generated successfully!");
+        toast.success("Notes generated successfully!", { id: "notes-success" });
       } catch (error: any) {
-        toast.error(error.message || "Failed to generate notes");
+        toast.error(error.message || "Failed to generate notes", { id: "notes-error" });
         setActiveFeature(null);
       } finally {
         setIsLoading(false);
@@ -257,9 +306,9 @@ function WorkspacePage() {
       try {
         const res = await WorkflowAPI.generateInterviewQuestions(docId, highlightedText);
         setInterviewQuestionsContent(res.questions);
-        toast.success("Interview questions generated successfully!");
+        toast.success("Interview questions generated successfully!", { id: "interview-success" });
       } catch (error: any) {
-        toast.error(error.message || "Failed to generate interview questions");
+        toast.error(error.message || "Failed to generate interview questions", { id: "interview-error" });
         setActiveFeature(null);
       } finally {
         setIsLoading(false);
@@ -281,9 +330,9 @@ function WorkspacePage() {
         const res = await WorkflowAPI.generateQuiz(docId, highlightedText);
         setQuizContent(res.quiz);
         setQuizId(res.id || null);
-        toast.success("Quiz generated successfully!");
+        toast.success("Quiz generated successfully!", { id: "quiz-success" });
       } catch (error: any) {
-        toast.error(error.message || "Failed to generate quiz");
+        toast.error(error.message || "Failed to generate quiz", { id: "quiz-error" });
         setActiveFeature(null);
       } finally {
         setIsLoading(false);
@@ -304,9 +353,9 @@ function WorkspacePage() {
       try {
         const res = await WorkflowAPI.generateMindMap(docId, highlightedText);
         setMindMapContent(res.mindMap);
-        toast.success("Mind map generated successfully!");
+        toast.success("Mind map generated successfully!", { id: "mindmap-success" });
       } catch (error: any) {
-        toast.error(error.message || "Failed to generate mind map");
+        toast.error(error.message || "Failed to generate mind map", { id: "mindmap-error" });
         setActiveFeature(null);
       } finally {
         setIsLoading(false);
@@ -339,9 +388,9 @@ function WorkspacePage() {
     try {
       const res = await WorkflowAPI.generateAnalogy(docId, highlightedText, style);
       setAnalogyContent(res.analogy);
-      toast.success("Analogy generated successfully!");
+      toast.success("Analogy generated successfully!", { id: "analogy-success" });
     } catch (error: any) {
-      toast.error(error.message || "Failed to generate analogy");
+      toast.error(error.message || "Failed to generate analogy", { id: "analogy-error" });
       setActiveFeature(null);
     } finally {
       setIsLoading(false);
@@ -421,7 +470,7 @@ function WorkspacePage() {
           onMouseUp={handleTextSelect}
         >
           {/* Document Toolbar */}
-          {(!documentMetadata || ["pdf", "docx", "doc"].includes(documentMetadata.fileType)) && (
+          {(!documentMetadata || ["pdf", "docx", "txt"].includes(documentMetadata.fileType)) && (
           <div className="h-12 border-b border-[var(--lf-border)] bg-[var(--lf-bg)] flex items-center justify-between px-4 shrink-0">
             <div className="flex items-center gap-2">
               <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
@@ -453,6 +502,12 @@ function WorkspacePage() {
                 className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)] active:scale-95 transition-transform"
               >
                 <ZoomIn className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handleDownloadDocument}
+                className="px-3 py-1 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] text-[var(--lf-text-secondary)] hover:bg-[var(--lf-accent)] hover:text-white transition-all"
+              >
+                Download
               </button>
             </div>
           </div>
@@ -513,14 +568,29 @@ function WorkspacePage() {
                   Preparing document...
                 </div>
               )
-            ) : documentMetadata?.fileType === "docx" || documentMetadata?.fileType === "doc" ? (
+            ) : documentMetadata?.fileType === "docx" ? (
               <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
                 <DocxViewer 
-                  fileUrl={safeDocxUrl || ""} 
+                  fileUrl={safeFileDownloadUrl || ""} 
                   zoom={zoom} 
                   onLoadSuccess={handleDocxLoadSuccess} 
                 />
               </div>
+            ) : documentMetadata?.fileType === "txt" ? (
+              isTxtLoading ? (
+                <div className="flex items-center justify-center p-12 text-stone-500 animate-pulse">
+                  Loading text document...
+                </div>
+              ) : isTxtError ? (
+                <div className="flex flex-col items-center justify-center p-12 text-red-500 text-center">
+                  <p className="font-bold text-lg">Failed to load text document.</p>
+                  <p className="text-sm mt-2 opacity-80">{(txtError as Error)?.message || "Unable to retrieve the text file."}</p>
+                </div>
+              ) : (
+                <div className="w-full h-full p-6 overflow-auto bg-white text-sm text-stone-800 dark:bg-stone-900 dark:text-stone-100 rounded-3xl whitespace-pre-wrap break-words">
+                  {txtContent || "No text content found."}
+                </div>
+              )
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-stone-500 p-8 text-center space-y-4">
                 <FileText className="h-12 w-12 text-stone-400" />
@@ -528,7 +598,7 @@ function WorkspacePage() {
                   Local Preview not natively supported for .{documentMetadata?.fileType}
                 </p>
                 <p className="text-sm">
-                  Only PDF and DOCX files support offline local rendering. PPTX and other formats may require third-party server-side rendering or Microsoft Office Online access which is not available in local development.
+                  Only PDF, DOCX, and TXT files support local browser rendering. For other document types, use the download button to access them directly.
                 </p>
               </div>
             )}

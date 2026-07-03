@@ -5,8 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import {
   UploadCloud,
-  Search,
-  Filter,
   FileText,
   Clock,
   Trash2,
@@ -69,6 +67,7 @@ function DocumentsPage() {
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       "application/vnd.ms-powerpoint",
       "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "text/plain",
     ];
     
     if (!validTypes.includes(file.type)) {
@@ -177,19 +176,7 @@ function DocumentsPage() {
                 Upload, organize, and access your learning resources powered by AI.
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--lf-text-secondary)]" />
-                <input
-                  type="text"
-                  placeholder="Search documents..."
-                  className="pl-9 pr-4 py-2 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] text-[13px] outline-none focus:border-orange-500/50 w-full sm:w-64"
-                />
-              </div>
-              <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--lf-border)] bg-[var(--lf-surface)] hover:bg-[var(--lf-bg)] text-[13px] font-semibold text-[var(--lf-text-primary)] transition-colors">
-                <Filter className="h-4 w-4" /> Filter
-              </button>
-            </div>
+
           </div>
 
           {/* Upload Area */}
