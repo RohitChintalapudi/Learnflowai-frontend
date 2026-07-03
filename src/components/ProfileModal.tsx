@@ -16,7 +16,7 @@ import {
 import toast from "react-hot-toast";
 import { ProfileAPI } from "../lib/api";
 import { useQueryClient } from "@tanstack/react-query";
-import { getFirstLetterOfFirstName } from "../lib/utils";
+
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -177,8 +177,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     return true;
   };
 
-  const activeAvatar = [profile?.profileImage, profile?.image].find(isValidAvatarUrl) || "";
-  const hasCustomAvatar = !!activeAvatar;
+  const hasCustomAvatar = [profile?.profileImage, profile?.image].some(isValidAvatarUrl);
+  const activeAvatar = [profile?.profileImage, profile?.image].find(isValidAvatarUrl) || "/default-avatar.svg";
 
   if (!isOpen) return null;
 
@@ -232,17 +232,11 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     
                     <div className="relative mb-4">
                       <div className="w-32 h-32 rounded-full border-4 border-[var(--lf-border)] dark:border-zinc-800/80 overflow-hidden bg-[var(--lf-surface)] dark:bg-zinc-900 shadow-xl relative group-hover:border-orange-500/30 transition-colors flex items-center justify-center">
-                        {hasCustomAvatar ? (
-                          <img 
-                            src={activeAvatar} 
-                            alt="Profile" 
-                            className={`w-full h-full object-cover transition-opacity duration-300 ${isUploading ? 'opacity-30' : 'opacity-100'}`} 
-                          />
-                        ) : (
-                          <div className={`w-full h-full bg-gradient-to-br from-orange-500 to-amber-500 text-white font-extrabold text-4xl flex items-center justify-center select-none transition-opacity duration-300 ${isUploading ? 'opacity-30' : 'opacity-100'}`}>
-                            {getFirstLetterOfFirstName(profile?.name)}
-                          </div>
-                        )}
+                        <img 
+                          src={activeAvatar} 
+                          alt="Profile" 
+                          className={`w-full h-full object-cover transition-opacity duration-300 ${isUploading ? 'opacity-30' : 'opacity-100'}`} 
+                        />
                         
                         {/* Hover Overlay */}
                         <div 
