@@ -12,13 +12,47 @@ import {
   PlayCircle,
   AlertTriangle,
 } from "lucide-react";
-import { DocumentAPI } from "../../lib/api";
+import { DocumentAPI, BACKEND_URL } from "../../lib/api";
 import type { DocumentMetadata } from "../../lib/api";
+import { detectDocumentPageCount } from "../../lib/documentPageCount";
 import toast from "react-hot-toast";
 
 export const Route = createFileRoute("/_authenticated/documents")({
   component: DocumentsPage,
 });
+
+const PAGINATED_FILE_TYPES = new Set(["pdf", "doc", "docx", "ppt", "pptx"]);
+
+function DocumentPageCount({ doc }: { doc: DocumentMetadata }) {
+  const { data: pageCount, isLoading, isError } = useQuery({
+    queryKey: ["document-page-count", doc.id],
+    queryFn: async () => {
+      const downloadUrl = `${BACKEND_URL}/api/documents/${doc.id}/download`;
+      return detectDocumentPageCount(doc.fileType, downloadUrl);
+    },
+    enabled: PAGINATED_FILE_TYPES.has(doc.fileType),
+    staleTime: Infinity,
+    retry: 1,
+  });
+
+  if (!PAGINATED_FILE_TYPES.has(doc.fileType)) {
+    return <span className="px-2 py-0.5 rounded border border-[var(--lf-border)] text-[var(--lf-text-secondary)] bg-[var(--lf-surface)]">N/A</span>;
+  }
+
+  if (isLoading) {
+    return <span className="px-2 py-0.5 rounded border border-[var(--lf-border)] text-[var(--lf-text-secondary)] bg-[var(--lf-surface)]">...</span>;
+  }
+
+  if (isError || typeof pageCount !== "number") {
+    return <span className="px-2 py-0.5 rounded border border-[var(--lf-border)] text-[var(--lf-text-secondary)] bg-[var(--lf-surface)]">--</span>;
+  }
+
+  return (
+    <span className="px-2 py-0.5 rounded border border-[var(--lf-border)] text-[var(--lf-text-secondary)] bg-[var(--lf-surface)]">
+      {pageCount} Pages
+    </span>
+  );
+}
 
 function DocumentsPage() {
   const navigate = useNavigate();
@@ -304,9 +338,7 @@ function DocumentsPage() {
                           <span className="px-2 py-0.5 rounded border border-orange-500/30 text-orange-500 bg-orange-500/5 uppercase">
                             {doc.fileType}
                           </span>
-                          <span className="px-2 py-0.5 rounded border border-[var(--lf-border)] text-[var(--lf-text-secondary)] bg-[var(--lf-surface)]">
-                            {doc.totalPages || 0} Pages
-                          </span>
+                          <DocumentPageCount doc={doc} />
                         </div>
                       </div>
                     </div>
