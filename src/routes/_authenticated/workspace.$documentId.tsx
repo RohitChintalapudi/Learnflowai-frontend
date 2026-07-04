@@ -16,7 +16,7 @@ import "@xyflow/react/dist/style.css";
 import * as dagre from "dagre";
 import { CustomMindMapNode } from "../../components/CustomMindMapNode";
 import { toPng } from "html-to-image";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
@@ -53,6 +53,8 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { DocxViewer } from "../../components/DocxViewer";
+import { PptxViewer } from "../../components/PptxViewer";
+import { useScrollPageNavigation } from "../../hooks/useScrollPageNavigation";
 import { useReactToPrint } from "react-to-print";
 import { SimulationGenerator } from "../../components/SimulationGenerator";
 
@@ -76,12 +78,13 @@ const features = [
 ] as const;
 
 function WorkspacePage() {
+  const queryClient = useQueryClient();
   const [activeFeature, setActiveFeature] = useState<FeatureType>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [highlightedText, setHighlightedText] = useState("");
-  const [numPages, setNumPages] = useState<number | null>(null);
+  const [totalPages, setTotalPages] = useState(1);
   const [zoom, setZoom] = useState(1.0);
 
   const { documentId: docId } = Route.useParams();
@@ -153,16 +156,16 @@ function WorkspacePage() {
     }
   }, [isMetadataError, metadataError]);
 
-  // Fetch the PDF blob via backend proxy to completely avoid CORS issues
-  const { data: pdfBlob, isError: isPdfBlobError, error: pdfBlobError, isLoading: isPdfBlobLoading } = useQuery({
-    queryKey: ['pdf-blob', docId],
+  // Fetch PDF blob via backend proxy to avoid CORS issues
+  const { data: documentBlob, isError: isDocumentBlobError, error: documentBlobError, isLoading: isDocumentBlobLoading } = useQuery({
+    queryKey: ['document-blob', docId, documentMetadata?.fileType],
     queryFn: async () => {
       if (!docId) throw new Error("No document ID specified");
       const response = await fetch(`${BACKEND_URL}/api/documents/${docId}/download`, {
         credentials: "include"
       });
       if (!response.ok) {
-        throw new Error(`Failed to download PDF (status ${response.status})`);
+        throw new Error(`Failed to download document (status ${response.status})`);
       }
       return await response.blob();
     },
@@ -173,33 +176,48 @@ function WorkspacePage() {
   const [pdfFileUrl, setPdfFileUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!pdfBlob) {
+    if (!documentBlob) {
       setPdfFileUrl(null);
       return;
     }
-    const url = URL.createObjectURL(pdfBlob);
+    const url = URL.createObjectURL(documentBlob);
     setPdfFileUrl(url);
     return () => {
       URL.revokeObjectURL(url);
     };
-  }, [pdfBlob]);
+  }, [documentBlob]);
 
   useEffect(() => {
-    if (isPdfBlobError && pdfBlobError) {
-      toast.error("PDF Download Error: " + (pdfBlobError as Error).message, {
-        id: "pdf-download-error",
+    if (isDocumentBlobError && documentBlobError) {
+      toast.error("Document Download Error: " + (documentBlobError as Error).message, {
+        id: "document-download-error",
       });
     }
-  }, [isPdfBlobError, pdfBlobError]);
+  }, [isDocumentBlobError, documentBlobError]);
 
   const safeDocxUrl = useMemo(() => {
     if (!docId) return null;
     return `${BACKEND_URL}/api/documents/${docId}/download`;
   }, [docId]);
 
+  const syncDetectedPageCount = useCallback((pageCount: number) => {
+    if (!docId) return;
+    queryClient.setQueryData(["document-page-count", docId], pageCount);
+    queryClient.setQueryData(["document", docId], (prev: any) => prev ? { ...prev, totalPages: pageCount } : prev);
+    queryClient.setQueryData(["documents"], (prev: any) => {
+      if (!Array.isArray(prev)) return prev;
+      return prev.map((doc: any) => doc.id === docId ? { ...doc, totalPages: pageCount } : doc);
+    });
+  }, [docId, queryClient]);
+
+  const handleDocumentLoadSuccess = useCallback((pageCount: number) => {
+    setTotalPages(pageCount);
+    syncDetectedPageCount(pageCount);
+  }, [syncDetectedPageCount]);
+
   const handlePdfLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
-  }, []);
+    handleDocumentLoadSuccess(numPages);
+  }, [handleDocumentLoadSuccess]);
 
   const handlePdfLoadError = useCallback((error: Error) => {
     console.error("PDF Load Error:", error);
@@ -209,8 +227,29 @@ function WorkspacePage() {
   }, []);
 
   const handleDocxLoadSuccess = useCallback((numPages: number) => {
-    setNumPages(numPages);
-  }, []);
+    handleDocumentLoadSuccess(numPages);
+  }, [handleDocumentLoadSuccess]);
+
+  useEffect(() => {
+    setTotalPages(1);
+  }, [docId, documentMetadata?.fileType]);
+
+  const navigationResetKey = `${docId ?? ""}-${documentMetadata?.fileType ?? ""}-${totalPages}`;
+  const { scrollContainerRef, currentPage, scrollToPage } = useScrollPageNavigation(
+    totalPages,
+    navigationResetKey,
+  );
+
+  const canGoPrevious = currentPage > 1;
+  const canGoNext = currentPage < totalPages;
+
+  const handlePrevPage = () => {
+    scrollToPage(Math.max(1, currentPage - 1));
+  };
+
+  const handleNextPage = () => {
+    scrollToPage(Math.min(totalPages, currentPage + 1));
+  };
 
   // Handle text selection
   const handleTextSelect = () => {
@@ -470,20 +509,28 @@ function WorkspacePage() {
           onMouseUp={handleTextSelect}
         >
           {/* Document Toolbar */}
-          {(!documentMetadata || ["pdf", "docx", "txt"].includes(documentMetadata.fileType)) && (
+          {(!documentMetadata || ["pdf", "docx", "txt", "ppt", "pptx"].includes(documentMetadata.fileType)) && (
           <div className="h-12 border-b border-[var(--lf-border)] bg-[var(--lf-bg)] flex items-center justify-between px-4 shrink-0">
             <div className="flex items-center gap-2">
               <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
                 <Search className="h-4 w-4" />
               </button>
               <div className="w-px h-4 bg-[var(--lf-border)] mx-2" />
-              <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
+              <button
+                onClick={handlePrevPage}
+                disabled={!canGoPrevious}
+                className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)] disabled:opacity-40 disabled:cursor-not-allowed"
+              >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="text-xs font-medium text-[var(--lf-text-primary)] min-w-[60px] text-center">
-                Total: {numPages || "-"}
+              <span className="text-xs font-medium text-[var(--lf-text-primary)] min-w-[120px] text-center">
+                Current: {currentPage} / Total: {totalPages}
               </span>
-              <button className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)]">
+              <button
+                onClick={handleNextPage}
+                disabled={!canGoNext}
+                className="p-1.5 hover:bg-[var(--lf-surface)] rounded-lg text-[var(--lf-text-secondary)] disabled:opacity-40 disabled:cursor-not-allowed"
+              >
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
@@ -514,7 +561,10 @@ function WorkspacePage() {
           )}
 
           {/* Document Viewer (PDF or DocViewer) */}
-          <div className="flex-1 relative bg-stone-100 dark:bg-stone-900 overflow-y-auto overflow-x-hidden flex flex-col items-center py-8">
+          <div
+            ref={scrollContainerRef}
+            className="flex-1 relative bg-stone-100 dark:bg-stone-900 overflow-y-auto overflow-x-hidden flex flex-col items-center py-8"
+          >
             {!documentMetadata && !isMetadataError ? (
               <div className="flex items-center justify-center h-full text-stone-500">
                 Loading Document Metadata...
@@ -526,13 +576,13 @@ function WorkspacePage() {
                 <p className="text-sm mt-2 opacity-80">{(metadataError as Error)?.message || "Check server connection."}</p>
               </div>
             ) : documentMetadata?.fileType === "pdf" ? (
-              isPdfBlobLoading ? (
+              isDocumentBlobLoading ? (
                 <div className="flex items-center justify-center p-12 text-stone-500 animate-pulse">
-                  Downloading PDF Document...
+                  Downloading PDF document...
                 </div>
-              ) : isPdfBlobError ? (
+              ) : isDocumentBlobError ? (
                 <div className="flex flex-col items-center justify-center p-12 text-red-500 text-center">
-                  <p className="font-bold text-lg">Failed to load PDF.</p>
+                  <p className="font-bold text-lg">Failed to load document.</p>
                   <p className="text-sm mt-2 opacity-80">This document file is missing or cannot be retrieved from the server.</p>
                 </div>
               ) : pdfFileUrl ? (
@@ -552,15 +602,16 @@ function WorkspacePage() {
                     </div>
                   }
                 >
-                  {numPages && Array.from(new Array(numPages), (_, index) => (
-                    <Page
-                      key={`page_${index + 1}`}
-                      pageNumber={index + 1}
-                      className="mb-8 shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden bg-white"
-                      scale={zoom}
-                      renderTextLayer={true}
-                      renderAnnotationLayer={true}
-                    />
+                  {Array.from({ length: totalPages }, (_, index) => (
+                    <div key={`page_${index + 1}`} data-page-number={index + 1}>
+                      <Page
+                        pageNumber={index + 1}
+                        className="mb-8 shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden bg-white"
+                        scale={zoom}
+                        renderTextLayer={true}
+                        renderAnnotationLayer={true}
+                      />
+                    </div>
                   ))}
                 </Document>
               ) : (
@@ -568,12 +619,20 @@ function WorkspacePage() {
                   Preparing document...
                 </div>
               )
-            ) : documentMetadata?.fileType === "docx" ? (
+            ) : ["docx", "doc"].includes(documentMetadata?.fileType || "") ? (
               <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
                 <DocxViewer 
-                  fileUrl={safeFileDownloadUrl || ""} 
+                  fileUrl={safeDocxUrl || ""} 
                   zoom={zoom} 
                   onLoadSuccess={handleDocxLoadSuccess} 
+                />
+              </div>
+            ) : ["ppt", "pptx"].includes(documentMetadata?.fileType || "") ? (
+              <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
+                <PptxViewer
+                  fileUrl={safeFileDownloadUrl || ""}
+                  zoom={zoom}
+                  onLoadSuccess={handleDocxLoadSuccess}
                 />
               </div>
             ) : documentMetadata?.fileType === "txt" ? (
