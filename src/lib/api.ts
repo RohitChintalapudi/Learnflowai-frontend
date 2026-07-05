@@ -6,7 +6,7 @@ import { authClient } from "./auth-client";
 export interface DocumentMetadata {
   id: string;
   title: string;
-  fileType: "pdf" | "ppt" | "pptx" | "doc" | "docx";
+  fileType: "pdf" | "ppt" | "pptx" | "doc" | "docx" | "txt";
   totalPages?: number;
   createdAt?: string;
   fileUrl?: string;

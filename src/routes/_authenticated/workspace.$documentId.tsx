@@ -192,11 +192,6 @@ function WorkspacePage() {
     }
   }, [isPdfBlobError, pdfBlobError]);
 
-  const safeDocxUrl = useMemo(() => {
-    if (!docId) return null;
-    return `${BACKEND_URL}/api/documents/${docId}/download`;
-  }, [docId]);
-
   const handlePdfLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
   }, []);
