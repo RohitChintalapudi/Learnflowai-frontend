@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { authStore } from "../../store/authStore";
 import toast from "react-hot-toast";
+import { BACKEND_URL } from "../../lib/auth-client";
 
 export const Route = createFileRoute("/_public/signup")({
   component: SignupPage,
@@ -58,7 +59,7 @@ function SignupPage() {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/auth/sign-up/email",
+        `${BACKEND_URL}/api/auth/sign-up/email`,
         {
           method: "POST",
           headers: {

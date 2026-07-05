@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { authStore } from "../../store/authStore";
-import { authClient } from "../../lib/auth-client";
+import { authClient, BACKEND_URL } from "../../lib/auth-client";
 import { GoogleSignInButton } from "../../components/GoogleSignInButton";
 import toast from "react-hot-toast";
 
@@ -70,7 +70,7 @@ function LoginPage() {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/auth/sign-in/email",
+        `${BACKEND_URL}/api/auth/sign-in/email`,
         {
           method: "POST",
           headers: {
