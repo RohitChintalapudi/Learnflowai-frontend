@@ -220,7 +220,7 @@ export const SimulationGenerator: React.FC<SimulationGeneratorProps> = ({
 
   return (
     <div className="w-full mx-auto font-sans">
-      <div className="relative overflow-hidden bg-[var(--lf-card)] backdrop-blur-xl border card-shadow-lg border border-[var(--lf-border)] rounded-2xl shadow-2xl p-6 md:p-8">
+      <div className="relative overflow-hidden bg-[var(--lf-card)] backdrop-blur-xl border border-[var(--lf-border)] card-shadow-lg rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8">
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-orange-500/10 blur-[90px] rounded-full" />
         {/* Ambient glows */}
         <div className="absolute -top-40 -left-40 w-80 h-80 bg-orange-500/10 rounded-full blur-[110px] pointer-events-none" />
@@ -324,7 +324,7 @@ export const SimulationGenerator: React.FC<SimulationGeneratorProps> = ({
                     Simulation Type
                   </label>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {(
                       ["visual-flow", "step-by-step", "real-world"] as const
                     ).map((t) => (
@@ -350,7 +350,7 @@ export const SimulationGenerator: React.FC<SimulationGeneratorProps> = ({
                     Complexity Level
                   </label>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {(["beginner", "intermediate", "advanced"] as const).map(
                       (d) => (
                         <button

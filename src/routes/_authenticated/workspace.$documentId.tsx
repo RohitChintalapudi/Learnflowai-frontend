@@ -87,6 +87,16 @@ function WorkspacePage() {
   const [totalPages, setTotalPages] = useState(1);
   const [zoom, setZoom] = useState(1.0);
 
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileOrTablet(window.innerWidth < 1024);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const { documentId: docId } = Route.useParams();
 
   const { data: documentMetadata, isError: isMetadataError, error: metadataError } = useQuery({
@@ -239,6 +249,45 @@ function WorkspacePage() {
     totalPages,
     navigationResetKey,
   );
+
+  const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+
+  const combinedRef = useCallback((node: HTMLDivElement | null) => {
+    // Sync React Flow / Scroll Navigation hook ref
+    if (scrollContainerRef) {
+      (scrollContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    }
+    
+    // Disconnect previous observer if DOM node changed
+    if (resizeObserverRef.current) {
+      resizeObserverRef.current.disconnect();
+      resizeObserverRef.current = null;
+    }
+
+    // Attach resize observer to keep canvas scaled dynamically
+    if (node) {
+      const handleResize = () => {
+        const padding = window.innerWidth < 640 ? 16 : 40;
+        setContainerWidth(node.clientWidth - padding);
+      };
+
+      handleResize();
+
+      const observer = new ResizeObserver(handleResize);
+      observer.observe(node);
+      resizeObserverRef.current = observer;
+    }
+  }, [scrollContainerRef]);
+
+  // Clean up observer on unmount
+  useEffect(() => {
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      }
+    };
+  }, []);
 
   const canGoPrevious = currentPage > 1;
   const canGoNext = currentPage < totalPages;
@@ -504,7 +553,7 @@ function WorkspacePage() {
         <motion.div 
           layout
           initial={false}
-          animate={{ width: activeFeature ? "55%" : "100%" }}
+          animate={{ width: activeFeature ? (isMobileOrTablet ? "0%" : "55%") : "100%" }}
           className="border-r border-[var(--lf-border)] flex flex-col bg-[#F3F4F6] dark:bg-[#0c0a09] relative z-10 shrink-0" 
           onMouseUp={handleTextSelect}
         >
@@ -562,7 +611,7 @@ function WorkspacePage() {
 
           {/* Document Viewer (PDF or DocViewer) */}
           <div
-            ref={scrollContainerRef}
+            ref={combinedRef}
             className="flex-1 relative bg-stone-100 dark:bg-stone-900 overflow-y-auto overflow-x-hidden flex flex-col items-center py-8"
           >
             {!documentMetadata && !isMetadataError ? (
@@ -608,6 +657,7 @@ function WorkspacePage() {
                         pageNumber={index + 1}
                         className="mb-8 shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden bg-white"
                         scale={zoom}
+                        width={containerWidth}
                         renderTextLayer={true}
                         renderAnnotationLayer={true}
                       />
@@ -670,7 +720,7 @@ function WorkspacePage() {
             <motion.div 
               layout
               initial={{ width: 0, opacity: 0 }}
-              animate={{ width: "45%", opacity: 1 }}
+              animate={{ width: isMobileOrTablet ? "100%" : "45%", opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               className="bg-[var(--lf-bg)] flex flex-col relative z-10 overflow-hidden shrink-0 border-l border-[var(--lf-border)]"
             >

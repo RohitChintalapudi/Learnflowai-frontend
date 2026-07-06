@@ -55,9 +55,9 @@ function DashboardHomePage() {
         </span>
       </>
     }>
-      <div className="flex-1 overflow-y-auto p-8 relative no-scrollbar">
+      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 lg:p-8 pb-24 lg:pb-8 relative no-scrollbar">
         <motion.div
-          className="max-w-[1200px] mx-auto space-y-8 pb-12"
+          className="max-w-[1200px] mx-auto space-y-5 sm:space-y-6 lg:space-y-8 pb-12"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -65,7 +65,7 @@ function DashboardHomePage() {
           {/* HERO SECTION */}
           <motion.div
             variants={itemVariants}
-            className="relative rounded-3xl p-8 lg:p-10 border border-[var(--lf-border)] overflow-hidden bg-[var(--lf-card)] card-shadow-lg"
+            className="relative rounded-2xl sm:rounded-3xl p-5 sm:p-7 lg:p-10 border border-[var(--lf-border)] overflow-hidden bg-[var(--lf-card)] card-shadow-lg"
           >
             <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-orange-500/30 to-transparent blur-[100px] rounded-full pointer-events-none translate-x-1/3 -translate-y-1/3 animate-pulse-scale-1" />
             <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-orange-500/25 to-transparent blur-[80px] rounded-full pointer-events-none -translate-x-1/3 translate-y-1/3 animate-pulse-scale-2" />
@@ -75,7 +75,7 @@ function DashboardHomePage() {
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-orange-500/30 bg-orange-500/15 text-[var(--lf-accent)] text-xs font-semibold mb-5">
                 <Brain className="h-3.5 w-3.5" /> AI-Powered Study Assistant
               </div>
-              <h1 data-tour="dashboard-heading" className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold tracking-tight leading-[1.15] mb-4">
+              <h1 data-tour="dashboard-heading" className="text-[30px] sm:text-4xl lg:text-[42px] font-extrabold tracking-tight leading-[1.15] mb-4">
                 Continue Your <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--lf-accent)] to-orange-300">
                   Learning Journey.
@@ -86,16 +86,16 @@ function DashboardHomePage() {
                 quizzes, and AI explanations tailored exactly to your
                 curriculum.
               </p>
-              <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
                 <button 
                   onClick={() => navigate({ to: "/documents" })}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--lf-accent)] hover:bg-[var(--lf-accent-hover)] text-white text-sm font-semibold shadow-lg shadow-orange-500/25 transition-all hover:scale-105 active:scale-95"
+                  className="flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl bg-[var(--lf-accent)] hover:bg-[var(--lf-accent-hover)] text-white text-sm font-semibold shadow-lg shadow-orange-500/25 transition-all hover:scale-105 active:scale-95"
                 >
                   <Upload className="h-4 w-4" /> Upload Document
                 </button>
                 <button 
                   onClick={() => navigate({ to: "/workspace/$documentId", params: { documentId: "demo-doc-123" } })}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-[var(--lf-text-secondary)] text-[var(--lf-text-primary)] text-sm font-semibold transition-all hover:bg-[var(--lf-bg)]"
+                  className="flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-[var(--lf-text-secondary)] text-[var(--lf-text-primary)] text-sm font-semibold transition-all hover:bg-[var(--lf-bg)]"
                 >
                   Open Workspace <ArrowRight className="h-4 w-4" />
                 </button>
@@ -190,7 +190,7 @@ function DashboardHomePage() {
                       <div key={i} className="h-20 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl animate-pulse card-shadow"></div>
                     ))
                   ) : summary?.recentDocuments.length === 0 ? (
-                    <div className="col-span-2 text-center py-6 text-[14px] text-[var(--lf-text-secondary)] italic">
+                    <div className="sm:col-span-2 text-center py-6 text-[14px] text-[var(--lf-text-secondary)] italic">
                       No documents uploaded yet.
                     </div>
                   ) : (
@@ -233,7 +233,7 @@ function DashboardHomePage() {
                 <div className="flex overflow-x-auto no-scrollbar gap-4 pb-4 snap-x">
                   {loading ? (
                     Array(4).fill(0).map((_, i) => (
-                      <div key={i} className="min-w-[240px] h-24 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl animate-pulse snap-start card-shadow"></div>
+                      <div key={i} className="min-w-[220px] sm:min-w-[240px] h-24 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl animate-pulse snap-start card-shadow"></div>
                     ))
                   ) : summary?.recentActivity.length === 0 ? (
                     <div className="text-[13px] text-[var(--lf-text-secondary)] italic">
@@ -243,7 +243,7 @@ function DashboardHomePage() {
                     summary?.recentActivity.map((act, i) => (
                       <div
                         key={i}
-                        className="min-w-[240px] max-w-[280px] p-4 rounded-2xl bg-[var(--lf-card)] border border-[var(--lf-border)] hover:border-orange-500/40 card-shadow card-shadow-hover transition-all cursor-pointer snap-start flex flex-col justify-between group"
+                        className="min-w-[220px] sm:min-w-[240px] max-w-[280px] p-4 rounded-2xl bg-[var(--lf-card)] border border-[var(--lf-border)] hover:border-orange-500/40 card-shadow card-shadow-hover transition-all cursor-pointer snap-start flex flex-col justify-between group"
                       >
                         <div className="flex items-center gap-3 mb-2">
                            <div className="w-8 h-8 rounded-full bg-[var(--lf-surface)] flex items-center justify-center shrink-0 border border-[var(--lf-border)] group-hover:border-[var(--lf-text-secondary)] transition-colors">

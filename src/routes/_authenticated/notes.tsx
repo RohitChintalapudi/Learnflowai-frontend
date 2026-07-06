@@ -83,19 +83,19 @@ function NotesPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="flex-1 overflow-y-auto p-8 relative no-scrollbar"
+              className="flex-1 overflow-y-auto responsive-page-pad mobile-safe-bottom relative no-scrollbar"
             >
               {/* Orange glow background */}
               <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[150px] pointer-events-none translate-x-1/4 -translate-y-1/4" />
               <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-500/8 rounded-full blur-[120px] pointer-events-none -translate-x-1/4 translate-y-1/4" />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[130px] pointer-events-none" />
-              <div className="max-w-6xl mx-auto space-y-8 relative z-10">
-                <div className="flex items-center gap-4 border-b border-[var(--lf-border)] pb-6">
+              <div className="max-w-6xl mx-auto space-y-5 sm:space-y-6 lg:space-y-8 relative z-10">
+                <div className="flex items-center gap-3 sm:gap-4 border-b border-[var(--lf-border)] pb-5 sm:pb-6">
                   <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center">
                     <Notebook className="h-6 w-6 text-orange-500" />
                   </div>
                   <div>
-                    <h1 data-tour="notes-heading" className="text-2xl font-bold text-[var(--lf-text-primary)]">Your Recent Notes</h1>
+                    <h1 data-tour="notes-heading" className="text-xl sm:text-2xl font-bold text-[var(--lf-text-primary)]">Your Recent Notes</h1>
                     <p className="text-[14px] text-[var(--lf-text-secondary)]">Access, review, and download your AI-generated study notes.</p>
                   </div>
                 </div>
@@ -115,12 +115,12 @@ function NotesPage() {
                     <p className="text-[14px] text-[var(--lf-text-secondary)]">Go to the AI Workspace, highlight some text, and generate notes to see them here.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
                     {savedNotes.map((note: SavedNote) => (
                       <div 
                         key={note.id}
                         onClick={() => setSelectedNote(note)}
-                        className="group p-6 rounded-3xl bg-[var(--lf-card)] border border-[var(--lf-border)] hover:border-orange-500/50 card-shadow hover:shadow-[0_8px_30px_rgba(249,115,22,0.12)] transition-all cursor-pointer flex flex-col h-full relative overflow-hidden"
+                        className="group p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[var(--lf-card)] border border-[var(--lf-border)] hover:border-orange-500/50 card-shadow hover:shadow-[0_8px_30px_rgba(249,115,22,0.12)] transition-all cursor-pointer flex flex-col h-full relative overflow-hidden"
                       >
                         <div className="absolute top-0 right-0 w-40 h-40 bg-orange-500/10 blur-[60px] rounded-full pointer-events-none" />
                         <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-orange-400/8 blur-[50px] rounded-full pointer-events-none" />
@@ -167,10 +167,10 @@ function NotesPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="flex-1 overflow-y-auto p-8 no-scrollbar"
+              className="flex-1 overflow-y-auto responsive-page-pad mobile-safe-bottom no-scrollbar"
             >
               <div className="max-w-4xl mx-auto space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <button 
                     onClick={() => setSelectedNote(null)}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:bg-[var(--lf-bg)] text-[14px] font-bold text-[var(--lf-text-primary)] transition-all"
@@ -189,7 +189,7 @@ function NotesPage() {
                 <div 
                   ref={contentRef}
                   id="pdf-content" 
-                  className="bg-[var(--lf-card)] dark:bg-[#0c0a09] rounded-[2rem] border border-[var(--lf-border)] p-10 md:p-14 card-shadow-lg relative print:shadow-none print:border-none print:p-12 print:w-full print:max-w-none print:m-0 print:block"
+                  className="bg-[var(--lf-card)] dark:bg-[#0c0a09] rounded-2xl sm:rounded-[2rem] border border-[var(--lf-border)] p-5 sm:p-8 md:p-14 card-shadow-lg relative print:shadow-none print:border-none print:p-12 print:w-full print:max-w-none print:m-0 print:block"
                   style={printStyle}
                 >
                   {/* Watermark - Shows up on every printed page */}

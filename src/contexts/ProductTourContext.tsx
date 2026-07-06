@@ -37,22 +37,10 @@ export function ProductTourProvider({ children }: { children: ReactNode }) {
     isNavigating: false,
   });
   const tourStateRef = useRef(tourState);
-  tourStateRef.current = tourState;
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (!tourStateRef.current.isActive) return;
-      if (e.key === "Escape") {
-        setTourState((prev) => ({ ...prev, isActive: false }));
-      } else if (e.key === "ArrowRight") {
-        handleNext();
-      } else if (e.key === "ArrowLeft") {
-        handlePrev();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
+    tourStateRef.current = tourState;
+  }, [tourState]);
 
   const startTour = useCallback(() => {
     localStorage.setItem("lf_tour_completed", "true");
@@ -90,6 +78,21 @@ export function ProductTourProvider({ children }: { children: ReactNode }) {
       return { ...prev, currentStepIndex: prevIdx };
     });
   }, []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (!tourStateRef.current.isActive) return;
+      if (e.key === "Escape") {
+        setTourState((prev) => ({ ...prev, isActive: false }));
+      } else if (e.key === "ArrowRight") {
+        handleNext();
+      } else if (e.key === "ArrowLeft") {
+        handlePrev();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [handleNext, handlePrev]);
 
   const goToStep = useCallback((index: number) => {
     setTourState((prev) => {

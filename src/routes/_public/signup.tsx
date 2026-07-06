@@ -100,12 +100,12 @@ function SignupPage() {
   };
 
   return (
-    <div className="flex-grow flex items-center justify-center min-h-[calc(100vh-64px)] px-4 py-12 sm:px-6 lg:px-8 relative">
+    <div className="flex-grow flex items-center justify-center min-h-[calc(100vh-64px)] px-4 py-8 sm:px-6 lg:px-8 relative">
       {/* Container Card with light/dark glassmorphism */}
-      <div className="w-full max-w-[480px] bg-white/95 dark:bg-stone-950/95 backdrop-blur-md rounded-2xl border border-brown-200/60 dark:border-stone-800/60 p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.10)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] hover:shadow-[0_30px_80px_rgba(0,0,0,0.12)] transition-all duration-300 transform hover:-translate-y-0.5">
+      <div className="w-full max-w-[480px] bg-white/95 dark:bg-stone-950/95 backdrop-blur-md rounded-2xl border border-brown-200/60 dark:border-stone-800/60 p-5 sm:p-8 lg:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.10)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] hover:shadow-[0_30px_80px_rgba(0,0,0,0.12)] transition-all duration-300 transform hover:-translate-y-0.5">
         {/* Header */}
         <div className="text-center mb-6">
-          <h2 className="text-3xl font-extrabold tracking-tight text-stone-900 dark:text-white">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 dark:text-white">
             Create Your Account
           </h2>
           <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
@@ -127,7 +127,7 @@ function SignupPage() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* First Name & Last Name (Side by Side) */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label
                 htmlFor="firstName"
