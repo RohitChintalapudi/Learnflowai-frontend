@@ -253,13 +253,13 @@ function LearningHistoryPage() {
 
   return (
     <DashboardLayout headerTitle="Learning History">
-      <div className="flex-1 overflow-y-auto p-8 relative no-scrollbar">
+      <div className="flex-1 overflow-y-auto responsive-page-pad mobile-safe-bottom relative no-scrollbar">
         {/* Orange glow background */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[150px] pointer-events-none translate-x-1/4 -translate-y-1/4" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-500/8 rounded-full blur-[120px] pointer-events-none -translate-x-1/4 translate-y-1/4" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[130px] pointer-events-none" />
 
-        <div className="max-w-[1200px] mx-auto space-y-8 pb-12 relative z-10">
+        <div className="max-w-[1200px] mx-auto space-y-5 sm:space-y-6 lg:space-y-8 pb-12 relative z-10">
           {/* Header Description */}
           <div className="space-y-1" data-tour="learning-history-heading">
             <h1 className="text-2xl font-black tracking-tight text-[var(--lf-text-primary)]">
@@ -336,12 +336,12 @@ function LearningHistoryPage() {
               </div>
 
               {/* Layout splits */}
-              <div className="grid grid-cols-12 gap-8 items-start !mt-4">
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 lg:gap-8 items-start !mt-4">
                 {/* Timeline Column */}
                 <div className="col-span-12 lg:col-span-8">
                   {allItems.length === 0 ? (
                     isFilterActive ? (
-                      <div className="flex flex-col items-center justify-center p-8 text-center bg-white/60 dark:bg-zinc-900/40 border border-[var(--lf-border)] rounded-3xl backdrop-blur-md min-h-[300px] max-w-xl mx-auto space-y-4">
+                      <div className="flex flex-col items-center justify-center p-5 sm:p-8 text-center bg-white/60 dark:bg-zinc-900/40 border border-[var(--lf-border)] rounded-2xl sm:rounded-3xl backdrop-blur-md min-h-[260px] sm:min-h-[300px] max-w-xl mx-auto space-y-4">
                         <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
                           <SlidersHorizontal className="h-5 w-5" />
                         </div>

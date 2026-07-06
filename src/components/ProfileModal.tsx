@@ -302,7 +302,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       <div className="h-10 w-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <HelpCircle className="h-5 w-5" />
                       </div>
-                      <span className="text-2xl font-black text-[var(--lf-text-primary)] dark:text-white">{stats?.quizzesCount || 0}</span>
+                      <span className="text-[24px] font-black text-[var(--lf-text-primary)] dark:text-white">{stats?.quizzesCount || 0}</span>
                       <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--lf-text-secondary)] dark:text-zinc-500 mt-1">Quizzes</span>
                     </div>
                     <div className="bg-[var(--lf-surface)] dark:bg-zinc-900/40 border border-[var(--lf-border)] dark:border-zinc-800 rounded-2xl p-4 flex flex-col items-center text-center group hover:border-purple-500/30 transition-colors">

@@ -11,12 +11,12 @@ function WorkspaceIndexRoute() {
 
   return (
     <DashboardLayout headerTitle="AI Workspace">
-      <div className="flex-1 flex flex-col items-center justify-center h-full p-8">
+      <div className="flex-1 flex flex-col items-center justify-center h-full px-4 py-8 sm:p-8 pb-24 lg:pb-8">
         <div className="flex flex-col items-center text-center max-w-md">
           <div className="w-20 h-20 bg-orange-500/10 rounded-full flex items-center justify-center mb-6">
             <FileText className="h-10 w-10 text-orange-500" />
           </div>
-          <h2 className="text-2xl font-bold text-[var(--lf-text-primary)] mb-3">No Document Selected</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-[var(--lf-text-primary)] mb-3">No Document Selected</h2>
           <p className="text-[15px] text-[var(--lf-text-secondary)] mb-8">
             Open a document from your library to start using AI-powered features like explanations, quizzes, notes, and more.
           </p>

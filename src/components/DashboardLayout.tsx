@@ -25,6 +25,8 @@ import {
   CheckCheck,
   Trash2,
   Inbox,
+  Menu,
+  X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { ProfileModal } from "./ProfileModal";
@@ -64,6 +66,12 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
     }
     return false;
   });
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Auto-close mobile sidebar when path changes
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [location.pathname]);
 
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const alertsDropdownRef = useRef<HTMLDivElement>(null);
@@ -146,9 +154,9 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
   const displayName = sessionUser?.name || profile?.name || cachedName || "User";
   const displayImage = isValidAvatarUrl(profile?.profileImage)
-    ? profile?.profileImage!
+    ? (profile?.profileImage ?? "")
     : isValidAvatarUrl(sessionUser?.image)
-      ? sessionUser?.image!
+      ? (sessionUser?.image ?? "")
       : isValidAvatarUrl(cachedImage)
         ? cachedImage
         : "/default-avatar.svg";
@@ -223,29 +231,51 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
   };
   return (
     <div className="h-screen w-full flex bg-[var(--lf-bg)] text-[var(--lf-text-primary)] overflow-hidden selection:bg-[var(--lf-accent)] selection:text-white font-sans relative">
+      {/* Backdrop for mobile */}
+      {isMobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 lg:hidden"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
       {/* ── SIDEBAR ────────────────────────────────────────────────────────── */}
-      <aside data-tour="sidebar" className={`flex-shrink-0 border-r border-[var(--lf-border)] bg-white/80 dark:bg-black/60 backdrop-blur-xl flex flex-col relative z-20 transition-all duration-300 ${isCollapsed ? "w-[76px]" : "w-64"}`}>
+      <aside 
+        data-tour="sidebar" 
+        className={`fixed lg:relative inset-y-0 left-0 z-40 flex-shrink-0 border-r border-[var(--lf-border)] bg-white dark:bg-stone-950 lg:bg-white/80 lg:dark:bg-black/60 backdrop-blur-xl flex flex-col transition-transform lg:transition-all duration-300 ${
+          isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        } ${isCollapsed ? "lg:w-[76px]" : "lg:w-64"} w-64`}
+      >
         
         {/* Toggle Collapse Button */}
         <button 
           onClick={toggleSidebar}
-          className="absolute -right-3.5 top-20 bg-[var(--lf-surface)] border border-[var(--lf-border)] text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)] hover:border-orange-500/50 rounded-full p-1.5 z-50 transition-colors shadow-sm"
+          className="hidden lg:block absolute -right-3.5 top-20 bg-[var(--lf-surface)] border border-[var(--lf-border)] text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)] hover:border-orange-500/50 rounded-full p-1.5 z-50 transition-colors shadow-sm"
         >
           {isCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
         </button>
 
-        <div className="h-16 flex items-center justify-center border-b border-[var(--lf-border)] transition-all">
-          <Link to="/dashboard" className={`flex items-center gap-3 hover:opacity-80 transition-opacity w-full px-6 ${isCollapsed ? "justify-center px-0" : ""}`}>
+        <div className="h-16 flex items-center justify-between border-b border-[var(--lf-border)] px-6">
+          <Link to="/dashboard" className={`flex items-center gap-3 hover:opacity-80 transition-opacity w-full ${isCollapsed && !isMobileSidebarOpen ? "lg:justify-center lg:px-0" : ""}`}>
             <div className="flex items-center justify-center shrink-0">
               <img src="/logo.png" className="block dark:hidden h-6 w-auto object-contain" alt="Learnflow AI Logo" />
               <img src="/logo_dark.png" className="hidden dark:block h-6 w-auto object-contain" alt="Learnflow AI Logo" />
             </div>
-            {!isCollapsed && (
+            {(!isCollapsed || isMobileSidebarOpen) && (
               <span className="text-[17px] font-extrabold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
                 Learnflow <span className="text-[var(--lf-accent)]">AI</span>
               </span>
             )}
           </Link>
+          
+          {/* Close button for mobile */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="p-1 rounded-lg hover:bg-[var(--lf-surface)] text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)] lg:hidden shrink-0"
+            title="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1.5 no-scrollbar overflow-x-hidden">
@@ -256,9 +286,9 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
                 <Link
                   key={idx}
                   to={item.to}
-                  title={isCollapsed ? item.label : undefined}
+                  title={isCollapsed && !isMobileSidebarOpen ? item.label : undefined}
                   {...(item.label === "Settings" ? { "data-tour": "settings-link" } : {})}
-                className={`w-full flex items-center rounded-xl transition-all duration-200 group relative overflow-hidden ${isCollapsed ? "justify-center p-3" : "gap-3 px-3 py-2.5"} ${active ? "bg-gradient-to-r from-orange-500/15 to-orange-500/5 text-[var(--lf-accent)] shadow-sm shadow-orange-500/10" : "text-[var(--lf-text-secondary)] hover:bg-[var(--lf-surface)] hover:text-[var(--lf-text-primary)] hover:shadow-sm"} active:scale-[0.97]`}
+                className={`w-full flex items-center rounded-xl transition-all duration-200 group relative overflow-hidden ${isCollapsed && !isMobileSidebarOpen ? "lg:justify-center lg:p-3" : "gap-3 px-3 py-2.5"} ${active ? "bg-gradient-to-r from-orange-500/15 to-orange-500/5 text-[var(--lf-accent)] shadow-sm shadow-orange-500/10" : "text-[var(--lf-text-secondary)] hover:bg-[var(--lf-surface)] hover:text-[var(--lf-text-primary)] hover:shadow-sm"} active:scale-[0.97]`}
               >
                 {/* Active background glow */}
                 {active && (
@@ -272,17 +302,17 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none" />
 
                 {/* When collapsed, if active, show a small left indicator */}
-                {active && isCollapsed && (
+                {active && isCollapsed && !isMobileSidebarOpen && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-[var(--lf-accent)] z-10 shrink-0" />
                 )}
 
                 <Icon className={`h-[18px] w-[18px] relative z-10 shrink-0 transition-transform duration-200 group-hover:scale-110 ${active ? "text-[var(--lf-accent)]" : "text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-text-primary)]"}`} />
                 
-                {!isCollapsed && (
+                {(!isCollapsed || isMobileSidebarOpen) && (
                   <span className="text-[13.5px] font-medium relative z-10 whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
                 )}
 
-                {active && !isCollapsed && (
+                {active && (!isCollapsed || isMobileSidebarOpen) && (
                   <div className="ml-auto w-1.5 h-5 rounded-full bg-gradient-to-b from-orange-500 to-orange-400 relative z-10 shrink-0 shadow-sm shadow-orange-500/50" />
                 )}
               </Link>
@@ -291,8 +321,28 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
         </nav>
 
         {/* Profile Card */}
-        <div data-tour="profile-card" className={`p-4 border-t border-[var(--lf-border)] transition-all ${isCollapsed ? "px-2" : ""}`}>
-          {isCollapsed ? (
+        <div data-tour="profile-card" className={`p-4 border-t border-[var(--lf-border)] transition-all ${isCollapsed && !isMobileSidebarOpen ? "px-2" : ""}`}>
+          {/* Mobile Tour and Logout actions inside drawer */}
+          {isMobileSidebarOpen && (
+            <div className="flex flex-col gap-1 mb-4 lg:hidden">
+              <button
+                onClick={startTour}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium text-[var(--lf-text-secondary)] hover:bg-[var(--lf-surface)] hover:text-[var(--lf-text-primary)] transition-all active:scale-[0.97]"
+              >
+                <PlayCircle className="h-[18px] w-[18px] text-[var(--lf-text-secondary)]" />
+                <span>Product Tour</span>
+              </button>
+              
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium text-rose-500 hover:bg-rose-500/10 transition-all active:scale-[0.97]"
+              >
+                <LogOut className="h-[18px] w-[18px]" />
+                <span>Logout</span>
+              </button>
+            </div>
+          )}
+          {isCollapsed && !isMobileSidebarOpen ? (
             <button 
               onClick={() => setIsProfileModalOpen(true)}
               className="w-full flex items-center justify-center p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/50 group transition-all card-shadow" 
@@ -338,42 +388,63 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
         {/* Top Header */}
         {!hideHeader && (
-          <header className="h-16 px-8 flex items-center justify-between border-b border-[var(--lf-border)] bg-white/80 dark:bg-black/70 backdrop-blur-md sticky top-0 z-30">
-            <div className="flex items-center gap-2">
-              {headerTitle === undefined ? (
-                <h2 className="text-lg font-bold">
-                  Welcome back, {displayName}
-                </h2>
-              ) : typeof headerTitle === "string" ? (
-                <h2 className="text-lg font-bold">
-                  {headerTitle}
-                </h2>
-              ) : (
-                headerTitle
-              )}
+          <header className="h-16 px-4 sm:px-8 flex items-center justify-between border-b border-[var(--lf-border)] bg-white/80 dark:bg-black/70 backdrop-blur-md sticky top-0 z-30">
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Hamburger menu button for mobile/tablet */}
+              <button
+                onClick={() => setIsMobileSidebarOpen(true)}
+                className="p-1.5 -ml-1 rounded-lg hover:bg-[var(--lf-surface)] text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)] lg:hidden shrink-0"
+                title="Open menu"
+              >
+                <Menu className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+              </button>
+
+              <div className="flex items-center gap-2 min-w-0">
+                {headerTitle === undefined ? (
+                  <h2 className="text-[13px] sm:text-sm md:text-lg font-bold truncate">
+                    <span className="inline sm:hidden">Welcome, {displayName ? displayName.split(" ")[0] : ""}</span>
+                    <span className="hidden sm:inline">Welcome back, {displayName ? displayName.split(" ")[0] : ""}</span>
+                  </h2>
+                ) : typeof headerTitle === "string" ? (
+                  <h2 className="text-[13px] sm:text-sm md:text-lg font-bold truncate">
+                    {headerTitle === "Welcome back" ? (
+                      <>
+                        <span className="inline sm:hidden">Welcome</span>
+                        <span className="hidden sm:inline">Welcome back</span>
+                      </>
+                    ) : (
+                      headerTitle
+                    )}
+                  </h2>
+                ) : (
+                  <div className="text-[13px] sm:text-sm md:text-lg font-bold truncate flex items-center">
+                    {headerTitle}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-1.5 sm:gap-3 md:gap-5">
               <button
                 onClick={toggleTheme}
-                className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
+                className="relative p-1.5 sm:p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
               >
                 {theme === "light" ? (
-                  <Moon className="h-5 w-5" />
+                  <Moon className="h-4 w-4 sm:h-5 sm:w-5" />
                 ) : (
-                  <Sun className="h-5 w-5" />
+                  <Sun className="h-4 w-4 sm:h-5 sm:w-5" />
                 )}
               </button>
 
               <div className="relative" ref={alertsDropdownRef}>
                 <button
                   onClick={() => setIsAlertsOpen(!isAlertsOpen)}
-                  className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
+                  className="relative p-1.5 sm:p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
                   title="Notifications"
                 >
-                  <Bell className="h-5 w-5" />
+                  <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-[9px] font-bold text-white flex items-center justify-center border border-[var(--lf-bg)] shadow-[0_0_8px_rgba(244,63,94,0.3)]">
+                    <span className="absolute top-1 right-1 h-3.5 min-w-[14px] px-0.5 rounded-full bg-rose-500 text-[8px] font-bold text-white flex items-center justify-center border border-[var(--lf-bg)] shadow-[0_0_8px_rgba(244,63,94,0.3)]">
                       {unreadCount}
                     </span>
                   )}
@@ -475,7 +546,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
               <button 
                 onClick={() => setIsProfileModalOpen(true)}
-                className="h-8 w-8 rounded-full border border-[var(--lf-border)] overflow-hidden cursor-pointer hover:ring-2 ring-orange-500/50 transition-all shrink-0 flex items-center justify-center bg-stone-100 dark:bg-stone-900"
+                className="h-7 w-7 sm:h-8 sm:w-8 rounded-full border border-[var(--lf-border)] overflow-hidden cursor-pointer hover:ring-2 ring-orange-500/50 transition-all shrink-0 flex items-center justify-center bg-stone-100 dark:bg-stone-900"
               >
                 <img
                   src={displayImage}
@@ -486,17 +557,19 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
               <button
                 onClick={startTour}
-                className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-orange-500 group shrink-0"
+                className="hidden lg:block relative p-1.5 sm:p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-orange-500 group shrink-0"
                 title="Replay Product Tour"
               >
-                <PlayCircle className="h-5 w-5" />
+                <PlayCircle className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
 
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-[13px] font-semibold transition-colors shadow-lg shadow-red-500/20 shrink-0"
+                className="hidden lg:flex p-1.5 sm:px-4 sm:py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-[12px] sm:text-[13px] font-semibold transition-colors shadow-lg shadow-red-500/20 shrink-0 items-center justify-center gap-1.5"
+                title="Logout"
               >
-                Logout
+                <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           </header>

@@ -200,7 +200,7 @@ function QuizDashboardPage() {
         <h2 data-tour="quizzes-heading" className="text-lg font-bold">Quiz Dashboard</h2>
       </div>
     }>
-      <div className="flex-1 overflow-y-auto p-8 relative no-scrollbar">
+      <div className="flex-1 overflow-y-auto responsive-page-pad mobile-safe-bottom relative no-scrollbar">
         {/* Orange glow background */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[150px] pointer-events-none translate-x-1/4 -translate-y-1/4" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-500/8 rounded-full blur-[120px] pointer-events-none -translate-x-1/4 translate-y-1/4" />
@@ -217,14 +217,14 @@ function QuizDashboardPage() {
           </motion.div>
 
           {/* Main layout: content left + topics sidebar right */}
-          <div className="flex gap-8">
+          <div className="flex flex-col lg:flex-row gap-5 lg:gap-8">
 
           {/* Left column — stats + search + quiz grid */}
           <div className="flex-1 min-w-0 space-y-8">
 
           {/* Analytics + Stats Section */}
           {isStatsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[1, 2, 3].map(i => (
                 <div key={i} className="h-28 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl animate-pulse card-shadow" />
               ))}
@@ -234,7 +234,7 @@ function QuizDashboardPage() {
               variants={containerVariants} 
               initial="hidden" 
               animate="show" 
-              className="grid grid-cols-1 md:grid-cols-3 gap-4"
+              className="grid grid-cols-1 sm:grid-cols-3 gap-4"
             >
               {/* Total Quizzes */}
               <motion.div 
@@ -245,7 +245,7 @@ function QuizDashboardPage() {
                 <div className="flex items-center justify-between relative z-10">
                   <div>
                     <p className="text-[13px] font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider mb-1">Total Quizzes</p>
-                    <p className="text-3xl font-black text-[var(--lf-text-primary)]">{stats?.totalQuizzes || 0}</p>
+                <p className="text-2xl sm:text-3xl font-black text-[var(--lf-text-primary)]">{stats?.totalQuizzes || 0}</p>
                   </div>
                   <div className="h-12 w-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <BookOpen className="h-5 w-5 text-orange-500" />
@@ -263,7 +263,7 @@ function QuizDashboardPage() {
                   <div>
                     <p className="text-[13px] font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider mb-1">Avg Score</p>
                     <div className="flex items-baseline gap-1.5">
-                      <p className="text-3xl font-black text-[var(--lf-text-primary)]">{analytics.submittedCount > 0 ? analytics.avgScore : "—"}</p>
+                      <p className="text-2xl sm:text-3xl font-black text-[var(--lf-text-primary)]">{analytics.submittedCount > 0 ? analytics.avgScore : "—"}</p>
                       {analytics.submittedCount > 0 && (
                         <span className="text-[16px] font-bold text-[var(--lf-text-secondary)]">%</span>
                       )}
@@ -285,7 +285,7 @@ function QuizDashboardPage() {
                 <div className="flex items-center justify-between relative z-10">
                   <div>
                     <p className="text-[13px] font-bold text-[var(--lf-text-secondary)] uppercase tracking-wider mb-1">Questions</p>
-                    <p className="text-3xl font-black text-[var(--lf-text-primary)]">
+                    <p className="text-2xl sm:text-3xl font-black text-[var(--lf-text-primary)]">
                       {analytics.totalAnswered > 0 ? `${analytics.totalCorrect}/${analytics.totalAnswered}` : "—"}
                     </p>
                     <p className="text-[11px] text-[var(--lf-text-secondary)] mt-0.5">
@@ -317,7 +317,7 @@ function QuizDashboardPage() {
 
           {/* Quiz Grid */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
               {[1, 2, 3, 4, 5, 6].map(i => (
                 <div key={i} className="h-48 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl animate-pulse card-shadow" />
               ))}
@@ -341,7 +341,7 @@ function QuizDashboardPage() {
               variants={containerVariants} 
               initial="hidden" 
               animate="show" 
-               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+               className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6"
              >
                {quizzes.map((quiz: GeneratedQuiz) => (
                 <motion.div 
@@ -504,7 +504,7 @@ function QuizDashboardPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-4xl max-h-full flex flex-col bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-3xl shadow-2xl overflow-hidden"
+              className="relative w-full max-w-4xl max-h-full flex flex-col bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
             >
               {/* Modal Header */}
               <div className="p-6 border-b border-[var(--lf-border)] flex justify-between items-center bg-[var(--lf-card)]/80 backdrop-blur-md sticky top-0 z-10">

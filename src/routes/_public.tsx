@@ -129,11 +129,11 @@ function PublicLayout() {
       {/* Global Public Navbar */}
       {!isAppRoute && (
         <nav className="border-b border-stone-200 dark:border-[rgba(255,255,255,0.08)] bg-white/80 dark:bg-black/60 backdrop-blur-xl sticky top-0 z-50 transition-colors duration-300">
-          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 sm:px-8 lg:px-12">
+          <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-12 py-2">
             {/* Brand Logo & Name */}
             <Link
               to="/"
-              className="flex items-center gap-3 group focus:outline-none"
+              className="flex min-w-0 items-center gap-2 sm:gap-3 group focus:outline-none"
             >
               <div className="flex items-center justify-center group-hover:scale-105 group-active:scale-95 transition-transform duration-200">
                   <img
@@ -147,14 +147,14 @@ function PublicLayout() {
                     alt="Learnflow AI Logo"
                   />
               </div>
-              <div className="flex flex-col justify-center">
+              <div className="flex min-w-0 flex-col justify-center">
                 <span className="text-[16px] font-extrabold tracking-tight leading-none text-stone-900 dark:text-white">
                   Learnflow{" "}
                   <span className="text-orange-500 dark:text-orange-400">
                     AI
                   </span>
                 </span>
-                <span className="text-[10px] font-medium text-stone-500 dark:text-stone-400 leading-none mt-1">
+                <span className="hidden min-[420px]:block text-[10px] font-medium text-stone-500 dark:text-stone-400 leading-none mt-1 truncate">
                   Learn Smarter, Understand Deeper
                 </span>
               </div>
@@ -163,7 +163,7 @@ function PublicLayout() {
             {/* Center nav links removed as requested */}
 
             {/* Right controls */}
-            <nav className="flex items-center gap-3">
+            <nav className="flex items-center gap-1.5 sm:gap-3 shrink-0">
               {/* Theme Toggle Button */}
               <button
                 onClick={toggleTheme}
@@ -180,7 +180,7 @@ function PublicLayout() {
               {/* Login Link */}
               <Link
                 to="/login"
-                className="text-sm font-semibold px-4 py-2 rounded-lg border border-stone-200 dark:border-stone-700/60 text-stone-600 dark:text-stone-300 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-600 dark:hover:text-orange-400 hover:border-orange-200 dark:hover:border-orange-800/50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                className="text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 rounded-lg border border-stone-200 dark:border-stone-700/60 text-stone-600 dark:text-stone-300 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-600 dark:hover:text-orange-400 hover:border-orange-200 dark:hover:border-orange-800/50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 activeProps={{
                   className:
                     "border-orange-400 dark:border-orange-600 text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/20",
@@ -192,7 +192,7 @@ function PublicLayout() {
               {/* Sign Up */}
               <Link
                 to="/signup"
-                className="text-sm font-semibold px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white transition-all duration-200 shadow-sm shadow-orange-500/20 hover:shadow-md hover:shadow-orange-500/30 active:scale-[0.97]"
+                className="text-xs sm:text-sm font-semibold px-3.5 sm:px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white transition-all duration-200 shadow-sm shadow-orange-500/20 hover:shadow-md hover:shadow-orange-500/30 active:scale-[0.97]"
               >
                 Sign Up
               </Link>
@@ -215,8 +215,8 @@ function PublicLayout() {
       {/* Global Footer */}
       {!isAppRoute && (
         <footer className="w-full border-t border-stone-200 dark:border-stone-800/60 bg-white dark:bg-black pt-16 pb-8 mt-auto relative z-10 transition-colors duration-300">
-          <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-12">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 mb-12 md:mb-16">
               
               {/* Section 1: Brand */}
 <div className="md:col-span-6 lg:col-span-5 flex flex-col items-start text-left max-w-sm">
@@ -224,20 +224,20 @@ function PublicLayout() {
     <div>
       <img
         src="/logo.png"
-        className="block dark:hidden h-32 w-auto object-contain transition-transform group-hover:scale-105"
+        className="block dark:hidden h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-105"
         alt="Learnflow AI Logo"
       />
       <img
         src="/logo_dark.png"
-        className="hidden dark:block h-32 w-auto object-contain transition-transform group-hover:scale-105"
+        className="hidden dark:block h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-105"
         alt="Learnflow AI Logo"
       />
     </div>
-                  <span className="text-lg font-bold tracking-tight text-stone-900 dark:text-white">
-                    Learnflow <span className="text-[#FF7A00]">AI</span>
-                  </span>
-                </Link>
-                <p className="text-sm font-medium text-stone-500 dark:text-stone-400">
+    <span className="text-lg font-bold tracking-tight text-stone-900 dark:text-white">
+      Learnflow <span className="text-[#FF7A00]">AI</span>
+    </span>
+  </Link>
+  <p className="text-sm font-medium text-stone-500 dark:text-stone-400">
                   Intelligent learning experiences designed for every student
                 </p>
               </div>
@@ -290,7 +290,7 @@ function PublicLayout() {
             </div>
 
             {/* Divider & Bottom Section */}
-            <div className="pt-8 border-t border-stone-200 dark:border-stone-800/60 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="pt-8 border-t border-stone-200 dark:border-stone-800/60 flex flex-col md:flex-row items-center justify-between gap-5 md:gap-6">
               <p className="text-sm font-medium text-stone-500 dark:text-stone-400 text-center md:text-left">
                 © {new Date().getFullYear()} Learnflow AI. All rights reserved.
               </p>

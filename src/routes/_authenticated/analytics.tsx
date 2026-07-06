@@ -35,10 +35,10 @@ export const Route = createFileRoute('/_authenticated/analytics')({
 // -- Skeleton Loader --
 function DashboardSkeleton() {
   return (
-    <div className="p-8 max-w-[1400px] mx-auto space-y-8 flex-1 overflow-y-auto no-scrollbar">
+    <div className="responsive-page-pad mobile-safe-bottom max-w-[1400px] mx-auto space-y-5 sm:space-y-6 lg:space-y-8 flex-1 overflow-y-auto no-scrollbar">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 data-tour="analytics-heading" className="text-3xl font-bold text-[var(--lf-text-primary)]">AI Learning Analytics</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h1 data-tour="analytics-heading" className="text-2xl sm:text-3xl font-bold text-[var(--lf-text-primary)]">AI Learning Analytics</h1>
         <div className="h-10 w-32 bg-[var(--lf-card)] border border-[var(--lf-border)] rounded-full animate-pulse"></div>
       </div>
       
@@ -176,16 +176,16 @@ function AnalyticsDashboard() {
 
   return (
     <DashboardLayout headerTitle="Analytics">
-      <div className="p-8 max-w-[1400px] mx-auto space-y-8 flex-1 overflow-y-auto no-scrollbar relative">
+      <div className="responsive-page-pad mobile-safe-bottom max-w-[1400px] mx-auto space-y-5 sm:space-y-6 lg:space-y-8 flex-1 overflow-y-auto no-scrollbar relative">
         
         {/* Orange glow background */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[150px] pointer-events-none translate-x-1/4 -translate-y-1/4" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-500/8 rounded-full blur-[120px] pointer-events-none -translate-x-1/4 translate-y-1/4" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[130px] pointer-events-none" />
       
-      <header className="flex items-center justify-between">
-        <h1 data-tour="analytics-heading" className="text-3xl font-bold text-[var(--lf-text-primary)]">AI Learning Analytics</h1>
-        <div className="flex items-center gap-2 px-4 py-2 bg-[var(--lf-bg-secondary)] border border-[var(--lf-border-primary)] rounded-full text-sm font-medium text-[var(--lf-text-secondary)]">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h1 data-tour="analytics-heading" className="text-2xl sm:text-3xl font-bold text-[var(--lf-text-primary)]">AI Learning Analytics</h1>
+        <div className="flex w-fit items-center gap-2 px-4 py-2 bg-[var(--lf-bg-secondary)] border border-[var(--lf-border-primary)] rounded-full text-sm font-medium text-[var(--lf-text-secondary)]">
           <Activity className="h-4 w-4 text-amber-500" />
           Last 30 Days
         </div>
@@ -196,7 +196,7 @@ function AnalyticsDashboard() {
 
       {/* Overview Metrics */}
       {overview && (
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
           <MetricCard 
             title="Total AI Interactions" 
             value={overview.totalAiInteractions} 
