@@ -1199,16 +1199,16 @@ function HomePage() {
       <div className="absolute top-[30%] left-[20%] w-[300px] h-[300px] bg-orange-500/15 dark:bg-orange-500/10 blur-[100px] rounded-full pointer-events-none" />
 
       {/* Î“Ã¶Ã‡Î“Ã¶Ã‡ HERO SECTION Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡ */}
-      <section id="about-us" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-16 pb-12 -mt-20 flex flex-col lg:flex-row items-center gap-16 lg:gap-24 relative z-10">
+      <section id="about-us" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-24 sm:pt-16 pb-12 -mt-20 flex flex-col xl:flex-row items-center gap-16 xl:gap-24 lg:gap-12 relative z-10">
         {/* Left Copy */}
-        <div className="flex-1 flex flex-col items-start max-w-[500px] shrink-0 scale-[1.05] lg:scale-[1.1] origin-center">
+        <div className="flex-grow md:flex-1 flex flex-col items-start w-full max-w-[500px] xl:shrink-0 xl:scale-[1.1] lg:scale-100 scale-100 origin-center">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-200 dark:border-orange-900/60 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-semibold mb-6">
             <Sparkles className="h-3.5 w-3.5" />
             AI-Powered Learning for Computer Science
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.05] text-stone-900 dark:text-white mb-4 max-w-[420px]">
-            <span className="block whitespace-nowrap">Learn Smarter.</span>
-            <span className="block whitespace-nowrap">
+            <span className="block sm:whitespace-nowrap">Learn Smarter.</span>
+            <span className="block sm:whitespace-nowrap">
               Understand{" "}
               <span className="text-orange-500 dark:text-orange-400">
                 Better.
@@ -1265,7 +1265,7 @@ function HomePage() {
         </div>
 
         {/* Right — Theme-Aware Laptop Mockup Images */}
-        <div className="flex-[2] flex items-center justify-center w-full min-h-[380px] overflow-visible lg:justify-end lg:pl-10 xl:pl-12 -mr-15">
+        <div className="flex-[2] flex items-center justify-center w-full min-h-[200px] sm:min-h-[300px] md:min-h-[380px] overflow-visible xl:justify-end xl:pl-12 lg:pl-10 lg:-mr-0 xl:-mr-16">
           <div className="relative w-full">
             <img
               src="/light_theme_laptop.png"
@@ -1283,9 +1283,9 @@ function HomePage() {
 
       {/* Î“Ã¶Ã‡Î“Ã¶Ã‡ STATS SECTION Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡ */}
       <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-1 -mt-15">
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-stone-200 dark:divide-stone-850 rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/40 overflow-hidden">
+        <div className="grid grid-cols-1 min-[500px]:grid-cols-2 lg:grid-cols-4 gap-4">
           {statsData.map((s) => (
-            <div key={s.label} className="flex items-center gap-4 px-6 py-5">
+            <div key={s.label} className="flex items-center gap-4 px-6 py-5 rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/40">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-950/40">
                 <s.icon className="h-4.5 w-4.5 text-orange-500 dark:text-orange-400" />
               </div>
@@ -1330,7 +1330,7 @@ function HomePage() {
                   className="absolute inset-0 rounded-3xl blur-2xl transition-all duration-500 bg-orange-500/0 opacity-0 group-hover:bg-orange-500/20 group-hover:opacity-100"
                 />
 
-                <div className="relative flex flex-col gap-4 p-8 rounded-3xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-orange-500/50 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-orange-500/10">
+                <div className="relative flex flex-col gap-4 p-6 sm:p-8 rounded-3xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-orange-500/50 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-orange-500/10">
                   {/* Icon container */}
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-950/40">
                     <f.icon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
@@ -1352,7 +1352,7 @@ function HomePage() {
                       onClick={() => handleFeatureToggle(f.id)}
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold shadow-md shadow-orange-500/30 transition-all duration-300"
                     >
-                      Explore {f.title} <ArrowRight className="h-4 w-4" />
+                      Explore<span className="hidden sm:inline">&nbsp;{f.title}</span> <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -1365,7 +1365,7 @@ function HomePage() {
                 className="flex flex-col justify-center gap-5"
               >
                 {/* Left accent line */}
-                <div className="relative pl-8">
+                <div className="relative pl-6 sm:pl-8">
                   <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-orange-500 rounded-full" />
 
                   <div className="space-y-6">
@@ -1419,6 +1419,9 @@ function HomePage() {
               </div>
             );
 
+            const cardEl = <div className="order-1 lg:order-none w-full">{card}</div>;
+            const descEl = <div className="order-2 lg:order-none w-full">{description}</div>;
+
             return (
               <div
                 key={f.title}
@@ -1426,13 +1429,13 @@ function HomePage() {
               >
                 {isLeft ? (
                   <>
-                    {card}
-                    {description}
+                    {cardEl}
+                    {descEl}
                   </>
                 ) : (
                   <>
-                    {description}
-                    {card}
+                    {descEl}
+                    {cardEl}
                   </>
                 )}
               </div>

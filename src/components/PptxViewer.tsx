@@ -81,18 +81,18 @@ export function PptxViewer({ fileUrl, zoom = 1, onLoadSuccess }: PptxViewerProps
             <div
               key={index + 1}
               data-page-number={index + 1}
-              className="w-full max-w-4xl aspect-video bg-white shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden p-8"
+              className="w-full max-w-4xl aspect-video bg-white shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden p-4 sm:p-8"
             >
               {slideTexts.length > 0 ? (
                 <div className="space-y-4">
                   {slideTexts.map((text, textIndex) => (
-                    <p key={`${index + 1}-${textIndex}`} className="text-stone-900 text-lg leading-relaxed">
+                    <p key={`${index + 1}-${textIndex}`} className="text-stone-900 text-xs sm:text-base md:text-lg leading-relaxed">
                       {text}
                     </p>
                   ))}
                 </div>
               ) : (
-                <p className="text-stone-500 text-sm italic">This slide has no extractable text content.</p>
+                <p className="text-stone-500 text-xs sm:text-sm italic">This slide has no extractable text content.</p>
               )}
             </div>
           ))}

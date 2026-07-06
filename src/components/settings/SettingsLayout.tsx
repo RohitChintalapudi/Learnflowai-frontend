@@ -52,7 +52,7 @@ export function SettingsLayout() {
       <div className="flex-grow flex flex-col h-full bg-[#fafafa] dark:bg-[#090909] overflow-hidden">
 
         {/* Horizontal Navigation as Bubble/Pill list */}
-        <div className="flex-none px-8 py-3 bg-transparent z-10">
+        <div className="flex-none px-4 sm:px-6 lg:px-8 py-3 bg-transparent z-10">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
             {tabs.map((tab) => {
               const active = activeTab === tab.id;
@@ -81,7 +81,7 @@ export function SettingsLayout() {
         </div>
 
         {/* Content Layout */}
-        <div className="flex-1 overflow-y-auto p-8 relative no-scrollbar">
+        <div className="flex-1 overflow-y-auto responsive-page-pad mobile-safe-bottom relative no-scrollbar">
           <div className="max-w-6xl mx-auto h-full pb-16">
             <motion.div
               key={activeTab}

@@ -14,22 +14,24 @@ export function HistoryDrawer({ isOpen, item, onClose, onRegenerate }: HistoryDr
   if (!item) return null;
 
   const copyToClipboard = () => {
-    let textToCopy = "";
-    if (item.activityType === "Explanation") {
-      textToCopy = item.explanationText || "";
-    } else if (item.activityType === "GeneratedNote") {
-      const summary = item.notes?.summary || "";
-      const kp = (item.notes?.keyPoints || []).join("\n- ");
-      textToCopy = `AI Notes: ${item.title}\n\nSummary:\n${summary}\n\nKey Points:\n- ${kp}`;
-    } else if (item.activityType === "GeneratedAnalogy") {
-      textToCopy = `Title: ${item.title}\nStyle: ${item.style}\n\nAnalogy:\n${item.analogyData?.analogy || ""}\n\nExplanation:\n${item.analogyData?.explanation || ""}`;
-    } else if (item.activityType === "GeneratedSimulation") {
-      const stepsText = (item.simulationData?.steps || []).map((s: any) => `Step ${s.stepNumber}: ${s.title}\n${s.description}`).join("\n\n");
-      textToCopy = `Simulation Overview:\n${item.simulationData?.overview || ""}\n\nSteps:\n${stepsText}`;
-    } else {
-      textToCopy = JSON.stringify(item, null, 2);
-    }
+    const getTextToCopy = () => {
+      if (item.activityType === "Explanation") {
+        return item.explanationText || "";
+      } else if (item.activityType === "GeneratedNote") {
+        const summary = item.notes?.summary || "";
+        const kp = (item.notes?.keyPoints || []).join("\n- ");
+        return `AI Notes: ${item.title}\n\nSummary:\n${summary}\n\nKey Points:\n- ${kp}`;
+      } else if (item.activityType === "GeneratedAnalogy") {
+        return `Title: ${item.title}\nStyle: ${item.style}\n\nAnalogy:\n${item.analogyData?.analogy || ""}\n\nExplanation:\n${item.analogyData?.explanation || ""}`;
+      } else if (item.activityType === "GeneratedSimulation") {
+        const stepsText = (item.simulationData?.steps || []).map((s: any) => `Step ${s.stepNumber}: ${s.title}\n${s.description}`).join("\n\n");
+        return `Simulation Overview:\n${item.simulationData?.overview || ""}\n\nSteps:\n${stepsText}`;
+      } else {
+        return JSON.stringify(item, null, 2);
+      }
+    };
 
+    const textToCopy = getTextToCopy();
     navigator.clipboard.writeText(textToCopy);
     toast.success("Content copied to clipboard!");
   };
@@ -89,7 +91,7 @@ export function HistoryDrawer({ isOpen, item, onClose, onRegenerate }: HistoryDr
           </div>
         );
 
-      case "GeneratedNote":
+      case "GeneratedNote": {
         const notesObj = item.notes || {};
         return (
           <div className="space-y-6">
@@ -122,9 +124,10 @@ export function HistoryDrawer({ isOpen, item, onClose, onRegenerate }: HistoryDr
             )}
           </div>
         );
+      }
 
       case "QuizSet":
-      case "GeneratedQuiz":
+      case "GeneratedQuiz": {
         const quizObj = item.quizJson || item.quizData || {};
         const mcqs = quizObj.mcqs || [];
         return (
@@ -169,8 +172,9 @@ export function HistoryDrawer({ isOpen, item, onClose, onRegenerate }: HistoryDr
             </div>
           </div>
         );
+      }
 
-      case "InterviewQuestionSet":
+      case "InterviewQuestionSet": {
         const qJson = item.questionsJson || {};
         const categories = [
           { name: "Basic", list: qJson.basic || [] },
@@ -205,6 +209,7 @@ export function HistoryDrawer({ isOpen, item, onClose, onRegenerate }: HistoryDr
             ))}
           </div>
         );
+      }
 
       case "GeneratedMindMap":
         return (
@@ -247,7 +252,7 @@ export function HistoryDrawer({ isOpen, item, onClose, onRegenerate }: HistoryDr
           </div>
         );
 
-      case "GeneratedSimulation":
+      case "GeneratedSimulation": {
         const sim = item.simulationData || {};
         return (
           <div className="space-y-6">
@@ -299,6 +304,7 @@ export function HistoryDrawer({ isOpen, item, onClose, onRegenerate }: HistoryDr
             </div>
           </div>
         );
+      }
 
       default:
         return (

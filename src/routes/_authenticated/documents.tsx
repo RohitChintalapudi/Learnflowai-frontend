@@ -198,12 +198,12 @@ function DocumentsPage() {
         )}
       </AnimatePresence>
 
-      <div className="flex-1 overflow-y-auto p-8 relative no-scrollbar">
-        <div className="max-w-[1200px] mx-auto space-y-8 pb-12">
+      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 lg:p-8 pb-24 lg:pb-8 relative no-scrollbar">
+        <div className="max-w-[1200px] mx-auto space-y-5 sm:space-y-6 lg:space-y-8 pb-12">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <h1 data-tour="documents-heading" className="text-3xl font-extrabold tracking-tight text-[var(--lf-text-primary)] mb-2">
+              <h1 data-tour="documents-heading" className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--lf-text-primary)] mb-2">
                 Documents
               </h1>
               <p className="text-[15px] text-[var(--lf-text-secondary)]">
@@ -217,7 +217,7 @@ function DocumentsPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`relative rounded-3xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center p-12 overflow-hidden cursor-pointer ${
+            className={`relative rounded-2xl sm:rounded-3xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center p-6 sm:p-8 lg:p-12 overflow-hidden cursor-pointer text-center ${
               isDragging
                 ? "border-orange-500 bg-orange-500/5 scale-[1.02] shadow-xl shadow-orange-500/10"
                 : "border-[var(--lf-border)] bg-[var(--lf-card)] hover:border-orange-500/30 hover:bg-[var(--lf-surface)] card-shadow"
@@ -268,10 +268,10 @@ function DocumentsPage() {
                   <div className="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <UploadCloud className="h-8 w-8 text-orange-500" />
                   </div>
-                  <h3 className="text-lg font-bold text-[var(--lf-text-primary)] mb-2">
+                  <h3 className="text-base sm:text-lg font-bold text-[var(--lf-text-primary)] mb-2">
                     Drop your study materials here
                   </h3>
-                  <p className="text-[13px] text-[var(--lf-text-secondary)] mb-6">
+                  <p className="text-[12.5px] sm:text-[13px] text-[var(--lf-text-secondary)] mb-6">
                     Supported files: PDF, PPT, PPTX, DOC, DOCX (Max 20MB)
                   </p>
                   <button
@@ -310,7 +310,7 @@ function DocumentsPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6"
             >
               <AnimatePresence>
                 {documents.map((doc) => (
@@ -320,7 +320,7 @@ function DocumentsPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     key={doc.id}
-                    className="group rounded-3xl bg-[var(--lf-card)] border border-[var(--lf-border)] hover:border-orange-500/40 card-shadow card-shadow-hover transition-all flex flex-col overflow-hidden relative"
+                    className="group rounded-2xl sm:rounded-3xl bg-[var(--lf-card)] border border-[var(--lf-border)] hover:border-orange-500/40 card-shadow card-shadow-hover transition-all flex flex-col overflow-hidden relative"
                   >
                     <div className="absolute top-0 right-0 w-40 h-40 bg-orange-500/10 blur-[60px] rounded-full pointer-events-none" />
                     <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-orange-400/8 blur-[50px] rounded-full pointer-events-none" />
