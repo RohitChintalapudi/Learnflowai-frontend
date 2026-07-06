@@ -49,7 +49,7 @@ function DashboardHomePage() {
   return (
     <DashboardLayout headerTitle={
       <>
-        Welcome back, {summary?.user?.name || ""} {" "}
+        Welcome back, {summary?.user?.name ? summary.user.name.split(" ")[0] : ""} {" "}
         <span className="inline-block hover:animate-bounce cursor-pointer origin-bottom-right">
           👋
         </span>

@@ -322,6 +322,26 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
         {/* Profile Card */}
         <div data-tour="profile-card" className={`p-4 border-t border-[var(--lf-border)] transition-all ${isCollapsed && !isMobileSidebarOpen ? "px-2" : ""}`}>
+          {/* Mobile Tour and Logout actions inside drawer */}
+          {isMobileSidebarOpen && (
+            <div className="flex flex-col gap-1 mb-4 lg:hidden">
+              <button
+                onClick={startTour}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium text-[var(--lf-text-secondary)] hover:bg-[var(--lf-surface)] hover:text-[var(--lf-text-primary)] transition-all active:scale-[0.97]"
+              >
+                <PlayCircle className="h-[18px] w-[18px] text-[var(--lf-text-secondary)]" />
+                <span>Product Tour</span>
+              </button>
+              
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium text-rose-500 hover:bg-rose-500/10 transition-all active:scale-[0.97]"
+              >
+                <LogOut className="h-[18px] w-[18px]" />
+                <span>Logout</span>
+              </button>
+            </div>
+          )}
           {isCollapsed && !isMobileSidebarOpen ? (
             <button 
               onClick={() => setIsProfileModalOpen(true)}
@@ -373,50 +393,58 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
               {/* Hamburger menu button for mobile/tablet */}
               <button
                 onClick={() => setIsMobileSidebarOpen(true)}
-                className="p-2 -ml-2 rounded-lg hover:bg-[var(--lf-surface)] text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)] lg:hidden shrink-0"
+                className="p-1.5 -ml-1 rounded-lg hover:bg-[var(--lf-surface)] text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)] lg:hidden shrink-0"
                 title="Open menu"
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
               </button>
 
               <div className="flex items-center gap-2 min-w-0">
                 {headerTitle === undefined ? (
-                  <h2 className="text-sm sm:text-lg font-bold truncate">
-                    Welcome back, {displayName}
+                  <h2 className="text-[13px] sm:text-sm md:text-lg font-bold truncate">
+                    <span className="inline sm:hidden">Welcome, {displayName ? displayName.split(" ")[0] : ""}</span>
+                    <span className="hidden sm:inline">Welcome back, {displayName ? displayName.split(" ")[0] : ""}</span>
                   </h2>
                 ) : typeof headerTitle === "string" ? (
-                  <h2 className="text-sm sm:text-lg font-bold truncate">
-                    {headerTitle}
+                  <h2 className="text-[13px] sm:text-sm md:text-lg font-bold truncate">
+                    {headerTitle === "Welcome back" ? (
+                      <>
+                        <span className="inline sm:hidden">Welcome</span>
+                        <span className="hidden sm:inline">Welcome back</span>
+                      </>
+                    ) : (
+                      headerTitle
+                    )}
                   </h2>
                 ) : (
-                  <div className="text-sm sm:text-lg font-bold truncate flex items-center">
+                  <div className="text-[13px] sm:text-sm md:text-lg font-bold truncate flex items-center">
                     {headerTitle}
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-5">
+            <div className="flex items-center gap-1.5 sm:gap-3 md:gap-5">
               <button
                 onClick={toggleTheme}
-                className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
+                className="relative p-1.5 sm:p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
               >
                 {theme === "light" ? (
-                  <Moon className="h-5 w-5" />
+                  <Moon className="h-4 w-4 sm:h-5 sm:w-5" />
                 ) : (
-                  <Sun className="h-5 w-5" />
+                  <Sun className="h-4 w-4 sm:h-5 sm:w-5" />
                 )}
               </button>
 
               <div className="relative" ref={alertsDropdownRef}>
                 <button
                   onClick={() => setIsAlertsOpen(!isAlertsOpen)}
-                  className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
+                  className="relative p-1.5 sm:p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
                   title="Notifications"
                 >
-                  <Bell className="h-5 w-5" />
+                  <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-[9px] font-bold text-white flex items-center justify-center border border-[var(--lf-bg)] shadow-[0_0_8px_rgba(244,63,94,0.3)]">
+                    <span className="absolute top-1 right-1 h-3.5 min-w-[14px] px-0.5 rounded-full bg-rose-500 text-[8px] font-bold text-white flex items-center justify-center border border-[var(--lf-bg)] shadow-[0_0_8px_rgba(244,63,94,0.3)]">
                       {unreadCount}
                     </span>
                   )}
@@ -518,7 +546,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
               <button 
                 onClick={() => setIsProfileModalOpen(true)}
-                className="h-8 w-8 rounded-full border border-[var(--lf-border)] overflow-hidden cursor-pointer hover:ring-2 ring-orange-500/50 transition-all shrink-0 flex items-center justify-center bg-stone-100 dark:bg-stone-900"
+                className="h-7 w-7 sm:h-8 sm:w-8 rounded-full border border-[var(--lf-border)] overflow-hidden cursor-pointer hover:ring-2 ring-orange-500/50 transition-all shrink-0 flex items-center justify-center bg-stone-100 dark:bg-stone-900"
               >
                 <img
                   src={displayImage}
@@ -529,18 +557,18 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
 
               <button
                 onClick={startTour}
-                className="relative p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-orange-500 group shrink-0"
+                className="hidden lg:block relative p-1.5 sm:p-2 rounded-full hover:bg-[var(--lf-surface)] transition-colors text-[var(--lf-text-secondary)] hover:text-orange-500 group shrink-0"
                 title="Replay Product Tour"
               >
-                <PlayCircle className="h-5 w-5" />
+                <PlayCircle className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
 
               <button
                 onClick={handleLogout}
-                className="p-2 sm:px-4 sm:py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-[12px] sm:text-[13px] font-semibold transition-colors shadow-lg shadow-red-500/20 shrink-0 flex items-center justify-center gap-1.5"
+                className="hidden lg:flex p-1.5 sm:px-4 sm:py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-[12px] sm:text-[13px] font-semibold transition-colors shadow-lg shadow-red-500/20 shrink-0 items-center justify-center gap-1.5"
                 title="Logout"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
