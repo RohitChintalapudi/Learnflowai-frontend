@@ -252,6 +252,7 @@ function WorkspacePage() {
 
   const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const resizeTimeoutRef = useRef<number | null>(null);
 
   const combinedRef = useCallback((node: HTMLDivElement | null) => {
     // Sync React Flow / Scroll Navigation hook ref
@@ -264,15 +265,29 @@ function WorkspacePage() {
       resizeObserverRef.current.disconnect();
       resizeObserverRef.current = null;
     }
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+      resizeTimeoutRef.current = null;
+    }
 
     // Attach resize observer to keep canvas scaled dynamically
     if (node) {
       const handleResize = () => {
         const padding = window.innerWidth < 640 ? 16 : 40;
-        setContainerWidth(node.clientWidth - padding);
+        
+        // Debounce state updates to prevent constant re-renders during sidebar transitions
+        if (resizeTimeoutRef.current) {
+          clearTimeout(resizeTimeoutRef.current);
+        }
+        
+        resizeTimeoutRef.current = window.setTimeout(() => {
+          setContainerWidth(node.clientWidth - padding);
+        }, 150);
       };
 
-      handleResize();
+      // Set initial width instantly
+      const padding = window.innerWidth < 640 ? 16 : 40;
+      setContainerWidth(node.clientWidth - padding);
 
       const observer = new ResizeObserver(handleResize);
       observer.observe(node);
@@ -285,6 +300,9 @@ function WorkspacePage() {
     return () => {
       if (resizeObserverRef.current) {
         resizeObserverRef.current.disconnect();
+      }
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
       }
     };
   }, []);
@@ -612,7 +630,7 @@ function WorkspacePage() {
           {/* Document Viewer (PDF or DocViewer) */}
           <div
             ref={combinedRef}
-            className="flex-1 relative bg-stone-100 dark:bg-stone-900 overflow-y-auto overflow-x-hidden flex flex-col items-center py-8"
+            className="flex-1 relative bg-stone-100 dark:bg-stone-900 overflow-y-auto overflow-x-auto no-scrollbar flex flex-col items-center py-8"
           >
             {!documentMetadata && !isMetadataError ? (
               <div className="flex items-center justify-center h-full text-stone-500">
@@ -652,14 +670,24 @@ function WorkspacePage() {
                   }
                 >
                   {Array.from({ length: totalPages }, (_, index) => (
-                    <div key={`page_${index + 1}`} data-page-number={index + 1}>
+                    <div 
+                      key={`page_${index + 1}`} 
+                      data-page-number={index + 1}
+                      style={{
+                        width: containerWidth ? `${containerWidth * zoom}px` : "auto",
+                        maxWidth: "none",
+                        transition: "width 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)",
+                        "--pdf-scale-factor": zoom / 1.2,
+                      } as React.CSSProperties}
+                    >
                       <Page
                         pageNumber={index + 1}
                         className="mb-8 shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden bg-white"
-                        scale={zoom}
+                        scale={1.2}
                         width={containerWidth}
                         renderTextLayer={true}
                         renderAnnotationLayer={true}
+                        loading={null}
                       />
                     </div>
                   ))}
@@ -670,18 +698,18 @@ function WorkspacePage() {
                 </div>
               )
             ) : ["docx", "doc"].includes(documentMetadata?.fileType || "") ? (
-              <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
+              <div className="w-full h-full flex flex-col p-0 bg-stone-100 dark:bg-stone-900 overflow-auto no-scrollbar">
                 <DocxViewer 
                   fileUrl={safeDocxUrl || ""} 
-                  zoom={zoom} 
+                  zoom={zoom * 1.35} 
                   onLoadSuccess={handleDocxLoadSuccess} 
                 />
               </div>
             ) : ["ppt", "pptx"].includes(documentMetadata?.fileType || "") ? (
-              <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
+              <div className="w-full h-full flex flex-col p-0 bg-stone-100 dark:bg-stone-900 overflow-auto no-scrollbar">
                 <PptxViewer
                   fileUrl={safeFileDownloadUrl || ""}
-                  zoom={zoom}
+                  zoom={zoom * 1.35}
                   onLoadSuccess={handleDocxLoadSuccess}
                 />
               </div>
@@ -724,6 +752,15 @@ function WorkspacePage() {
               exit={{ width: 0, opacity: 0 }}
               className="bg-[var(--lf-bg)] flex flex-col relative z-10 overflow-hidden shrink-0 border-l border-[var(--lf-border)]"
             >
+              {/* Glowing Divider Line with Fading Edges */}
+              <div 
+                className="absolute left-0 top-0 bottom-0 w-[2px] z-50 pointer-events-none"
+                style={{
+                  background: "linear-gradient(to bottom, transparent, #f97316 15%, #f97316 85%, transparent)",
+                  boxShadow: "0 0 8px rgba(249, 115, 22, 0.4)",
+                  transform: "translateX(-1px)",
+                }}
+              />
               <div className="h-12 border-b border-[var(--lf-border)] flex items-center justify-between px-6 shrink-0 bg-[var(--lf-surface)]/50 backdrop-blur-md min-w-[300px]">
                 <div className="flex items-center gap-2 text-[var(--lf-text-primary)] font-bold text-[13px]">
                   <Brain className="h-4 w-4 text-[var(--lf-accent)]" />
