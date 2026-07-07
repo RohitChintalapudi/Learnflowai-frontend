@@ -204,29 +204,26 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
     setShowLogoutConfirm(false);
     setIsLoggingOut(true);
 
+    // Set flag to prevent background session auto-login race condition
+    localStorage.setItem("lf_just_logged_out", "true");
+
+    // Clear local state instantly
+    queryClient.clear();
+    authStore.setAuthenticated(false);
+    localStorage.removeItem("lf_user_name");
+    localStorage.removeItem("lf_user_image");
+
+    // Redirect to login instantly
+    navigate({ to: "/login" });
+    toast.success("You have been logged out.");
+
     try {
       await authClient.signOut();
-
-      // Clear cached queries
-      queryClient.clear();
-
-      // Update auth state
-      authStore.setAuthenticated(false);
-      localStorage.removeItem("lf_user_name");
-      localStorage.removeItem("lf_user_image");
-
-      toast.success("You have been logged out.");
-      navigate({ to: "/login" });
     } catch (err) {
-      console.error("Logout failed:", err);
-
-      // Ensure local state is cleared even if request fails
-      queryClient.clear();
-      authStore.setAuthenticated(false);
-      localStorage.removeItem("lf_user_name");
-      localStorage.removeItem("lf_user_image");
-
-      navigate({ to: "/login" });
+      console.error("Logout backend request failed:", err);
+    } finally {
+      setIsLoggingOut(false);
+      localStorage.removeItem("lf_just_logged_out");
     }
   };
   return (

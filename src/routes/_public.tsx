@@ -5,6 +5,7 @@ import {
   Link,
   useLocation,
   redirect,
+  useNavigate,
 } from "@tanstack/react-router";
 import {
   Sun,
@@ -16,20 +17,8 @@ import { authStore } from "../store/authStore";
 import { authClient } from "../lib/auth-client";
 
 export const Route = createFileRoute("/_public")({
-  beforeLoad: async () => {
-    let isAuthenticated = authStore.isAuthenticated;
-    if (!isAuthenticated) {
-      try {
-        const { data: session } = await authClient.getSession();
-        if (session) {
-          authStore.setAuthenticated(true);
-          isAuthenticated = true;
-        }
-      } catch (e) {
-        console.error("Failed to check active session:", e);
-      }
-    }
-    if (isAuthenticated) {
+  beforeLoad: () => {
+    if (authStore.isAuthenticated) {
       throw redirect({ to: "/dashboard" });
     }
   },
@@ -37,15 +26,33 @@ export const Route = createFileRoute("/_public")({
 });
 
 function PublicLayout() {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(() => {
     if (typeof window !== "undefined") {
+      // Only show splash on root path and if they haven't seen it yet
       if (window.location.pathname === "/") {
-        return true;
+        return !sessionStorage.getItem("hasSeenSplash");
       }
-      return !sessionStorage.getItem("hasSeenSplash");
+      return false;
     }
-    return true;
+    return false;
   });
+
+  // Check session in the background asynchronously
+  useEffect(() => {
+    if (!authStore.isAuthenticated && localStorage.getItem("lf_just_logged_out") !== "true") {
+      authClient.getSession()
+        .then(({ data: session }) => {
+          if (session) {
+            authStore.setAuthenticated(true);
+            navigate({ to: "/dashboard" });
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to check background active session:", err);
+        });
+    }
+  }, [navigate]);
 
   const handleVideoEnd = () => {
     if (isLoading) {
@@ -336,7 +343,7 @@ function AnimatedPage({ children }: { children: React.ReactNode }) {
     const t = setTimeout(() => {
       document.body.style.overflow = prev;
       document.documentElement.style.overflow = "";
-    }, 480); // slightly longer than the 450ms animation
+    }, 220); // slightly longer than the 200ms animation
 
     return () => {
       clearTimeout(t);

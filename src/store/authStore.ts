@@ -1,14 +1,10 @@
+let _isAuthenticated = false;
+
 export const authStore = {
   get isAuthenticated() {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem("isAuthenticated") === "true";
+    return _isAuthenticated;
   },
   setAuthenticated(value: boolean) {
-    if (typeof window === "undefined") return;
-    if (value) {
-      localStorage.setItem("isAuthenticated", "true");
-    } else {
-      localStorage.removeItem("isAuthenticated");
-    }
+    _isAuthenticated = value;
   }
 };

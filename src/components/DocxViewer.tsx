@@ -83,7 +83,7 @@ export function DocxViewer({ fileUrl, zoom = 1, onLoadSuccess }: DocxViewerProps
   }, [fileUrl]);
 
   return (
-    <div className="w-full h-full relative rounded-xl flex flex-col items-center py-8">
+    <div className="w-full min-h-[500px] relative rounded-xl flex flex-col items-stretch py-0">
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <div className="animate-pulse text-stone-500 font-medium p-12">Loading DOCX...</div>
@@ -97,7 +97,7 @@ export function DocxViewer({ fileUrl, zoom = 1, onLoadSuccess }: DocxViewerProps
       )}
       <div
         ref={containerRef}
-        className="w-full docx-wrapper-container flex flex-col items-center transition-transform"
+        className="w-full docx-wrapper-container flex flex-col items-stretch transition-transform"
         style={{ zoom }}
       />
     </div>
