@@ -252,6 +252,7 @@ function WorkspacePage() {
 
   const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const resizeTimeoutRef = useRef<number | null>(null);
 
   const combinedRef = useCallback((node: HTMLDivElement | null) => {
     // Sync React Flow / Scroll Navigation hook ref
@@ -264,15 +265,29 @@ function WorkspacePage() {
       resizeObserverRef.current.disconnect();
       resizeObserverRef.current = null;
     }
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+      resizeTimeoutRef.current = null;
+    }
 
     // Attach resize observer to keep canvas scaled dynamically
     if (node) {
       const handleResize = () => {
         const padding = window.innerWidth < 640 ? 16 : 40;
-        setContainerWidth(node.clientWidth - padding);
+        
+        // Debounce state updates to prevent constant re-renders during sidebar transitions
+        if (resizeTimeoutRef.current) {
+          clearTimeout(resizeTimeoutRef.current);
+        }
+        
+        resizeTimeoutRef.current = window.setTimeout(() => {
+          setContainerWidth(node.clientWidth - padding);
+        }, 150);
       };
 
-      handleResize();
+      // Set initial width instantly
+      const padding = window.innerWidth < 640 ? 16 : 40;
+      setContainerWidth(node.clientWidth - padding);
 
       const observer = new ResizeObserver(handleResize);
       observer.observe(node);
@@ -285,6 +300,9 @@ function WorkspacePage() {
     return () => {
       if (resizeObserverRef.current) {
         resizeObserverRef.current.disconnect();
+      }
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
       }
     };
   }, []);
@@ -317,6 +335,36 @@ function WorkspacePage() {
       setIsMenuOpen(false);
     }
   };
+
+  // Listen to selectionchange on mobile/tablet to support native touch selection
+  useEffect(() => {
+    if (!isMobileOrTablet) return;
+
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      if (selection && selection.toString().trim().length > 0) {
+        const container = scrollContainerRef?.current;
+        if (container && selection.anchorNode && container.contains(selection.anchorNode)) {
+          const range = selection.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          
+          setMenuPos({
+            x: rect.left + rect.width / 2,
+            y: rect.top - 10,
+          });
+          setHighlightedText(selection.toString());
+          setIsMenuOpen(true);
+          return;
+        }
+      }
+      setIsMenuOpen(false);
+    };
+
+    document.addEventListener("selectionchange", handleSelectionChange);
+    return () => {
+      document.removeEventListener("selectionchange", handleSelectionChange);
+    };
+  }, [isMobileOrTablet, scrollContainerRef]);
 
   const [explanationContent, setExplanationContent] = useState<string>("");
   const [analogyContent, setAnalogyContent] = useState<any | null>(null);
@@ -497,7 +545,7 @@ function WorkspacePage() {
         </div>
       }
     >
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden relative select-none">
         {/* Floating Contextual Menu */}
         <AnimatePresence>
           {isMenuOpen && (
@@ -505,14 +553,31 @@ function WorkspacePage() {
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              style={{
-                position: 'fixed',
-                left: menuPos.x,
-                top: menuPos.y,
-                transform: 'translate(-50%, -100%)',
-                zIndex: 100,
-              }}
-              className="bg-white/90 dark:bg-black/90 backdrop-blur-xl border border-orange-500/30 shadow-2xl shadow-orange-500/20 rounded-2xl p-2 flex items-center gap-1.5"
+              style={(() => {
+                if (isMobileOrTablet) {
+                  const menuWidth = 170; // estimated width of mobile vertical menu
+                  const leftPos = Math.max(16, Math.min(window.innerWidth - 16 - menuWidth, menuPos.x - menuWidth / 2));
+                  return {
+                    position: 'fixed',
+                    left: `${leftPos}px`,
+                    top: `${menuPos.y}px`,
+                    transform: 'translate(0, -100%)',
+                    zIndex: 100,
+                  };
+                }
+                return {
+                  position: 'fixed',
+                  left: menuPos.x,
+                  top: menuPos.y,
+                  transform: 'translate(-50%, -100%)',
+                  zIndex: 100,
+                };
+              })()}
+              className={
+                isMobileOrTablet
+                  ? "bg-white/95 dark:bg-black/95 backdrop-blur-xl border border-orange-500/30 shadow-2xl shadow-orange-500/20 rounded-2xl p-1.5 flex flex-col items-stretch gap-0.5 min-w-[170px]"
+                  : "bg-white/95 dark:bg-black/95 backdrop-blur-xl border border-orange-500/30 shadow-2xl shadow-orange-500/20 rounded-2xl p-2 flex items-center gap-1.5"
+              }
             >
               {/* Outer glow ring */}
               <div className="absolute inset-0 rounded-2xl bg-orange-500/5 blur-xl -z-10" />
@@ -520,40 +585,64 @@ function WorkspacePage() {
               <div className="absolute -top-px left-4 right-4 h-px bg-gradient-to-r from-transparent via-orange-500/50 to-transparent" />
               
               {/* Bottom arrow */}
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-white/90 dark:bg-black/90 border-r border-b border-orange-500/20" />
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-white/95 dark:bg-black/95 border-r border-b border-orange-500/20" />
               
               {features.map((feature) => (
                 <button
                   key={feature.id}
                   data-tour={`ai-${feature.id === "analogy" ? "analogies" : feature.id === "simulation" ? "simulations" : feature.id}`}
                   onClick={() => handleFeatureClick(feature.id)}
-                  className="flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all duration-300 group min-w-[70px] relative overflow-hidden hover:bg-orange-500/10 hover:shadow-[0_0_20px_rgba(255,122,24,0.25)] active:scale-90"
+                  className={
+                    isMobileOrTablet
+                      ? "flex flex-row items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 group relative overflow-hidden hover:bg-orange-500/10 active:scale-95 text-left w-full"
+                      : "flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all duration-300 group min-w-[70px] relative overflow-hidden hover:bg-orange-500/10 hover:shadow-[0_0_20px_rgba(255,122,24,0.25)] active:scale-90"
+                  }
                 >
                   {/* Hover glow background */}
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-b from-orange-500/0 to-orange-500/0 group-hover:from-orange-500/5 group-hover:to-orange-500/0 transition-all duration-300" />
                   
-                  <feature.icon className="h-[18px] w-[18px] text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-all duration-300 group-hover:scale-110" />
-                  <span className="text-[10px] font-bold text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-colors duration-300 whitespace-nowrap">
+                  <feature.icon className="h-[18px] w-[18px] text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-all duration-300 group-hover:scale-110 shrink-0" />
+                  <span className={
+                    isMobileOrTablet
+                      ? "text-[12px] font-semibold text-[var(--lf-text-primary)] group-hover:text-[var(--lf-accent)] transition-colors duration-300 whitespace-nowrap"
+                      : "text-[10px] font-bold text-[var(--lf-text-secondary)] group-hover:text-[var(--lf-accent)] transition-colors duration-300 whitespace-nowrap"
+                  }>
                     {feature.label}
                   </span>
                 </button>
               ))}
-              <div className="w-px h-8 bg-gradient-to-b from-transparent via-orange-500/20 to-transparent mx-1" />
-              <button 
-                onClick={() => setIsMenuOpen(false)}
-                className="p-2 text-[var(--lf-text-secondary)] hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all duration-200 active:scale-90"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              
+              {isMobileOrTablet ? (
+                <>
+                  <div className="h-px bg-gradient-to-r from-transparent via-orange-500/20 to-transparent my-1 shrink-0" />
+                  <button 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex flex-row items-center gap-3 px-3 py-2 text-[var(--lf-text-secondary)] hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all duration-200 active:scale-95 shrink-0 text-left font-semibold text-[12px]"
+                  >
+                    <X className="h-[18px] w-[18px] shrink-0" />
+                    <span>Close Menu</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="w-px h-8 bg-gradient-to-b from-transparent via-orange-500/20 to-transparent mx-1 shrink-0" />
+                  <button 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="p-2 text-[var(--lf-text-secondary)] hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all duration-200 active:scale-90 shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* LEFT SECTION: Document Viewer */}
         <motion.div 
-          layout
           initial={false}
-          animate={{ width: activeFeature ? (isMobileOrTablet ? "0%" : "55%") : "100%" }}
+          animate={{ width: activeFeature ? (isMobileOrTablet ? "100%" : "55%") : "100%" }}
+          transition={{ type: "tween", ease: "easeInOut", duration: 0.25 }}
           className="border-r border-[var(--lf-border)] flex flex-col bg-[#F3F4F6] dark:bg-[#0c0a09] relative z-10 shrink-0" 
           onMouseUp={handleTextSelect}
         >
@@ -612,7 +701,7 @@ function WorkspacePage() {
           {/* Document Viewer (PDF or DocViewer) */}
           <div
             ref={combinedRef}
-            className="flex-1 relative bg-stone-100 dark:bg-stone-900 overflow-y-auto overflow-x-hidden flex flex-col items-center py-8"
+            className="flex-1 relative bg-stone-100 dark:bg-stone-900 overflow-y-auto overflow-x-auto no-scrollbar flex flex-col items-center py-8 select-text"
           >
             {!documentMetadata && !isMetadataError ? (
               <div className="flex items-center justify-center h-full text-stone-500">
@@ -652,14 +741,24 @@ function WorkspacePage() {
                   }
                 >
                   {Array.from({ length: totalPages }, (_, index) => (
-                    <div key={`page_${index + 1}`} data-page-number={index + 1}>
+                    <div 
+                      key={`page_${index + 1}`} 
+                      data-page-number={index + 1}
+                      style={{
+                        width: containerWidth ? `${containerWidth * zoom}px` : "auto",
+                        maxWidth: "none",
+                        transition: "width 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)",
+                        "--pdf-scale-factor": zoom / 1.2,
+                      } as React.CSSProperties}
+                    >
                       <Page
                         pageNumber={index + 1}
                         className="mb-8 shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden bg-white"
-                        scale={zoom}
+                        scale={1.2}
                         width={containerWidth}
                         renderTextLayer={true}
                         renderAnnotationLayer={true}
+                        loading={null}
                       />
                     </div>
                   ))}
@@ -670,18 +769,18 @@ function WorkspacePage() {
                 </div>
               )
             ) : ["docx", "doc"].includes(documentMetadata?.fileType || "") ? (
-              <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
+              <div className="w-full h-full flex flex-col p-0 bg-stone-100 dark:bg-stone-900 overflow-auto no-scrollbar items-center py-8">
                 <DocxViewer 
                   fileUrl={safeDocxUrl || ""} 
-                  zoom={zoom} 
+                  zoom={containerWidth ? Math.min(1.35, (containerWidth - 32) / 816) * zoom : zoom * 1.35} 
                   onLoadSuccess={handleDocxLoadSuccess} 
                 />
               </div>
             ) : ["ppt", "pptx"].includes(documentMetadata?.fileType || "") ? (
-              <div className="w-full h-full flex flex-col p-4 bg-stone-100 dark:bg-stone-900">
+              <div className="w-full h-full flex flex-col p-0 bg-stone-100 dark:bg-stone-900 overflow-auto no-scrollbar">
                 <PptxViewer
                   fileUrl={safeFileDownloadUrl || ""}
-                  zoom={zoom}
+                  zoom={zoom * 1.35}
                   onLoadSuccess={handleDocxLoadSuccess}
                 />
               </div>
@@ -718,12 +817,25 @@ function WorkspacePage() {
         <AnimatePresence initial={false}>
           {activeFeature && (
             <motion.div 
-              layout
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: isMobileOrTablet ? "100%" : "45%", opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              className="bg-[var(--lf-bg)] flex flex-col relative z-10 overflow-hidden shrink-0 border-l border-[var(--lf-border)]"
+              initial={isMobileOrTablet ? { x: "100%", width: "100%" } : { width: 0, opacity: 0 }}
+              animate={isMobileOrTablet ? { x: 0, width: "100%" } : { width: "45%", opacity: 1 }}
+              exit={isMobileOrTablet ? { x: "100%", width: "100%" } : { width: 0, opacity: 0 }}
+              transition={{ type: "tween", ease: "easeInOut", duration: 0.25 }}
+              className={
+                isMobileOrTablet
+                  ? "absolute inset-y-0 right-0 z-30 bg-[var(--lf-bg)] flex flex-col border-l border-[var(--lf-border)] w-full shadow-2xl"
+                  : "bg-[var(--lf-bg)] flex flex-col relative z-10 overflow-hidden shrink-0 border-l border-[var(--lf-border)]"
+              }
             >
+              {/* Glowing Divider Line with Fading Edges */}
+              <div 
+                className="absolute left-0 top-0 bottom-0 w-[2px] z-50 pointer-events-none"
+                style={{
+                  background: "linear-gradient(to bottom, transparent, #f97316 15%, #f97316 85%, transparent)",
+                  boxShadow: "0 0 8px rgba(249, 115, 22, 0.4)",
+                  transform: "translateX(-1px)",
+                }}
+              />
               <div className="h-12 border-b border-[var(--lf-border)] flex items-center justify-between px-6 shrink-0 bg-[var(--lf-surface)]/50 backdrop-blur-md min-w-[300px]">
                 <div className="flex items-center gap-2 text-[var(--lf-text-primary)] font-bold text-[13px]">
                   <Brain className="h-4 w-4 text-[var(--lf-accent)]" />
@@ -738,7 +850,7 @@ function WorkspacePage() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 no-scrollbar relative min-w-[300px]">
+              <div className="flex-1 overflow-y-auto p-6 no-scrollbar relative min-w-[300px] select-text">
                 <AnimatePresence mode="wait">
 
               {isLoading && (
@@ -851,39 +963,47 @@ function FeatureExplain({ content }: { content: string }) {
       {content ? (
         <div className="space-y-6">
           {sections.map((section, idx) => {
-            const isRealWorld = section.title.toLowerCase().includes("real-world") || section.title.toLowerCase().includes("example");
+            const isExplanation = section.title.toLowerCase().includes("explain") || section.title.toLowerCase().includes("overview") || section.title.toLowerCase() === "introduction";
             const isKeyPoints = section.title.toLowerCase().includes("key");
+            const isRealWorld = section.title.toLowerCase().includes("real-world") || section.title.toLowerCase().includes("example");
+            const isRelatedConcepts = section.title.toLowerCase().includes("connection") || section.title.toLowerCase().includes("related") || section.title.toLowerCase().includes("context");
             const isImportantNotes = section.title.toLowerCase().includes("important") || section.title.toLowerCase().includes("note");
 
             let containerClass;
             let titleIcon = null;
-            let titleClass = "text-[16px] font-bold text-[var(--lf-text-primary)] mb-3";
+            let titleClass = "";
 
-            if (isRealWorld) {
-              containerClass = "p-5 rounded-2xl bg-orange-500/10 border border-orange-500/30 card-shadow-lg";
-              titleIcon = <Globe className="h-5 w-5 text-orange-600 dark:text-orange-400" />;
-              titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-orange-700 dark:text-orange-400";
+            if (isExplanation) {
+              containerClass = "p-5 rounded-2xl bg-blue-500/5 border border-blue-500/10 transition-colors shadow-[0_4px_20px_rgba(59,130,246,0.02)]";
+              titleIcon = <BookOpen className="h-5 w-5 text-blue-500" />;
+              titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-blue-600 dark:text-blue-400";
             } else if (isKeyPoints) {
-              containerClass = "p-5 rounded-2xl bg-[var(--lf-surface)] border border-[var(--lf-border)] card-shadow";
-              titleIcon = <CheckCircle2 className="h-5 w-5 text-emerald-500" />;
-              titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-[var(--lf-text-primary)]";
+              containerClass = "p-5 rounded-2xl bg-amber-500/5 border border-amber-500/10 transition-colors shadow-[0_4px_20px_rgba(245,158,11,0.02)]";
+              titleIcon = <Lightbulb className="h-5 w-5 text-amber-500" />;
+              titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-amber-600 dark:text-amber-400";
+            } else if (isRealWorld) {
+              containerClass = "p-5 rounded-2xl bg-orange-500/5 border border-orange-500/10 transition-colors shadow-[0_4px_20px_rgba(249,115,22,0.02)]";
+              titleIcon = <Globe className="h-5 w-5 text-orange-500" />;
+              titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-orange-600 dark:text-orange-400";
+            } else if (isRelatedConcepts) {
+              containerClass = "p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 transition-colors shadow-[0_4px_20px_rgba(16,185,129,0.02)]";
+              titleIcon = <GitMerge className="h-5 w-5 text-emerald-500" />;
+              titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-emerald-600 dark:text-emerald-400";
             } else if (isImportantNotes) {
-              containerClass = "p-5 rounded-2xl bg-red-500/5 border border-red-500/20";
+              containerClass = "p-5 rounded-2xl bg-red-500/5 border border-red-500/10 transition-colors shadow-[0_4px_20px_rgba(239,68,68,0.02)]";
               titleIcon = <Brain className="h-5 w-5 text-red-500" />;
               titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-red-600 dark:text-red-400";
             } else {
-              containerClass = "text-[15px] leading-relaxed text-[var(--lf-text-primary)]";
+              containerClass = "p-5 rounded-2xl bg-purple-500/5 border border-purple-500/10 transition-colors shadow-[0_4px_20px_rgba(168,85,247,0.02)]";
+              titleIcon = <Sparkles className="h-5 w-5 text-purple-500" />;
+              titleClass = "text-[15px] font-bold flex items-center gap-2 mb-3 text-purple-600 dark:text-purple-400";
             }
 
             return (
               <div key={idx} className={containerClass}>
-                {titleIcon ? (
-                  <h3 className={titleClass}>
-                    {titleIcon} {section.title}
-                  </h3>
-                ) : (
-                  <h3 className={titleClass}>{section.title}</h3>
-                )}
+                <h3 className={titleClass}>
+                  {titleIcon} {section.title}
+                </h3>
                 <div className="prose prose-sm dark:prose-invert max-w-none prose-orange prose-p:leading-relaxed prose-li:my-1">
                   <ReactMarkdown>{section.content}</ReactMarkdown>
                 </div>

@@ -149,22 +149,17 @@
 /* ── Page transition — triggers when route key changes ── */
 @keyframes pageSlideIn {
     0% {
-        opacity: 0;
-        transform: translateY(22px) scale(0.97);
-        filter: blur(4px);
-    }
-    60% {
-        filter: blur(0px);
+        opacity: 0.6;
+        transform: translateY(8px);
     }
     100% {
         opacity: 1;
-        transform: translateY(0px) scale(1);
-        filter: blur(0px);
+        transform: translateY(0px);
     }
 }
 
 .page-enter {
-    animation: pageSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: pageSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* ── Floating orb animations ── */
@@ -311,26 +306,7 @@
 }
 
 
-/* ── Page transition — triggers when route key changes ── */
-@keyframes pageSlideIn {
-    0% {
-        opacity: 0;
-        transform: translateY(22px) scale(0.97);
-        filter: blur(4px);
-    }
-    60% {
-        filter: blur(0px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0px) scale(1);
-        filter: blur(0px);
-    }
-}
 
-.page-enter {
-    animation: pageSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
 
 /* ── Floating orb animations ── */
 @keyframes float-1 {
@@ -495,12 +471,19 @@
 
 /* ── Responsive Document Viewers ── */
 .react-pdf__Page__canvas {
-  max-width: 100% !important;
+  width: 100% !important;
   height: auto !important;
 }
 
 .react-pdf__Page {
-  max-width: 100% !important;
+  width: 100% !important;
+  height: auto !important;
+}
+
+.react-pdf__Page__textContent,
+.react-pdf__Page__annotationLayer {
+  transform: scale(var(--pdf-scale-factor, 1)) !important;
+  transform-origin: top left !important;
 }
 
 .docx-wrapper-container {
@@ -508,9 +491,29 @@
   overflow-x: auto;
 }
 
-.docx-wrapper-container section.docx {
-  max-width: 100% !important;
-  height: auto !important;
-  padding: 1.5rem !important;
+.docx-wrapper-container section.docx,
+.docx-wrapper-container section.docx-document {
+  width: 816px !important; /* Fixed A4 page width */
+  min-height: 29.7cm !important;
+  max-width: 816px !important;
+  margin: 0 auto 2rem auto !important; /* Centered with spacing */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  border-radius: 0.375rem !important;
   box-sizing: border-box !important;
+  background-color: white !important;
+}
+
+.dark .docx-wrapper-container section.docx,
+.dark .docx-wrapper-container section.docx-document {
+  border: 1px solid rgb(41 37 36) !important;
+  background-color: white !important;
+}
+
+/* Hide scrollbar but keep functional scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }

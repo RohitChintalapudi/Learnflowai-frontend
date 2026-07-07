@@ -60,7 +60,7 @@ export function PptxViewer({ fileUrl, zoom = 1, onLoadSuccess }: PptxViewerProps
   }, [fileUrl]);
 
   return (
-    <div className="w-full h-full relative rounded-xl flex flex-col items-center py-8">
+    <div className="w-full min-h-[500px] relative rounded-xl flex flex-col items-stretch py-0">
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <div className="animate-pulse text-stone-500 font-medium p-12">Loading presentation...</div>
@@ -74,14 +74,14 @@ export function PptxViewer({ fileUrl, zoom = 1, onLoadSuccess }: PptxViewerProps
       )}
       {!loading && !error && (
         <div
-          className="w-full flex flex-col items-center gap-8 transition-transform origin-top"
+          className="w-full flex flex-col items-stretch gap-8 transition-transform origin-top"
           style={{ transform: `scale(${zoom})` }}
         >
           {slides.map((slideTexts, index) => (
             <div
               key={index + 1}
               data-page-number={index + 1}
-              className="w-full max-w-4xl aspect-video bg-white shadow-xl border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden p-4 sm:p-8"
+              className="w-full aspect-video bg-white shadow-none border-none rounded-sm overflow-hidden p-4 sm:p-8"
             >
               {slideTexts.length > 0 ? (
                 <div className="space-y-4">
