@@ -1,443 +1,228 @@
-# 🎯 AI Doubt Clarification Agent - Frontend
+# Learnflowai - Frontend
 
-An AI-powered platform that helps identify skill gaps, assess competency levels, and provide personalized learning recommendations. The frontend is built using a modern, scalable, and type-safe React architecture focused on maintainability, performance, and developer experience.
+An AI-powered learning assistance platform that helps identify skill gaps, clarify doubts, assess competency levels, and provide personalized learning paths. The frontend is built using a modern, scalable, and type-safe React architecture focused on maintainability, performance, and responsive user experience.
 
 ---
 
-## ⚛️ Tech Stack
+## Architecture Overview
 
-### Core
+The frontend application follows a Feature-Based Architecture (also referred to as Co-located Monolith). This architecture isolates business logic within self-contained modules, preventing cross-cutting concerns from creating tightly coupled components.
 
-* React.js — Frontend library
-* TypeScript — Type-safe application development
-* Vite — Fast development and optimized production builds
+### Folder Strategy
+
+```
+src/
+├── assets/                  # Static assets (images, fonts)
+├── components/              # Global shared components
+│   ├── common/              # Layout placeholders, cards, custom buttons
+│   └── ui/                  # Shadcn UI accessible primitives
+├── constants/               # Global constants and configurations
+├── hooks/                   # Application-wide React hooks
+├── layouts/                 # Page scaffolding templates
+├── lib/                     # Client libraries (Axios instances, authClient)
+├── providers/               # Context providers (Theme, Auth, Query)
+├── routes/                  # TanStack Router definitions
+├── schemas/                 # Shared validation schemas (Zod)
+├── services/                # Global API abstraction layer
+├── store/                   # Global state managers (Zustand)
+├── types/                   # Shared TypeScript declarations
+│
+└── features/                # Domain-driven feature directories
+    ├── authentication/      # Sign up, sign in, password recovery
+    ├── doubt-clarification/ # AI explanation, simulations, mindmaps, quizzes
+    ├── assessments/         # User skills evaluation forms and logic
+    └── recommendations/     # Recommended reading list and action paths
+```
+
+Each folder under `features/` acts as an autonomous module. A feature owns its internal components, custom hooks, schemas, types, services, and state. Features must expose their API via an `index.ts` file, and imports between features should only access these explicit public exports.
+
+---
+
+## System Architecture Diagrams
+
+### Application Structure Block Diagram
+
+The diagram below details the components in the client browser layer, the feature modules, and their relationships with shared resources.
+
+```mermaid
+graph TD
+    subgraph Client ["Client Browser Layer"]
+        ViteDev["Vite Dev Server / Static Assets"]
+        Router["TanStack Router (Type-Safe Routing)"]
+        UI["Shadcn UI & Radix UI (Presentation Components)"]
+        State["State Management"]
+        State --> Zustand["Zustand (Client UI & Auth State)"]
+        State --> TSQuery["TanStack Query (Cached Server State)"]
+    end
+
+    subgraph FeatureModules ["Feature Modules (features/)"]
+        AuthFeature["Authentication Feature"]
+        DoubtFeature["Doubt Clarification Feature"]
+        AssessFeature["Assessments Feature"]
+        RecomFeature["Recommendations Feature"]
+    end
+
+    subgraph SharedLayer ["Shared Infrastructure (src/)"]
+        ComponentsCommon["Shared Common Components"]
+        HooksCommon["Shared Custom Hooks"]
+        ServicesCommon["Shared API Services"]
+        LibCommon["API Clients (authClient, axios)"]
+    end
+
+    Router --> FeatureModules
+    FeatureModules --> UI
+    FeatureModules --> SharedLayer
+    LibCommon --> Zustand
+    LibCommon --> TSQuery
+```
+
+### User Session & Authentication Flow
+
+Authentication is managed via Better Auth. The client triggers auth requests that set secure, HttpOnly session cookies on the backend, which are then passed transparently with each fetch request.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant App as React SPA (Client)
+    participant AuthClient as Better Auth Client
+    participant API as Local Express Backend
+    participant DB as Neon PostgreSQL (Database)
+
+    User->>App: Input email & password, click Sign Up / Sign In
+    App->>AuthClient: authClient.signIn.email({ email, password })
+    AuthClient->>API: POST /api/auth/sign-in/email (Credentials)
+    API->>DB: Query User & verify password hash
+    DB-->>API: User Record / Auth Credentials Match
+    API->>DB: Create Session record in database
+    DB-->>API: Session Created
+    API-->>AuthClient: Return Session Object & Set Cookie (HttpOnly)
+    AuthClient-->>App: Session object saved in Zustand / Local State
+    App-->>User: Navigate to Dashboard / Authenticated view
+```
+
+### AI Doubt Clarification Workflow
+
+This diagram outlines the flow of events from highlighting a portion of a document to receiving and rendering AI-generated materials like simulations or mind maps.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Student as Student (User)
+    participant UI as React UI (XYFlow / Recharts)
+    participant API as Express API Server
+    participant Graph as LangGraph Workflows
+    participant LLM as LLM Provider (Groq API)
+    participant DB as Neon Database
+
+    Student->>UI: Highlight text in Document viewer
+    Student->>UI: Select tool (Simulation / Mindmap / Analogy / Quiz / Notes)
+    UI->>API: POST /api/workflow/{tool} (documentId, highlightedText)
+    API->>Graph: Initiate LangGraph State Graph workflow
+    Graph->>LLM: Prompt LLM with highlighted text & system guidelines
+    LLM-->>Graph: Return structured JSON data
+    Graph->>DB: Save generated result (e.g. GeneratedSimulation)
+    DB-->>Graph: Success
+    Graph-->>API: Return structured JSON response
+    API-->>UI: Return response JSON
+    UI->>Student: Render interactive simulation / node graph / chart
+```
+
+---
+
+## Technology Stack
+
+### Core Framework & Build Tool
+* React 19: Component-based UI library.
+* TypeScript: Static typing for enhanced developer experience and error reduction.
+* Vite: Fast dev server compilation and highly optimized production asset bundling.
 
 ### Routing
-
-* TanStack Router — Type-safe client-side routing
+* TanStack Router: Standard type-safe client-side routing. All routes are declared declaratively, enforcing parameters, search parameter validations, and route-level loaders at compile time.
 
 ### State Management
+* Zustand: Client-side state manager for UI indicators, sidebar layouts, dark mode switches, and cached auth state metadata.
+* TanStack Query (React Query): Server state cache synchronization. Resolves client-side state issues by managing fetch cycles, automatic background refetching, retry logic, mutations, and caching policies.
 
-* Zustand — Client-side state management
-* TanStack Query — Server-state management, caching, and synchronization
-
-### UI & Styling
-
-* Tailwind CSS — Utility-first styling
-* Shadcn UI — Reusable component system
-* Radix UI — Accessible UI primitives
+### UI and Visualizations
+* Tailwind CSS: Inline utility-first CSS configurations.
+* Radix UI: Unstyled, accessible UI primitives for accessible buttons, select fields, and overlays.
+* Shadcn UI: Pre-styled custom layouts built on Radix primitives.
+* Recharts: SVG-based charting engine used for dashboards and learning graphs.
+* XYFlow (React Flow) and Dagre: Interactive workflow visualization models. Used to organize and render generated AI mind maps and flow diagrams dynamically based on graph coordinates.
 
 ### Forms & Validation
-
-* React Hook Form — Form state management
-* Zod — Schema validation and type inference
-
-### Data Visualization
-
-* Recharts — Business dashboards and analytics
-* Apache ECharts — Advanced visualizations
-
-### Code Quality
-
-* Biome — Formatting, linting, and static analysis
+* React Hook Form: Optimized, uncontrolled input forms to reduce unnecessary re-renders.
+* Zod: Strong input schema validation and TypeScript type inference.
 
 ---
 
-## 🚀 Installation
+## State Management Guidelines
+
+To keep application performance optimal, client state and server state are separated:
+
+### Client-Side State (Zustand)
+* Store authentication tokens, active user session details, UI preferences, panel toggles, and theme attributes.
+* Local view status parameters.
+
+### Server-Side State (TanStack Query)
+* Document metadata collections.
+* AI workflow outputs (quizzes, analogies, visual simulations, generated study notes).
+* User analytical profiles.
+* Standard API responses.
+
+Never cache database query results inside a global Zustand store. Use TanStack Query hooks directly to query, cache, and mutate state.
+
+---
+
+## Development Guidelines
+
+### File Naming Conventions
+* Filenames and directory paths must use kebab-case.
+* Component filenames must end with `.tsx` (e.g., `login-form.tsx`, `doubt-card.tsx`).
+* Hooks must begin with `use-` (e.g., `use-auth.ts`, `use-doubt-analysis.ts`).
+* Services must end with `-service.ts` (e.g., `auth-service.ts`).
+* Stores must end with `-store.ts` (e.g., `theme-store.ts`).
+* Schemas must end with `-schema.ts` (e.g., `registration-schema.ts`).
+
+### Code Quality Rules
+* Avoid the use of `any` types. If a value is unknown, explicitly declare it as `unknown` and cast it using Zod validation or type guards.
+* Enforce import sorting. Ensure Biome formats import ordering cleanly before staging changes.
+* Presentation components must not perform API fetch calls. Keep side-effects, API calls, and business logic inside features and custom hooks, passing data down as props.
+
+---
+
+## Getting Started
 
 ### Prerequisites
+* Node.js version 20 or higher.
+* pnpm package manager.
 
-* Node.js v20+
-* pnpm
+### Setup Instructions
+1. Clone the repository to your local directory.
+2. Open a terminal and run `pnpm install` in the frontend directory to resolve and install dependencies.
+3. Configure the local environment variables. Create a `.env` file in the root directory and specify:
+   ```env
+   VITE_BACKEND_URL=http://localhost:3000
+   ```
+4. Run `pnpm dev` to launch the local Vite development server.
+5. Access the application in your browser at `http://localhost:5173`.
 
-### Setup
-
-Clone the repository:
-
-```bash
-git clone <repository-url>
-```
-
-Navigate to the project:
-
-```bash
-cd ai-doubt-clarification-agent-frontend
-```
-
-Install dependencies:
-
-```bash
-pnpm install
-```
-
-Start the development server:
-
-```bash
-pnpm dev
-```
-
-Open:
-
-```txt
-http://localhost:5173
-```
+### Commands Reference
+* `pnpm dev`: Launch the development server.
+* `pnpm build`: Generate the optimized production build outputs.
+* `pnpm preview`: Spin up a local preview server for testing production build assets.
+* `pnpm lint`: Run lint checks.
+* `pnpm format`: Format the code files.
+* `pnpm check`: Execute the formatting and quality checks.
+* `pnpm check:fix`: Automatically resolve fixable linting and formatting issues.
 
 ---
 
-## 📜 Available Scripts
-
-```bash
-pnpm dev          # Start development server
-pnpm build        # Build production bundle
-pnpm preview      # Preview production build
-
-pnpm lint         # Run lint checks
-pnpm format       # Format code
-pnpm check        # Run Biome checks
-pnpm check:fix    # Automatically fix issues
-```
-
----
-
-## 🏗️ Architecture
-
-The application follows a **Feature-Based Architecture**.
-
-Each feature owns its:
-
-* Components
-* Hooks
-* Services
-* Store
-* Schemas
-* Types
-* Utilities
-* Static Data
-
-This keeps business logic close to the feature it belongs to and prevents the codebase from becoming difficult to maintain as it grows.
-
-### Rule of Thumb
-
-Before creating a file in a root-level directory, ask:
-
-> Will this be used by multiple features?
-
-If yes → place it in a shared/global directory.
-
-If no → keep it inside the feature.
-
----
-
-## 📂 Project Structure
-
-```txt
-src
-│
-├── assets/
-│
-├── components/
-│   ├── common/              # Shared reusable components
-│   └── ui/                  # Shadcn UI components
-│
-├── constants/              # Global constants
-├── hooks/                  # Shared hooks
-├── layouts/                # Application layouts
-├── providers/              # Global providers
-├── routes/                 # TanStack Router routes
-├── schemas/                # Shared schemas
-├── services/               # Shared services
-├── store/                  # Global stores
-├── types/                  # Shared types
-├── lib/                    # Shared
-│
-├── features/
-│   │
-│   ├── authentication/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── services/
-│   │   ├── store/
-│   │   ├── schemas/
-│   │   ├── types/
-│   │   ├── utils/
-│   │   ├── data/
-│   │   └── index.ts
-│   │
-│   ├── doubt-clarification/
-│   ├── assessments/
-│   └── recommendations/
-│
-├── main.tsx
-└── ...
-```
-
----
-
-## 📁 Folder Responsibilities
-
-| Folder            | Responsibility                  |
-| ----------------- | ------------------------------- |
-| features          | Feature-specific business logic |
-| components/common | Shared reusable components      |
-| components/ui     | Shadcn UI components            |
-| types             | Shared TypeScript types         |
-| schemas           | Shared Zod schemas              |
-| utils             | Shared utility functions        |
-| providers         | Application providers           |
-| store             | Global Zustand stores           |
-| routes            | Route definitions               |
-| layouts           | Application layouts             |
-| constants         | Application-wide constants      |
-
----
-
-## 🔄 State Management Strategy
-
-### Zustand
-
-Use for:
-
-* Authentication state
-* Theme state
-* UI state
-* Local application state
-
-### TanStack Query
-
-Use for:
-
-* API requests
-* User data
-* Doubt Clarification results
-* Learning recommendations
-* Assessment results
-* Query caching
-* Mutations
-
-### Important Rule
-
-❌ Do not store API data in Zustand.
-
-✅ Use TanStack Query for all server state.
-
----
-
-## 📝 Forms & Validation
-
-All forms should use:
-
-* React Hook Form
-* Zod
-
-Example structure:
-
-```txt
-features/authentication/
-├── components/
-│   └── login-form.tsx
-├── schemas/
-│   └── login-schema.ts
-└── services/
-    └── auth-service.ts
-```
-
-All user input must be validated before submission.
-
----
-
-## 📐 Development Guidelines
-
-### File Naming
-
-Use **kebab-case** for all files and folders.
-
-✅ Good
-
-```txt
-doubt-card.tsx
-profile-summary.tsx
-learning-path.tsx
-use-auth.ts
-user-service.ts
-```
-
-❌ Bad
-
-```txt
-DoubtCard.tsx
-ProfileSummary.tsx
-LearningPath.tsx
-UserService.ts
-```
-
----
-
-### Component Naming
-
-Use **PascalCase** for React components.
-
-```tsx
-export function DoubtCard() {
-  return <div>Doubt Card</div>;
-}
-```
-
----
-
-### Hook Naming
-
-All custom hooks must start with `use`.
-
-```txt
-use-auth.ts
-use-user-profile.ts
-use-doubt-analysis.ts
-```
-
----
-
-### Store Naming
-
-```txt
-auth-store.ts
-theme-store.ts
-assessment-store.ts
-```
-
----
-
-### Service Naming
-
-```txt
-auth-service.ts
-user-service.ts
-assessment-service.ts
-recommendation-service.ts
-```
-
----
-
-### Schema Naming
-
-```txt
-login-schema.ts
-profile-schema.ts
-assessment-schema.ts
-```
-
----
-
-### API Layer Rules
-
-All API requests must live inside service files.
-
-✅ Good
-
-```ts
-export const getProfile = () =>
-  api.get("/profile");
-```
-
-❌ Avoid API calls directly inside components.
-
----
-
-### Import Order
-
-```ts
-// React
-import { useState } from "react";
-
-// Third-party libraries
-import { useQuery } from "@tanstack/react-query";
-
-// Internal imports
-import { Button } from "@/components/ui/button";
-
-// Relative imports
-import "./styles.css";
-```
-
----
-
-### TypeScript Rules
-
-* Avoid `any`
-* Prefer `unknown` when needed
-* Use interfaces and types appropriately
-* Keep types close to their feature unless shared
-
----
-
-### Styling Rules
-
-* Use Tailwind CSS first
-* Reuse Shadcn UI components
-* Avoid inline styles
-* Avoid custom CSS unless necessary
-
----
-
-### Component Rules
-
-* Keep components focused and reusable
-* Prefer composition over prop drilling
-* Keep business logic outside presentation components
-
----
-
-### Git Commit Convention
-
-Follow Conventional Commits.
-
-```txt
-feat: add AI doubt clarification dashboard
-fix: resolve assessment validation issue
-refactor: simplify recommendation logic
-docs: update setup guide
-style: format dashboard components
-chore: update dependencies
-```
-
----
-
-## 🎯 Development Principles
-
-* Type Safety First
-* Feature-Based Architecture
-* Reusable Components
-* Accessibility by Default
-* Clean Code Practices
-* Consistent User Experience
-* Performance-Oriented Development
-* Maintainability Over Cleverness
-* Scalability Over Short-Term Convenience
-
----
-
-## ✅ Pull Request Checklist
-
-Before creating a PR:
-
-```bash
-pnpm check
-pnpm build
-```
-
-Ensure:
-
-* No TypeScript errors
-* No linting issues
-* Production build succeeds
-* New code follows project conventions
-* Feature-specific code remains inside its feature directory
-
----
-
-## 🤝 Support & Contribute
-
-If you found this project helpful, consider giving it a ⭐ on GitHub.
-
-Contributions, suggestions, and improvements are always welcome.
-
-# Learnflowai-frontend
+## Pull Request Checklist
+
+Before submitting a pull request, run the following verification checks:
+1. Ensure `pnpm check` returns no errors or formatting warnings.
+2. Ensure `pnpm build` executes successfully without compilation or type-check failures.
+3. Verify that all components render accessibly on mobile viewports.
+4. Verify that no hardcoded backend API URLs or production database links exist in code revisions.
