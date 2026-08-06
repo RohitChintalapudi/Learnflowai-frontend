@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { GenerateSimulationRequest, GenerateSimulationResponse } from '../types/simulation.types';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://ai-doubt-clarification-backend-production.up.railway.app";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://learnflowai-backend-k32r.onrender.com";
 const API_BASE_URL = `${BACKEND_URL}/api`;
 
 const api = axios.create({
