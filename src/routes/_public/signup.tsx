@@ -145,6 +145,7 @@ function SignupPage() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="First name"
+                  autoComplete="given-name"
                   className="w-full pl-10 pr-3 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                   required
                 />
@@ -168,6 +169,7 @@ function SignupPage() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Last name"
+                  autoComplete="family-name"
                   className="w-full pl-10 pr-3 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                   required
                 />
@@ -193,6 +195,7 @@ function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
+                autoComplete="username"
                 className="w-full pl-10 pr-4 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                 required
               />
@@ -217,6 +220,7 @@ function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a password"
+                autoComplete="new-password"
                 className="w-full pl-10 pr-10 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                 required
               />
@@ -252,6 +256,7 @@ function SignupPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your password"
+                autoComplete="new-password"
                 className="w-full pl-10 pr-10 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                 required
               />
