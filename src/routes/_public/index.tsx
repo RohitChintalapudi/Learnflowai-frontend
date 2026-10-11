@@ -26,6 +26,7 @@ import {
   RotateCcw,
   X,
 } from "lucide-react";
+import { TextMorph } from "../../components/TextMorph";
 
 export const Route = createFileRoute("/_public/")({
   component: HomePage,
@@ -1176,11 +1177,27 @@ function HomePage() {
   const handleExploreFeatures = () => {
     const target = document.getElementById("features");
     if (target) {
-      const offset = 80;
-      const y = target.getBoundingClientRect().top + window.scrollY - offset;
+      const offset = 76;
+      const y = Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset);
       window.scrollTo({ top: y, behavior: "smooth" });
     }
   };
+
+  useEffect(() => {
+    // One-time scroll on initial mount if page URL contains a hash
+    const hash = window.location.hash.replace("#", "");
+    if (hash) {
+      const timer = setTimeout(() => {
+        const target = document.getElementById(hash);
+        if (target) {
+          const offset = 76;
+          const y = Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset);
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Prevent TS unused variable errors for WIP code
   void screens;
@@ -1199,20 +1216,33 @@ function HomePage() {
       <div className="absolute top-[30%] left-[20%] w-[300px] h-[300px] bg-orange-500/15 dark:bg-orange-500/10 blur-[100px] rounded-full pointer-events-none" />
 
       {/* Î“Ã¶Ã‡Î“Ã¶Ã‡ HERO SECTION Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡ */}
-      <section id="about-us" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-24 sm:pt-16 pb-12 -mt-20 flex flex-col xl:flex-row items-center gap-16 xl:gap-24 lg:gap-12 relative z-10">
+      <section id="about-us" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-24 sm:pt-16 pb-12 -mt-20 flex flex-col xl:flex-row items-center gap-16 xl:gap-24 lg:gap-12 relative z-10 scroll-mt-20">
         {/* Left Copy */}
         <div className="flex-grow md:flex-1 flex flex-col items-start w-full max-w-[500px] xl:shrink-0 xl:scale-[1.1] lg:scale-100 scale-100 origin-center">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-200 dark:border-orange-900/60 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-semibold mb-6">
-            <Sparkles className="h-3.5 w-3.5" />
-            AI-Powered Learning for Computer Science
+            <Sparkles className="h-3.5 w-3.5 shrink-0" />
+            <TextMorph
+              prefix=""
+              words={[
+                "AI-Powered Learning for Computer Science",
+                "Instant AI Doubt Clarification & Explanations",
+                "Interactive Network & Protocol Simulations",
+                "Smart Flashcards & Adaptive Practice",
+              ]}
+              interval={3200}
+            />
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.05] text-stone-900 dark:text-white mb-4 max-w-[420px]">
             <span className="block sm:whitespace-nowrap">Learn Smarter.</span>
-            <span className="block sm:whitespace-nowrap">
+            <span className="block sm:whitespace-nowrap flex items-center gap-2">
               Understand{" "}
-              <span className="text-orange-500 dark:text-orange-400">
-                Better.
-              </span>
+              <TextMorph
+                prefix=""
+                words={["Better.", "Faster.", "Deeper.", "Every Concept."]}
+                interval={2600}
+                className="text-orange-500 dark:text-orange-400 inline-flex"
+                charClassName="text-orange-500 dark:text-orange-400"
+              />
             </span>
           </h1>
           <p className="text-sm text-stone-500 dark:text-stone-400 leading-relaxed mb-6 max-w-[420px]">
@@ -1281,7 +1311,7 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Î“Ã¶Ã‡Î“Ã¶Ã‡ STATS SECTION Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡ */}
+      {/* STATS SECTION */}
       <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-1 -mt-15">
         <div className="grid grid-cols-1 min-[500px]:grid-cols-2 lg:grid-cols-4 gap-4">
           {statsData.map((s) => (
@@ -1291,7 +1321,15 @@ function HomePage() {
               </div>
               <div>
                 <p className="text-lg font-extrabold text-stone-900 dark:text-white">
-                  {s.value}
+                  {s.label === "Learning Assistant" ? (
+                    <TextMorph
+                      prefix=""
+                      words={["AI-Powered", "Real-Time", "Adaptive", "Instant"]}
+                      interval={2800}
+                    />
+                  ) : (
+                    s.value
+                  )}
                 </p>
                 <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
                   {s.label}
@@ -1303,13 +1341,22 @@ function HomePage() {
       </section>
 
       {/* Î“Ã¶Ã‡Î“Ã¶Ã‡ FEATURES ZIGZAG SECTION Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡ */}
-      <section id="features" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
+      <section id="features" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 scroll-mt-20">
         <div className="w-full mb-12">
           <div className="relative h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent mb-12" />
         </div>
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-extrabold tracking-tight text-stone-900 dark:text-white mb-4">
-            Features We Provide
+          <h2 className="text-3xl font-extrabold tracking-tight text-stone-900 dark:text-white mb-4 flex items-center justify-center">
+            <TextMorph
+              prefix=""
+              words={[
+                "Features We Provide",
+                "Interactive AI Learning Tools",
+                "Real-Time Concept Visualizations",
+                "Comprehensive CS Practice Modes",
+              ]}
+              interval={3000}
+            />
           </h2>
           <p className="text-lg text-stone-600 dark:text-stone-400 max-w-2xl mx-auto">
             Everything you need to master Computer Science with AI-powered tools
@@ -1450,10 +1497,21 @@ function HomePage() {
       </div>
 
       {/* Î“Ã¶Ã‡Î“Ã¶Ã‡ REVIEWS CAROUSEL SECTION Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡ */}
-      <section id="blog" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pb-16">
+      <section id="why-students-love-us" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pb-16 scroll-mt-20">
+        <div id="blog" className="sr-only" aria-hidden="true" />
+        <div id="students-love" className="sr-only" aria-hidden="true" />
         <div className="mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 dark:text-white mb-2">
-            What Students Love
+          <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 dark:text-white mb-2 flex items-center">
+            <TextMorph
+              prefix=""
+              words={[
+                "What Students Love",
+                "Why Students Love Us",
+                "Real Student Stories",
+                "Proven Learning Impact",
+              ]}
+              interval={3200}
+            />
           </h2>
           <p className="text-sm text-stone-500 dark:text-stone-400">
             Join thousands of CS learners who've transformed their understanding
@@ -1630,8 +1688,16 @@ function HomePage() {
             <Sparkles className="h-7 w-7 text-orange-500 dark:text-orange-400" />
           </div>
           <div>
-            <h3 className="text-3xl md:text-4xl font-extrabold text-stone-900 dark:text-white mb-4">
-              Ready to begin your learning journey?
+            <h3 className="text-3xl md:text-4xl font-extrabold text-stone-900 dark:text-white mb-4 flex items-center justify-center">
+              <TextMorph
+                prefix=""
+                words={[
+                  "Ready to begin your learning journey?",
+                  "Master computer science concepts today",
+                  "Turn confusion into total clarity",
+                ]}
+                interval={3500}
+              />
             </h3>
             <p className="text-base text-stone-500 dark:text-stone-400 max-w-xl mx-auto">
               Join thousands of students and master computer science concepts

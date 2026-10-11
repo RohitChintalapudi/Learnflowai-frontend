@@ -11,10 +11,15 @@ import {
   Sun,
   Moon,
   Mail,
+  Menu,
+  X,
 } from "lucide-react";
 
 import { authStore } from "../store/authStore";
 import { authClient } from "../lib/auth-client";
+import { motion, AnimatePresence } from "motion/react";
+import AnimatedTabs from "../components/AnimatedTabs";
+import { TextMorph } from "../components/TextMorph";
 
 export const Route = createFileRoute("/_public")({
   beforeLoad: () => {
@@ -107,6 +112,100 @@ function PublicLayout() {
   const isAppRoute = location.pathname === "/dashboard" || location.pathname === "/documents" || location.pathname.startsWith("/workspace") || location.pathname.startsWith("/notes") || location.pathname.startsWith("/quizzes") || location.pathname.startsWith("/analytics");
   const isLanding = location.pathname === "/";
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("");
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const checkScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    checkScroll();
+    window.addEventListener("scroll", checkScroll, { passive: true });
+    return () => window.removeEventListener("scroll", checkScroll);
+  }, []);
+
+  const isAutoScrollingRef = React.useRef(false);
+  const scrollTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const scrollToSection = (sectionId: string) => {
+    if (location.pathname === "/") {
+      isAutoScrollingRef.current = true;
+      setActiveSection(sectionId);
+
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
+      if (sectionId === "about-us") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        const el = document.getElementById(sectionId);
+        if (el) {
+          const headerOffset = 76;
+          const elementTop = el.getBoundingClientRect().top + window.scrollY;
+          const targetY = Math.max(0, elementTop - headerOffset);
+          window.scrollTo({ top: targetY, behavior: "smooth" });
+        }
+      }
+
+      // Lock activeSection for the entire duration of the smooth scroll travel (700ms)
+      // and only sync the hash URL after arrival to avoid hash jump interference
+      scrollTimeoutRef.current = setTimeout(() => {
+        isAutoScrollingRef.current = false;
+        if (sectionId === "about-us") {
+          window.history.replaceState(null, "", window.location.pathname);
+        } else {
+          window.history.replaceState(null, "", `#${sectionId}`);
+        }
+      }, 700);
+    } else {
+      window.location.href = `/#${sectionId}`;
+    }
+  };
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isLanding) {
+      setActiveSection("");
+      return;
+    }
+
+    const sectionIds = ["about-us", "features", "why-students-love-us"];
+    const handleScroll = () => {
+      // Ignore scroll-spy while smoothly traveling to a clicked section
+      if (isAutoScrollingRef.current) return;
+
+      const scrollPosition = window.scrollY + 140;
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const el = document.getElementById(sectionIds[i]);
+        if (el) {
+          const elementTop = el.getBoundingClientRect().top + window.scrollY;
+          if (elementTop <= scrollPosition) {
+            setActiveSection(sectionIds[i]);
+            return;
+          }
+        }
+      }
+      if (window.scrollY < 200) {
+        setActiveSection("about-us");
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isLanding]);
+
+  const navItems = [
+    { label: "Overview", id: "about-us" },
+    { label: "Features", id: "features" },
+    { label: "Why Students Love Us", id: "why-students-love-us" },
+  ];
+
   if (isLoading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-black z-50 fixed inset-0">
@@ -133,13 +232,25 @@ function PublicLayout() {
           : "bg-[url('/background.png')] dark:bg-[url('/background_dark.png')] bg-cover bg-[50%_-250px] bg-no-repeat"
       }`}
     >
-      {/* Global Public Navbar */}
+      {/* Global Public Sticky Animated Navbar */}
       {!isAppRoute && (
-        <nav className="border-b border-stone-200 dark:border-[rgba(255,255,255,0.08)] bg-white/80 dark:bg-black/60 backdrop-blur-xl sticky top-0 z-50 transition-colors duration-300">
-          <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-12 py-2">
+        <header
+          className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
+            isScrolled
+              ? "border-b border-stone-200/90 dark:border-stone-800/90 bg-white/90 dark:bg-[#0c0a09]/90 backdrop-blur-xl shadow-xs shadow-stone-900/5 py-1.5"
+              : "border-b border-transparent bg-white/75 dark:bg-[#0c0a09]/75 backdrop-blur-md py-3"
+          }`}
+        >
+          <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-12 transition-all duration-300">
             {/* Brand Logo & Name */}
             <Link
               to="/"
+              onClick={(e) => {
+                if (isLanding) {
+                  e.preventDefault();
+                  scrollToSection("about-us");
+                }
+              }}
               className="flex min-w-0 items-center gap-2 sm:gap-3 group focus:outline-none"
             >
               <div className="flex items-center justify-center group-hover:scale-105 group-active:scale-95 transition-transform duration-200">
@@ -161,13 +272,33 @@ function PublicLayout() {
                     AI
                   </span>
                 </span>
-                <span className="hidden min-[420px]:block text-[10px] font-medium text-stone-500 dark:text-stone-400 leading-none mt-1 truncate">
-                  Learn Smarter, Understand Deeper
-                </span>
+                <TextMorph
+                  prefix=""
+                  words={[
+                    "Learn Smarter, Understand Deeper",
+                    "Instant AI Doubt Clarification",
+                    "Interactive Step-by-Step Guidance",
+                    "Master Concepts with Confidence",
+                  ]}
+                  interval={3200}
+                  className="hidden min-[420px]:inline-flex text-[10px] font-medium text-stone-500 dark:text-stone-400 leading-none mt-1"
+                />
               </div>
             </Link>
 
-            {/* Center nav links removed as requested */}
+            {/* Desktop Navigation Links with Motion animated tabs (Landing page only) */}
+            {isLanding && (
+              <div className="hidden md:flex items-center">
+                <AnimatedTabs
+                  tabs={navItems}
+                  activeTab={isLanding ? activeSection : ""}
+                  onChange={(_, id) => {
+                    if (id) scrollToSection(id);
+                  }}
+                  layoutId="navbar-tab"
+                />
+              </div>
+            )}
 
             {/* Right controls */}
             <nav className="flex items-center gap-1.5 sm:gap-3 shrink-0">
@@ -203,9 +334,76 @@ function PublicLayout() {
               >
                 Sign Up
               </Link>
+
+              {/* Mobile Menu Toggle Button (Landing page only) */}
+              {isLanding && (
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen((prev) => !prev)}
+                  className="md:hidden p-2 rounded-lg text-stone-600 dark:text-stone-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-all duration-200 focus:outline-none"
+                  aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+                >
+                  {mobileMenuOpen ? (
+                    <X className="h-[18px] w-[18px]" />
+                  ) : (
+                    <Menu className="h-[18px] w-[18px]" />
+                  )}
+                </button>
+              )}
             </nav>
           </div>
-        </nav>
+
+          {/* Mobile Navigation Dropdown */}
+          <AnimatePresence>
+            {isLanding && mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.22, ease: "easeInOut" }}
+                className="overflow-hidden md:hidden border-t border-stone-200/80 dark:border-stone-800/80 bg-white/95 dark:bg-[#0c0a09]/95 backdrop-blur-xl px-4 py-3 space-y-1"
+              >
+                {navItems.map((item) => {
+                  const isActive = isLanding && activeSection === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        scrollToSection(item.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`relative w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                        isActive
+                          ? "text-orange-600 dark:text-orange-400 font-semibold"
+                          : "text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/50"
+                      }`}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="mobile-nav-pill"
+                          className="absolute inset-0 rounded-lg bg-orange-50 dark:bg-orange-950/40"
+                          initial={false}
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 35,
+                          }}
+                        />
+                      )}
+                      <span className="relative z-10">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </header>
+      )}
+
+      {/* Spacer for fixed navbar to prevent content overlapping */}
+      {!isAppRoute && (
+        <div className="h-16 sm:h-20 shrink-0 pointer-events-none" aria-hidden="true" />
       )}
 
       {/* Page Content Container */}
@@ -257,7 +455,7 @@ function PublicLayout() {
                     {[
                       { label: "Overview", type: "anchor", href: "/#about-us" },
                       { label: "Features", type: "anchor", href: "/#features" },
-                      { label: "Student Reviews", type: "anchor", href: "/#blog" },
+                      { label: "Why Students Love Us", type: "anchor", href: "/#why-students-love-us" },
                       { label: "Get Started", type: "anchor", href: "/#careers" }
                     ].map((link, i) => (
                       <li key={i}>
@@ -267,14 +465,7 @@ function PublicLayout() {
                             onClick={(e) => {
                               e.preventDefault();
                               const targetId = link.href.split('#')[1];
-                              const target = document.getElementById(targetId);
-                              if (target) {
-                                const offset = 80;
-                                const y = target.getBoundingClientRect().top + window.scrollY - offset;
-                                window.scrollTo({ top: y, behavior: 'smooth' });
-                              } else if (window.location.pathname !== '/') {
-                                window.location.href = link.href;
-                              }
+                              scrollToSection(targetId);
                             }}
                             className="text-base font-medium text-stone-600 dark:text-stone-400 hover:text-[#FF7A00] dark:hover:text-[#FF7A00] cursor-pointer transition-all duration-300 hover:translate-x-1 inline-block"
                           >
