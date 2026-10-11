@@ -124,21 +124,74 @@ function PublicLayout() {
     return () => window.removeEventListener("scroll", checkScroll);
   }, []);
 
+  const isAutoScrollingRef = React.useRef(false);
+
+  const smoothScrollTo = (targetY: number, duration: number = 750) => {
+    const startY = window.scrollY || window.pageYOffset;
+    const distance = targetY - startY;
+    if (Math.abs(distance) < 5) return;
+
+    isAutoScrollingRef.current = true;
+    let startTime: number | null = null;
+    let cancelled = false;
+
+    const onUserInterrupt = () => {
+      cancelled = true;
+      isAutoScrollingRef.current = false;
+      cleanup();
+    };
+
+    const cleanup = () => {
+      window.removeEventListener("wheel", onUserInterrupt);
+      window.removeEventListener("touchmove", onUserInterrupt);
+    };
+
+    window.addEventListener("wheel", onUserInterrupt, { once: true, passive: true });
+    window.addEventListener("touchmove", onUserInterrupt, { once: true, passive: true });
+
+    // easeInOutCubic curve for smooth cinematic travel
+    const easeInOutCubic = (t: number): number => {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    };
+
+    const step = (currentTime: number) => {
+      if (cancelled) return;
+      if (startTime === null) startTime = currentTime;
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = easeInOutCubic(progress);
+
+      window.scrollTo(0, startY + distance * easedProgress);
+
+      if (elapsed < duration) {
+        window.requestAnimationFrame(step);
+      } else {
+        window.scrollTo(0, targetY);
+        cleanup();
+        setTimeout(() => {
+          isAutoScrollingRef.current = false;
+        }, 80);
+      }
+    };
+
+    window.requestAnimationFrame(step);
+  };
+
   const scrollToSection = (sectionId: string) => {
     if (location.pathname === "/") {
       if (sectionId === "about-us") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        window.history.pushState(null, "", "/");
         setActiveSection("about-us");
+        smoothScrollTo(0, 700);
+        window.history.pushState(null, "", "/");
         return;
       }
       const el = document.getElementById(sectionId);
       if (el) {
-        const offset = 80;
-        const y = el.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top: y, behavior: "smooth" });
-        window.history.pushState(null, "", `/#${sectionId}`);
         setActiveSection(sectionId);
+        const headerOffset = 76;
+        const targetY = Math.max(0, el.getBoundingClientRect().top + window.scrollY - headerOffset);
+        smoothScrollTo(targetY, 800);
+        window.history.pushState(null, "", `/#${sectionId}`);
       }
     } else {
       window.location.href = `/#${sectionId}`;
@@ -157,6 +210,7 @@ function PublicLayout() {
 
     const sectionIds = ["about-us", "features", "why-students-love-us"];
     const handleScroll = () => {
+      if (isAutoScrollingRef.current) return;
       const scrollPosition = window.scrollY + 140;
       for (let i = sectionIds.length - 1; i >= 0; i--) {
         const el = document.getElementById(sectionIds[i]);
