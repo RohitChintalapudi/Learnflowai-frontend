@@ -11,6 +11,8 @@ import {
   Sun,
   Moon,
   Mail,
+  Menu,
+  X,
 } from "lucide-react";
 
 import { authStore } from "../store/authStore";
@@ -107,6 +109,66 @@ function PublicLayout() {
   const isAppRoute = location.pathname === "/dashboard" || location.pathname === "/documents" || location.pathname.startsWith("/workspace") || location.pathname.startsWith("/notes") || location.pathname.startsWith("/quizzes") || location.pathname.startsWith("/analytics");
   const isLanding = location.pathname === "/";
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("");
+
+  const scrollToSection = (sectionId: string) => {
+    if (location.pathname === "/") {
+      if (sectionId === "about-us") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.history.pushState(null, "", "/");
+        setActiveSection("about-us");
+        return;
+      }
+      const el = document.getElementById(sectionId);
+      if (el) {
+        const offset = 80;
+        const y = el.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: y, behavior: "smooth" });
+        window.history.pushState(null, "", `/#${sectionId}`);
+        setActiveSection(sectionId);
+      }
+    } else {
+      window.location.href = `/#${sectionId}`;
+    }
+  };
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isLanding) {
+      setActiveSection("");
+      return;
+    }
+
+    const sectionIds = ["about-us", "features", "why-students-love-us"];
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 140;
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const el = document.getElementById(sectionIds[i]);
+        if (el && el.offsetTop <= scrollPosition) {
+          setActiveSection(sectionIds[i]);
+          return;
+        }
+      }
+      if (window.scrollY < 200) {
+        setActiveSection("about-us");
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isLanding]);
+
+  const navItems = [
+    { label: "Overview", id: "about-us" },
+    { label: "Features", id: "features" },
+    { label: "Why Students Love Us", id: "why-students-love-us" },
+  ];
+
   if (isLoading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-black z-50 fixed inset-0">
@@ -140,6 +202,12 @@ function PublicLayout() {
             {/* Brand Logo & Name */}
             <Link
               to="/"
+              onClick={(e) => {
+                if (isLanding) {
+                  e.preventDefault();
+                  scrollToSection("about-us");
+                }
+              }}
               className="flex min-w-0 items-center gap-2 sm:gap-3 group focus:outline-none"
             >
               <div className="flex items-center justify-center group-hover:scale-105 group-active:scale-95 transition-transform duration-200">
@@ -167,7 +235,26 @@ function PublicLayout() {
               </div>
             </Link>
 
-            {/* Center nav links removed as requested */}
+            {/* Desktop Navigation Links */}
+            <div className="hidden md:flex items-center gap-1 lg:gap-2">
+              {navItems.map((item) => {
+                const isActive = isLanding && activeSection === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => scrollToSection(item.id)}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs lg:text-sm font-medium transition-all duration-200 cursor-pointer ${
+                      isActive
+                        ? "text-orange-600 dark:text-orange-400 font-semibold bg-orange-50 dark:bg-orange-950/30"
+                        : "text-stone-600 dark:text-stone-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-stone-100/70 dark:hover:bg-stone-800/50"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
 
             {/* Right controls */}
             <nav className="flex items-center gap-1.5 sm:gap-3 shrink-0">
@@ -203,8 +290,48 @@ function PublicLayout() {
               >
                 Sign Up
               </Link>
+
+              {/* Mobile Menu Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen((prev) => !prev)}
+                className="md:hidden p-2 rounded-lg text-stone-600 dark:text-stone-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-all duration-200 focus:outline-none"
+                aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              >
+                {mobileMenuOpen ? (
+                  <X className="h-[18px] w-[18px]" />
+                ) : (
+                  <Menu className="h-[18px] w-[18px]" />
+                )}
+              </button>
             </nav>
           </div>
+
+          {/* Mobile Navigation Dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-stone-200/80 dark:border-stone-800/80 bg-white/95 dark:bg-[#0c0a09]/95 backdrop-blur-xl px-4 py-3 space-y-1 transition-all">
+              {navItems.map((item) => {
+                const isActive = isLanding && activeSection === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      scrollToSection(item.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                      isActive
+                        ? "bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 font-semibold"
+                        : "text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/50"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </nav>
       )}
 
@@ -257,7 +384,7 @@ function PublicLayout() {
                     {[
                       { label: "Overview", type: "anchor", href: "/#about-us" },
                       { label: "Features", type: "anchor", href: "/#features" },
-                      { label: "Student Reviews", type: "anchor", href: "/#blog" },
+                      { label: "Why Students Love Us", type: "anchor", href: "/#why-students-love-us" },
                       { label: "Get Started", type: "anchor", href: "/#careers" }
                     ].map((link, i) => (
                       <li key={i}>
@@ -267,14 +394,7 @@ function PublicLayout() {
                             onClick={(e) => {
                               e.preventDefault();
                               const targetId = link.href.split('#')[1];
-                              const target = document.getElementById(targetId);
-                              if (target) {
-                                const offset = 80;
-                                const y = target.getBoundingClientRect().top + window.scrollY - offset;
-                                window.scrollTo({ top: y, behavior: 'smooth' });
-                              } else if (window.location.pathname !== '/') {
-                                window.location.href = link.href;
-                              }
+                              scrollToSection(targetId);
                             }}
                             className="text-base font-medium text-stone-600 dark:text-stone-400 hover:text-[#FF7A00] dark:hover:text-[#FF7A00] cursor-pointer transition-all duration-300 hover:translate-x-1 inline-block"
                           >
