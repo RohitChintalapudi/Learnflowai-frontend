@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 
 import { authStore } from "../store/authStore";
-import { authClient } from "../lib/auth-client";
 import { motion, AnimatePresence } from "motion/react";
 import AnimatedTabs from "../components/AnimatedTabs";
+import { TextMorph } from "../components/TextMorph";
 
 export const Route = createFileRoute("/_public")({
   beforeLoad: () => {
@@ -200,9 +200,9 @@ function PublicLayout() {
   }, [isLanding]);
 
   const navItems = [
-    { label: "Overview", id: "about-us" },
-    { label: "Features", id: "features" },
-    { label: "Why Students Love Us", id: "why-students-love-us" },
+    { label: "Overview", id: "about-us", words: ["Overview", "About Us"] },
+    { label: "Features", id: "features", words: ["Features", "AI Tools", "Capabilities"] },
+    { label: "Why Students Love Us", id: "why-students-love-us", words: ["Why Students Love Us", "Student Reviews", "Wall of Love"] },
   ];
 
   if (isLoading) {
@@ -271,9 +271,17 @@ function PublicLayout() {
                     AI
                   </span>
                 </span>
-                <span className="hidden min-[420px]:block text-[10px] font-medium text-stone-500 dark:text-stone-400 leading-none mt-1 truncate">
-                  Learn Smarter, Understand Deeper
-                </span>
+                <TextMorph
+                  prefix=""
+                  words={[
+                    "Learn Smarter, Understand Deeper",
+                    "Instant AI Doubt Clarification",
+                    "Interactive Step-by-Step Guidance",
+                    "Master Concepts with Confidence",
+                  ]}
+                  interval={3200}
+                  className="hidden min-[420px]:inline-flex text-[10px] font-medium text-stone-500 dark:text-stone-400 leading-none mt-1"
+                />
               </div>
             </Link>
 
@@ -321,9 +329,15 @@ function PublicLayout() {
               {/* Sign Up */}
               <Link
                 to="/signup"
-                className="text-xs sm:text-sm font-semibold px-3.5 sm:px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white transition-all duration-200 shadow-sm shadow-orange-500/20 hover:shadow-md hover:shadow-orange-500/30 active:scale-[0.97]"
+                className="text-xs sm:text-sm font-semibold px-3.5 sm:px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white transition-all duration-200 shadow-sm shadow-orange-500/20 hover:shadow-md hover:shadow-orange-500/30 active:scale-[0.97] inline-flex items-center justify-center"
               >
-                Sign Up
+                <TextMorph
+                  prefix=""
+                  words={["Sign Up", "Join Free", "Get Started"]}
+                  interval={3600}
+                  className="inline-flex items-center text-white font-semibold"
+                  charClassName="text-white"
+                />
               </Link>
 
               {/* Mobile Menu Toggle Button (Landing page only) */}
@@ -382,7 +396,15 @@ function PublicLayout() {
                           }}
                         />
                       )}
-                      <span className="relative z-10">{item.label}</span>
+                      <span className="relative z-10 flex items-center">
+                        <TextMorph
+                          prefix=""
+                          words={item.words || [item.label]}
+                          interval={3400}
+                          className="inline-flex items-center"
+                          charClassName={isActive ? "text-orange-600 dark:text-orange-400 font-semibold" : undefined}
+                        />
+                      </span>
                     </button>
                   );
                 })}
