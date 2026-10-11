@@ -19,7 +19,6 @@ import { authStore } from "../store/authStore";
 import { authClient } from "../lib/auth-client";
 import { motion, AnimatePresence } from "motion/react";
 import AnimatedTabs from "../components/AnimatedTabs";
-import { TextMorph } from "../components/TextMorph";
 
 export const Route = createFileRoute("/_public")({
   beforeLoad: () => {
@@ -272,17 +271,9 @@ function PublicLayout() {
                     AI
                   </span>
                 </span>
-                <TextMorph
-                  prefix=""
-                  words={[
-                    "Learn Smarter, Understand Deeper",
-                    "Instant AI Doubt Clarification",
-                    "Interactive Step-by-Step Guidance",
-                    "Master Concepts with Confidence",
-                  ]}
-                  interval={3200}
-                  className="hidden min-[420px]:inline-flex text-[10px] font-medium text-stone-500 dark:text-stone-400 leading-none mt-1"
-                />
+                <span className="hidden min-[420px]:inline-flex text-[10px] font-medium text-stone-500 dark:text-stone-400 leading-none mt-1">
+                  Learn Smarter, Understand Deeper
+                </span>
               </div>
             </Link>
 
