@@ -1219,18 +1219,9 @@ function HomePage() {
       <section id="about-us" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-24 sm:pt-16 pb-12 -mt-20 flex flex-col xl:flex-row items-center gap-16 xl:gap-24 lg:gap-12 relative z-10 scroll-mt-20">
         {/* Left Copy */}
         <div className="flex-grow md:flex-1 flex flex-col items-start w-full max-w-[500px] xl:shrink-0 xl:scale-[1.1] lg:scale-100 scale-100 origin-center">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-200 dark:border-orange-900/60 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-semibold mb-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-orange-200 dark:border-orange-900/60 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-semibold mb-6">
             <Sparkles className="h-3.5 w-3.5 shrink-0" />
-            <TextMorph
-              prefix=""
-              words={[
-                "AI-Powered Learning for Computer Science",
-                "Instant AI Doubt Clarification & Explanations",
-                "Interactive Network & Protocol Simulations",
-                "Smart Flashcards & Adaptive Practice",
-              ]}
-              interval={3200}
-            />
+            <span>Instant AI Doubt Clarification & Explanations</span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.08] text-stone-900 dark:text-white mb-4 max-w-xl">
             <span className="block whitespace-nowrap">Learn Smarter.</span>
