@@ -28,21 +28,18 @@ export const AnimatedTabs = ({
   const getTabLabel = (tab: TabItem) => (typeof tab === "string" ? tab : tab.label);
   const getTabId = (tab: TabItem) => (typeof tab === "string" ? tab : tab.id);
 
+  const isControlled = controlledActiveTab !== undefined;
   const initialTab = tabs.length > 0 ? getTabId(tabs[0]) : "";
   const [internalActiveTab, setInternalActiveTab] = useState(initialTab);
 
-  const currentActive = controlledActiveTab !== undefined ? controlledActiveTab : internalActiveTab;
-
-  useEffect(() => {
-    if (controlledActiveTab !== undefined) {
-      setInternalActiveTab(controlledActiveTab);
-    }
-  }, [controlledActiveTab]);
+  const currentActive = isControlled ? controlledActiveTab : internalActiveTab;
 
   const handleTabClick = (tab: TabItem) => {
     const id = getTabId(tab);
     const label = getTabLabel(tab);
-    setInternalActiveTab(id);
+    if (!isControlled) {
+      setInternalActiveTab(id);
+    }
     if (onChange) {
       onChange(label, id);
     }

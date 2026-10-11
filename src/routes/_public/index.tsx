@@ -1176,32 +1176,26 @@ function HomePage() {
   const handleExploreFeatures = () => {
     const target = document.getElementById("features");
     if (target) {
-      const offset = 80;
-      const y = target.getBoundingClientRect().top + window.scrollY - offset;
+      const offset = 76;
+      const y = Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset);
       window.scrollTo({ top: y, behavior: "smooth" });
-      window.history.pushState(null, "", "/#features");
     }
   };
 
   useEffect(() => {
-    const handleHash = () => {
-      const hash = window.location.hash.replace("#", "");
-      if (hash) {
+    // One-time scroll on initial mount if page URL contains a hash
+    const hash = window.location.hash.replace("#", "");
+    if (hash) {
+      const timer = setTimeout(() => {
         const target = document.getElementById(hash);
         if (target) {
-          const offset = 80;
-          const y = target.getBoundingClientRect().top + window.scrollY - offset;
+          const offset = 76;
+          const y = Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset);
           window.scrollTo({ top: y, behavior: "smooth" });
         }
-      }
-    };
-
-    const timer = setTimeout(handleHash, 100);
-    window.addEventListener("hashchange", handleHash);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("hashchange", handleHash);
-    };
+      }, 150);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   // Prevent TS unused variable errors for WIP code

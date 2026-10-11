@@ -125,28 +125,39 @@ function PublicLayout() {
   }, []);
 
   const isAutoScrollingRef = React.useRef(false);
+  const scrollTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const scrollToSection = (sectionId: string) => {
     if (location.pathname === "/") {
       isAutoScrollingRef.current = true;
       setActiveSection(sectionId);
 
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
       if (sectionId === "about-us") {
         window.scrollTo({ top: 0, behavior: "smooth" });
-        window.history.pushState(null, "", "/");
       } else {
         const el = document.getElementById(sectionId);
         if (el) {
           const headerOffset = 76;
-          const targetY = Math.max(0, el.getBoundingClientRect().top + window.scrollY - headerOffset);
+          const elementTop = el.getBoundingClientRect().top + window.scrollY;
+          const targetY = Math.max(0, elementTop - headerOffset);
           window.scrollTo({ top: targetY, behavior: "smooth" });
-          window.history.pushState(null, "", `/#${sectionId}`);
         }
       }
 
-      setTimeout(() => {
+      // Lock activeSection for the entire duration of the smooth scroll travel (700ms)
+      // and only sync the hash URL after arrival to avoid hash jump interference
+      scrollTimeoutRef.current = setTimeout(() => {
         isAutoScrollingRef.current = false;
-      }, 350);
+        if (sectionId === "about-us") {
+          window.history.replaceState(null, "", window.location.pathname);
+        } else {
+          window.history.replaceState(null, "", `#${sectionId}`);
+        }
+      }, 700);
     } else {
       window.location.href = `/#${sectionId}`;
     }
@@ -164,13 +175,18 @@ function PublicLayout() {
 
     const sectionIds = ["about-us", "features", "why-students-love-us"];
     const handleScroll = () => {
+      // Ignore scroll-spy while smoothly traveling to a clicked section
       if (isAutoScrollingRef.current) return;
+
       const scrollPosition = window.scrollY + 140;
       for (let i = sectionIds.length - 1; i >= 0; i--) {
         const el = document.getElementById(sectionIds[i]);
-        if (el && el.offsetTop <= scrollPosition) {
-          setActiveSection(sectionIds[i]);
-          return;
+        if (el) {
+          const elementTop = el.getBoundingClientRect().top + window.scrollY;
+          if (elementTop <= scrollPosition) {
+            setActiveSection(sectionIds[i]);
+            return;
+          }
         }
       }
       if (window.scrollY < 200) {
