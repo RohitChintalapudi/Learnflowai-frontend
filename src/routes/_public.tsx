@@ -110,8 +110,6 @@ function PublicLayout() {
   const location = useLocation();
   const isAppRoute = location.pathname === "/dashboard" || location.pathname === "/documents" || location.pathname.startsWith("/workspace") || location.pathname.startsWith("/notes") || location.pathname.startsWith("/quizzes") || location.pathname.startsWith("/analytics");
   const isLanding = location.pathname === "/";
-  const isAuthRoute = location.pathname === "/login" || location.pathname === "/signup";
-  const showNavbar = !isAppRoute && !isAuthRoute;
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("");
@@ -234,7 +232,7 @@ function PublicLayout() {
       }`}
     >
       {/* Global Public Sticky Animated Navbar */}
-      {showNavbar && (
+      {!isAppRoute && (
         <header
           className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
             isScrolled
@@ -279,17 +277,19 @@ function PublicLayout() {
               </div>
             </Link>
 
-            {/* Desktop Navigation Links with Motion animated tabs */}
-            <div className="hidden md:flex items-center">
-              <AnimatedTabs
-                tabs={navItems}
-                activeTab={isLanding ? activeSection : ""}
-                onChange={(_, id) => {
-                  if (id) scrollToSection(id);
-                }}
-                layoutId="navbar-tab"
-              />
-            </div>
+            {/* Desktop Navigation Links with Motion animated tabs (Landing page only) */}
+            {isLanding && (
+              <div className="hidden md:flex items-center">
+                <AnimatedTabs
+                  tabs={navItems}
+                  activeTab={isLanding ? activeSection : ""}
+                  onChange={(_, id) => {
+                    if (id) scrollToSection(id);
+                  }}
+                  layoutId="navbar-tab"
+                />
+              </div>
+            )}
 
             {/* Right controls */}
             <nav className="flex items-center gap-1.5 sm:gap-3 shrink-0">
@@ -326,25 +326,27 @@ function PublicLayout() {
                 Sign Up
               </Link>
 
-              {/* Mobile Menu Toggle Button */}
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen((prev) => !prev)}
-                className="md:hidden p-2 rounded-lg text-stone-600 dark:text-stone-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-all duration-200 focus:outline-none"
-                aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-              >
-                {mobileMenuOpen ? (
-                  <X className="h-[18px] w-[18px]" />
-                ) : (
-                  <Menu className="h-[18px] w-[18px]" />
-                )}
-              </button>
+              {/* Mobile Menu Toggle Button (Landing page only) */}
+              {isLanding && (
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen((prev) => !prev)}
+                  className="md:hidden p-2 rounded-lg text-stone-600 dark:text-stone-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-all duration-200 focus:outline-none"
+                  aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+                >
+                  {mobileMenuOpen ? (
+                    <X className="h-[18px] w-[18px]" />
+                  ) : (
+                    <Menu className="h-[18px] w-[18px]" />
+                  )}
+                </button>
+              )}
             </nav>
           </div>
 
           {/* Mobile Navigation Dropdown */}
           <AnimatePresence>
-            {mobileMenuOpen && (
+            {isLanding && mobileMenuOpen && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
@@ -391,7 +393,7 @@ function PublicLayout() {
       )}
 
       {/* Spacer for fixed navbar to prevent content overlapping */}
-      {showNavbar && (
+      {!isAppRoute && (
         <div className="h-16 sm:h-20 shrink-0 pointer-events-none" aria-hidden="true" />
       )}
 
