@@ -210,10 +210,10 @@ function PublicLayout() {
       {/* Global Public Sticky Animated Navbar */}
       {!isAppRoute && (
         <header
-          className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+          className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
             isScrolled
               ? "border-b border-stone-200/90 dark:border-stone-800/90 bg-white/90 dark:bg-[#0c0a09]/90 backdrop-blur-xl shadow-xs shadow-stone-900/5 py-1.5"
-              : "border-b border-transparent bg-white/70 dark:bg-[#0c0a09]/70 backdrop-blur-md py-3"
+              : "border-b border-transparent bg-white/75 dark:bg-[#0c0a09]/75 backdrop-blur-md py-3"
           }`}
         >
           <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-12 transition-all duration-300">
@@ -362,6 +362,11 @@ function PublicLayout() {
             )}
           </AnimatePresence>
         </header>
+      )}
+
+      {/* Spacer for fixed navbar to prevent content overlapping */}
+      {!isAppRoute && (
+        <div className="h-16 sm:h-20 shrink-0 pointer-events-none" aria-hidden="true" />
       )}
 
       {/* Page Content Container */}
