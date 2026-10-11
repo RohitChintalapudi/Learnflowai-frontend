@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
+import { TextMorph } from "./TextMorph";
 
-export type TabItem = string | { label: string; id: string };
+export type TabItem = string | { label: string; id: string; words?: string[] };
 
 export type AnimatedTabsProps = {
   tabs?: Array<TabItem>;
@@ -12,6 +13,7 @@ export type AnimatedTabsProps = {
   className?: string;
   tabClassName?: string;
   layoutId?: string;
+  morphInterval?: number;
 };
 
 const defaultTabs: TabItem[] = ["Home", "Components", "Docs", "Templates"];
@@ -27,6 +29,11 @@ export const AnimatedTabs = ({
 }: AnimatedTabsProps) => {
   const getTabLabel = (tab: TabItem) => (typeof tab === "string" ? tab : tab.label);
   const getTabId = (tab: TabItem) => (typeof tab === "string" ? tab : tab.id);
+  const getTabWords = (tab: TabItem): string[] => {
+    if (typeof tab === "string") return [tab];
+    if (tab.words && tab.words.length > 0) return tab.words;
+    return [tab.label];
+  };
 
   const isControlled = controlledActiveTab !== undefined;
   const initialTab = tabs.length > 0 ? getTabId(tabs[0]) : "";
@@ -51,6 +58,7 @@ export const AnimatedTabs = ({
         {tabs.map((tab, index) => {
           const id = getTabId(tab);
           const label = getTabLabel(tab);
+          const tabWords = getTabWords(tab);
           const isActive = currentActive === id;
 
           return (
@@ -78,7 +86,19 @@ export const AnimatedTabs = ({
                   }}
                 />
               )}
-              <span className="relative z-10">{label}</span>
+              <span className="relative z-10 flex items-center justify-center">
+                {tabWords.length > 1 ? (
+                  <TextMorph
+                    prefix=""
+                    words={tabWords}
+                    interval={morphInterval ?? (isActive ? 2800 : 3600)}
+                    className="inline-flex items-center"
+                    charClassName={isActive ? "text-primary dark:text-white font-semibold" : undefined}
+                  />
+                ) : (
+                  <span>{label}</span>
+                )}
+              </span>
             </button>
           );
         })}
@@ -96,6 +116,7 @@ export const AnimatedTabs = ({
       {tabs.map((tab, index) => {
         const id = getTabId(tab);
         const label = getTabLabel(tab);
+        const tabWords = getTabWords(tab);
         const isActive = currentActive === id;
 
         return (
@@ -123,7 +144,19 @@ export const AnimatedTabs = ({
                 }}
               />
             )}
-            <span className="relative z-10">{label}</span>
+            <span className="relative z-10 flex items-center justify-center">
+              {tabWords.length > 1 ? (
+                <TextMorph
+                  prefix=""
+                  words={tabWords}
+                  interval={morphInterval ?? (isActive ? 2800 : 3600)}
+                  className="inline-flex items-center"
+                  charClassName={isActive ? "text-white" : undefined}
+                />
+              ) : (
+                <span>{label}</span>
+              )}
+            </span>
           </button>
         );
       })}
