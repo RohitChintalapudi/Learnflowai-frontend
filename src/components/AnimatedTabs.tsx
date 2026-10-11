@@ -26,6 +26,7 @@ export const AnimatedTabs = ({
   className,
   tabClassName,
   layoutId = "active-tab",
+  morphInterval,
 }: AnimatedTabsProps) => {
   const getTabLabel = (tab: TabItem) => (typeof tab === "string" ? tab : tab.label);
   const getTabId = (tab: TabItem) => (typeof tab === "string" ? tab : tab.id);
