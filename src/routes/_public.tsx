@@ -110,6 +110,8 @@ function PublicLayout() {
   const location = useLocation();
   const isAppRoute = location.pathname === "/dashboard" || location.pathname === "/documents" || location.pathname.startsWith("/workspace") || location.pathname.startsWith("/notes") || location.pathname.startsWith("/quizzes") || location.pathname.startsWith("/analytics");
   const isLanding = location.pathname === "/";
+  const isAuthRoute = location.pathname === "/login" || location.pathname === "/signup";
+  const showNavbar = !isAppRoute && !isAuthRoute;
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("");
@@ -232,7 +234,7 @@ function PublicLayout() {
       }`}
     >
       {/* Global Public Sticky Animated Navbar */}
-      {!isAppRoute && (
+      {showNavbar && (
         <header
           className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
             isScrolled
@@ -389,7 +391,7 @@ function PublicLayout() {
       )}
 
       {/* Spacer for fixed navbar to prevent content overlapping */}
-      {!isAppRoute && (
+      {showNavbar && (
         <div className="h-16 sm:h-20 shrink-0 pointer-events-none" aria-hidden="true" />
       )}
 
