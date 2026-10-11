@@ -44,14 +44,14 @@ export function TextMorph({
   if (!words.length) return null;
 
   return (
-    <span className={cn("inline-flex items-center gap-1.5", className)}>
+    <span className={cn("inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap", className)}>
       {prefix !== null && prefix !== undefined && prefix !== "" ? (
         <span>{prefix}</span>
       ) : null}
       <AnimatePresence mode="popLayout">
         <motion.span
           key={`${index}-${currentWord}`}
-          className="flex gap-[0.5px] overflow-hidden py-0.5"
+          className="flex flex-nowrap shrink-0 whitespace-nowrap gap-[0.5px] overflow-hidden py-0.5"
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -5 }}
@@ -60,7 +60,7 @@ export function TextMorph({
           {chars.map((char, i) => (
             <motion.span
               key={i}
-              className={charClassName}
+              className={cn("inline-block shrink-0", charClassName)}
               initial={{ opacity: 0, y: 5, filter: "blur(5px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: -5, filter: "blur(5px)" }}

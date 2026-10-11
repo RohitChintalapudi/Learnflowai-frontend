@@ -1232,15 +1232,15 @@ function HomePage() {
               interval={3200}
             />
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.05] text-stone-900 dark:text-white mb-4 max-w-[420px]">
-            <span className="block sm:whitespace-nowrap">Learn Smarter.</span>
-            <span className="block sm:whitespace-nowrap flex items-center gap-2">
-              Understand{" "}
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.08] text-stone-900 dark:text-white mb-4 max-w-xl">
+            <span className="block whitespace-nowrap">Learn Smarter.</span>
+            <span className="flex items-center gap-2 whitespace-nowrap">
+              <span>Understand</span>{" "}
               <TextMorph
                 prefix=""
-                words={["Better.", "Faster.", "Deeper.", "Every Concept."]}
+                words={["Better.", "Faster.", "Deeper."]}
                 interval={2600}
-                className="text-orange-500 dark:text-orange-400 inline-flex"
+                className="text-orange-500 dark:text-orange-400 inline-flex shrink-0 whitespace-nowrap"
                 charClassName="text-orange-500 dark:text-orange-400"
               />
             </span>
