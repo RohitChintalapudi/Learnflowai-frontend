@@ -17,6 +17,8 @@ import {
 
 import { authStore } from "../store/authStore";
 import { authClient } from "../lib/auth-client";
+import { motion } from "motion/react";
+import AnimatedTabs from "../components/AnimatedTabs";
 
 export const Route = createFileRoute("/_public")({
   beforeLoad: () => {
@@ -235,25 +237,16 @@ function PublicLayout() {
               </div>
             </Link>
 
-            {/* Desktop Navigation Links */}
-            <div className="hidden md:flex items-center gap-1 lg:gap-2">
-              {navItems.map((item) => {
-                const isActive = isLanding && activeSection === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => scrollToSection(item.id)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs lg:text-sm font-medium transition-all duration-200 cursor-pointer ${
-                      isActive
-                        ? "text-orange-600 dark:text-orange-400 font-semibold bg-orange-50 dark:bg-orange-950/30"
-                        : "text-stone-600 dark:text-stone-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-stone-100/70 dark:hover:bg-stone-800/50"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
+            {/* Desktop Navigation Links with Motion animated tabs */}
+            <div className="hidden md:flex items-center">
+              <AnimatedTabs
+                tabs={navItems}
+                activeTab={isLanding ? activeSection : ""}
+                onChange={(_, id) => {
+                  if (id) scrollToSection(id);
+                }}
+                layoutId="navbar-tab"
+              />
             </div>
 
             {/* Right controls */}
@@ -320,13 +313,25 @@ function PublicLayout() {
                       scrollToSection(item.id);
                       setMobileMenuOpen(false);
                     }}
-                    className={`w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                    className={`relative w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                       isActive
-                        ? "bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 font-semibold"
+                        ? "text-orange-600 dark:text-orange-400 font-semibold"
                         : "text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/50"
                     }`}
                   >
-                    {item.label}
+                    {isActive && (
+                      <motion.div
+                        layoutId="mobile-nav-pill"
+                        className="absolute inset-0 rounded-lg bg-orange-50 dark:bg-orange-950/40"
+                        initial={false}
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 35,
+                        }}
+                      />
+                    )}
+                    <span className="relative z-10">{item.label}</span>
                   </button>
                 );
               })}

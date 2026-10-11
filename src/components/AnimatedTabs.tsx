@@ -1,0 +1,137 @@
+import { useState, useEffect } from "react";
+import { motion } from "motion/react";
+import { cn } from "@/lib/utils";
+
+export type TabItem = string | { label: string; id: string };
+
+export type AnimatedTabsProps = {
+  tabs?: Array<TabItem>;
+  variant?: "default" | "underline";
+  activeTab?: string;
+  onChange?: (tab: string, id?: string) => void;
+  className?: string;
+  tabClassName?: string;
+  layoutId?: string;
+};
+
+const defaultTabs: TabItem[] = ["Home", "Components", "Docs", "Templates"];
+
+export const AnimatedTabs = ({
+  tabs = defaultTabs,
+  variant = "default",
+  activeTab: controlledActiveTab,
+  onChange,
+  className,
+  tabClassName,
+  layoutId = "active-tab",
+}: AnimatedTabsProps) => {
+  const getTabLabel = (tab: TabItem) => (typeof tab === "string" ? tab : tab.label);
+  const getTabId = (tab: TabItem) => (typeof tab === "string" ? tab : tab.id);
+
+  const initialTab = tabs.length > 0 ? getTabId(tabs[0]) : "";
+  const [internalActiveTab, setInternalActiveTab] = useState(initialTab);
+
+  const currentActive = controlledActiveTab !== undefined ? controlledActiveTab : internalActiveTab;
+
+  useEffect(() => {
+    if (controlledActiveTab !== undefined) {
+      setInternalActiveTab(controlledActiveTab);
+    }
+  }, [controlledActiveTab]);
+
+  const handleTabClick = (tab: TabItem) => {
+    const id = getTabId(tab);
+    const label = getTabLabel(tab);
+    setInternalActiveTab(id);
+    if (onChange) {
+      onChange(label, id);
+    }
+  };
+
+  if (variant === "underline") {
+    return (
+      <div className={cn("border-border relative flex items-center border-b", className)}>
+        {tabs.map((tab, index) => {
+          const id = getTabId(tab);
+          const label = getTabLabel(tab);
+          const isActive = currentActive === id;
+
+          return (
+            <button
+              key={id || index}
+              type="button"
+              onClick={() => handleTabClick(tab)}
+              className={cn(
+                "relative flex h-10 items-center px-4 text-sm font-medium transition-colors duration-200 cursor-pointer focus:outline-none",
+                isActive
+                  ? "text-primary dark:text-white font-semibold"
+                  : "text-muted-foreground hover:text-foreground",
+                tabClassName
+              )}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId={`${layoutId}-underline`}
+                  className="bg-orange-500 absolute right-0 bottom-0 left-0 h-0.5"
+                  initial={false}
+                  transition={{
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30,
+                  }}
+                />
+              )}
+              <span className="relative z-10">{label}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "relative mx-auto flex w-fit items-center rounded-full border border-stone-200/80 bg-stone-100/80 p-1 dark:border-stone-800/80 dark:bg-stone-900/80 backdrop-blur-md shadow-xs",
+        className
+      )}
+    >
+      {tabs.map((tab, index) => {
+        const id = getTabId(tab);
+        const label = getTabLabel(tab);
+        const isActive = currentActive === id;
+
+        return (
+          <button
+            key={id || index}
+            type="button"
+            onClick={() => handleTabClick(tab)}
+            className={cn(
+              "relative flex h-8 items-center rounded-full px-3.5 text-xs sm:text-sm font-medium transition-colors duration-200 cursor-pointer focus:outline-none",
+              isActive
+                ? "text-white font-semibold shadow-xs"
+                : "text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white",
+              tabClassName
+            )}
+          >
+            {isActive && (
+              <motion.div
+                layoutId={`${layoutId}-background`}
+                className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 shadow-sm shadow-orange-500/25"
+                initial={false}
+                transition={{
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 35,
+                }}
+              />
+            )}
+            <span className="relative z-10">{label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+export default AnimatedTabs;
