@@ -107,22 +107,22 @@ export const AnimatedTabs = ({
             type="button"
             onClick={() => handleTabClick(tab)}
             className={cn(
-              "relative flex h-8 items-center rounded-full px-3.5 text-xs sm:text-sm font-medium transition-colors duration-200 cursor-pointer focus:outline-none",
+              "relative flex h-8 items-center rounded-full px-4 text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer focus:outline-none select-none active:scale-[0.97]",
               isActive
-                ? "text-white font-semibold shadow-xs"
-                : "text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white",
+                ? "text-white font-semibold"
+                : "text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white hover:bg-stone-200/50 dark:hover:bg-stone-800/50",
               tabClassName
             )}
           >
             {isActive && (
               <motion.div
                 layoutId={`${layoutId}-background`}
-                className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 shadow-sm shadow-orange-500/25"
+                className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 shadow-md shadow-orange-500/30"
                 initial={false}
                 transition={{
                   type: "spring",
-                  stiffness: 500,
-                  damping: 35,
+                  stiffness: 450,
+                  damping: 32,
                 }}
               />
             )}

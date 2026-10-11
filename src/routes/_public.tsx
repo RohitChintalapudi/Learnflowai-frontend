@@ -17,7 +17,7 @@ import {
 
 import { authStore } from "../store/authStore";
 import { authClient } from "../lib/auth-client";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import AnimatedTabs from "../components/AnimatedTabs";
 
 export const Route = createFileRoute("/_public")({
@@ -113,6 +113,16 @@ function PublicLayout() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("");
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const checkScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    checkScroll();
+    window.addEventListener("scroll", checkScroll, { passive: true });
+    return () => window.removeEventListener("scroll", checkScroll);
+  }, []);
 
   const scrollToSection = (sectionId: string) => {
     if (location.pathname === "/") {
@@ -197,10 +207,16 @@ function PublicLayout() {
           : "bg-[url('/background.png')] dark:bg-[url('/background_dark.png')] bg-cover bg-[50%_-250px] bg-no-repeat"
       }`}
     >
-      {/* Global Public Navbar */}
+      {/* Global Public Sticky Animated Navbar */}
       {!isAppRoute && (
-        <nav className="border-b border-stone-200 dark:border-[rgba(255,255,255,0.08)] bg-white/80 dark:bg-black/60 backdrop-blur-xl sticky top-0 z-50 transition-colors duration-300">
-          <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-12 py-2">
+        <header
+          className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+            isScrolled
+              ? "border-b border-stone-200/90 dark:border-stone-800/90 bg-white/90 dark:bg-[#0c0a09]/90 backdrop-blur-xl shadow-xs shadow-stone-900/5 py-1.5"
+              : "border-b border-transparent bg-white/70 dark:bg-[#0c0a09]/70 backdrop-blur-md py-3"
+          }`}
+        >
+          <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-12 transition-all duration-300">
             {/* Brand Logo & Name */}
             <Link
               to="/"
@@ -301,43 +317,51 @@ function PublicLayout() {
           </div>
 
           {/* Mobile Navigation Dropdown */}
-          {mobileMenuOpen && (
-            <div className="md:hidden border-t border-stone-200/80 dark:border-stone-800/80 bg-white/95 dark:bg-[#0c0a09]/95 backdrop-blur-xl px-4 py-3 space-y-1 transition-all">
-              {navItems.map((item) => {
-                const isActive = isLanding && activeSection === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      scrollToSection(item.id);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`relative w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                      isActive
-                        ? "text-orange-600 dark:text-orange-400 font-semibold"
-                        : "text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/50"
-                    }`}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="mobile-nav-pill"
-                        className="absolute inset-0 rounded-lg bg-orange-50 dark:bg-orange-950/40"
-                        initial={false}
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 35,
-                        }}
-                      />
-                    )}
-                    <span className="relative z-10">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </nav>
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.22, ease: "easeInOut" }}
+                className="overflow-hidden md:hidden border-t border-stone-200/80 dark:border-stone-800/80 bg-white/95 dark:bg-[#0c0a09]/95 backdrop-blur-xl px-4 py-3 space-y-1"
+              >
+                {navItems.map((item) => {
+                  const isActive = isLanding && activeSection === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        scrollToSection(item.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`relative w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                        isActive
+                          ? "text-orange-600 dark:text-orange-400 font-semibold"
+                          : "text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/50"
+                      }`}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="mobile-nav-pill"
+                          className="absolute inset-0 rounded-lg bg-orange-50 dark:bg-orange-950/40"
+                          initial={false}
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 35,
+                          }}
+                        />
+                      )}
+                      <span className="relative z-10">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </header>
       )}
 
       {/* Page Content Container */}
