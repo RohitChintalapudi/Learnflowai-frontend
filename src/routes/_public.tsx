@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { authStore } from "../store/authStore";
+import { authClient } from "../lib/auth-client";
 import { motion, AnimatePresence } from "motion/react";
 import AnimatedTabs from "../components/AnimatedTabs";
 import { TextMorph } from "../components/TextMorph";
