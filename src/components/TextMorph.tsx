@@ -48,32 +48,47 @@ export function TextMorph({
       {prefix !== null && prefix !== undefined && prefix !== "" ? (
         <span>{prefix}</span>
       ) : null}
-      <AnimatePresence mode="popLayout">
-        <motion.span
-          key={`${index}-${currentWord}`}
-          className="flex flex-nowrap shrink-0 whitespace-nowrap gap-[0.5px] overflow-hidden py-0.5"
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -5 }}
-          transition={{ duration: 0.35 }}
-        >
-          {chars.map((char, i) => (
+      <span className="inline-grid items-center shrink-0">
+        {/* Invisible measurement placeholders to permanently lock container dimensions to the largest word */}
+        {words.map((w, i) => (
+          <span
+            key={i}
+            aria-hidden="true"
+            className="invisible pointer-events-none select-none col-start-1 row-start-1 whitespace-nowrap overflow-hidden py-0.5"
+          >
+            {w}
+          </span>
+        ))}
+        {/* Visible animated active word */}
+        <span className="col-start-1 row-start-1 overflow-hidden py-0.5 flex items-center">
+          <AnimatePresence mode="popLayout">
             <motion.span
-              key={i}
-              className={cn("inline-block shrink-0", charClassName)}
-              initial={{ opacity: 0, y: 5, filter: "blur(5px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -5, filter: "blur(5px)" }}
-              transition={{
-                delay: i * 0.025,
-                duration: 0.28,
-              }}
+              key={`${index}-${currentWord}`}
+              className="flex flex-nowrap shrink-0 whitespace-nowrap gap-[0.5px]"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.35 }}
             >
-              {char === " " ? "\u00A0" : char}
+              {chars.map((char, i) => (
+                <motion.span
+                  key={i}
+                  className={cn("inline-block shrink-0", charClassName)}
+                  initial={{ opacity: 0, y: 5, filter: "blur(5px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -5, filter: "blur(5px)" }}
+                  transition={{
+                    delay: i * 0.025,
+                    duration: 0.28,
+                  }}
+                >
+                  {char === " " ? "\u00A0" : char}
+                </motion.span>
+              ))}
             </motion.span>
-          ))}
-        </motion.span>
-      </AnimatePresence>
+          </AnimatePresence>
+        </span>
+      </span>
     </span>
   );
 }
