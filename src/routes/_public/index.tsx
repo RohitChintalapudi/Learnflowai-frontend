@@ -37,7 +37,7 @@ type FeatureId = "ai" | "quiz" | "notes" | "sim" | "roadmap";
 const statsData = [
   { icon: GraduationCap, value: "10,000+", label: "Active Learners" },
   { icon: BookOpen, value: "500+", label: "Topics Covered" },
-  { icon: Zap, value: "AI-Powered", label: "Learning Assistant" },
+  { icon: Zap, value: "Real-Time", label: "Learning Assistant" },
   { icon: Trophy, value: "95%", label: "Learner Satisfaction" },
 ];
 
@@ -1311,7 +1311,7 @@ function HomePage() {
                 <s.icon className="h-4.5 w-4.5 text-orange-500 dark:text-orange-400" />
               </div>
               <div>
-                <p className="text-lg font-extrabold text-stone-900 dark:text-white">
+                <p className="text-lg font-extrabold text-stone-900 dark:text-white whitespace-nowrap">
                   {s.value}
                 </p>
                 <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
