@@ -1303,7 +1303,7 @@ function HomePage() {
       </section>
 
       {/* STATS SECTION */}
-      <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-1 -mt-15">
+      <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-1 -mt-[50px] sm:-mt-[90px] lg:-mt-[120px] relative z-20">
         <div className="grid grid-cols-1 min-[500px]:grid-cols-2 lg:grid-cols-4 gap-4">
           {statsData.map((s) => (
             <div key={s.label} className="flex items-center gap-4 px-6 py-5 rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/40">
