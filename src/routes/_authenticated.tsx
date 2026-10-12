@@ -5,6 +5,7 @@ import { authClient } from '../lib/auth-client'
 import { ProductTour } from '../components/Tour/ProductTour'
 import { TourPrompt } from '../components/Tour/TourPrompt'
 import { useProductTour } from '../contexts/ProductTourContext'
+import { FeedbackWidget } from '../components/FeedbackWidget'
 
 export const Route = createFileRoute('/_authenticated')({
   beforeLoad: async ({ location }) => {
@@ -69,6 +70,7 @@ function AuthenticatedLayout() {
         onAccept={handleAcceptTour}
         onSkip={handleSkipTour}
       />
+      <FeedbackWidget />
     </div>
   )
 }

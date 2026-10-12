@@ -1058,8 +1058,38 @@ export const AlertsAPI = {
     }
 
     return response.json();
-
   }
 };
 
-// End of file
+export const FeedbackAPI = {
+  async submitFeedback(data: { rating: number; comment?: string }): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${API_BASE_URL}/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to submit feedback");
+    }
+
+    return response.json();
+  },
+
+  async getMyFeedback(): Promise<{ success: boolean; data: any[] }> {
+    const response = await fetch(`${API_BASE_URL}/feedback`, {
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to get feedback");
+    }
+
+    return response.json();
+  },
+};
+
