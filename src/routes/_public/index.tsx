@@ -37,7 +37,7 @@ type FeatureId = "ai" | "quiz" | "notes" | "sim" | "roadmap";
 const statsData = [
   { icon: GraduationCap, value: "10,000+", label: "Active Learners" },
   { icon: BookOpen, value: "500+", label: "Topics Covered" },
-  { icon: Zap, value: "AI-Powered", label: "Learning Assistant" },
+  { icon: Zap, value: "Real-Time", label: "Learning Assistant" },
   { icon: Trophy, value: "95%", label: "Learner Satisfaction" },
 ];
 
@@ -1218,29 +1218,20 @@ function HomePage() {
       {/* Î“Ã¶Ã‡Î“Ã¶Ã‡ HERO SECTION Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡ */}
       <section id="about-us" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-24 sm:pt-16 pb-12 -mt-20 flex flex-col xl:flex-row items-center gap-16 xl:gap-24 lg:gap-12 relative z-10 scroll-mt-20">
         {/* Left Copy */}
-        <div className="flex-grow md:flex-1 flex flex-col items-start w-full max-w-[500px] xl:shrink-0 xl:scale-[1.1] lg:scale-100 scale-100 origin-center">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-200 dark:border-orange-900/60 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-semibold mb-6">
+        <div className="flex-1 flex flex-col items-start w-full max-w-[500px] xl:w-[500px] xl:shrink-0 xl:scale-[1.1] lg:scale-100 scale-100 origin-center">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-orange-200 dark:border-orange-900/60 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-semibold mb-6">
             <Sparkles className="h-3.5 w-3.5 shrink-0" />
-            <TextMorph
-              prefix=""
-              words={[
-                "AI-Powered Learning for Computer Science",
-                "Instant AI Doubt Clarification & Explanations",
-                "Interactive Network & Protocol Simulations",
-                "Smart Flashcards & Adaptive Practice",
-              ]}
-              interval={3200}
-            />
+            <span>Instant AI Doubt Clarification & Explanations</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.05] text-stone-900 dark:text-white mb-4 max-w-[420px]">
-            <span className="block sm:whitespace-nowrap">Learn Smarter.</span>
-            <span className="block sm:whitespace-nowrap flex items-center gap-2">
-              Understand{" "}
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.08] text-stone-900 dark:text-white mb-4 max-w-xl">
+            <span className="block whitespace-nowrap">Learn Smarter.</span>
+            <span className="flex items-center gap-2 whitespace-nowrap">
+              <span>Understand</span>{" "}
               <TextMorph
                 prefix=""
-                words={["Better.", "Faster.", "Deeper.", "Every Concept."]}
+                words={["Better.", "Faster.", "Deeper."]}
                 interval={2600}
-                className="text-orange-500 dark:text-orange-400 inline-flex"
+                className="text-orange-500 dark:text-orange-400 inline-flex shrink-0 whitespace-nowrap"
                 charClassName="text-orange-500 dark:text-orange-400"
               />
             </span>
@@ -1287,15 +1278,15 @@ function HomePage() {
                     />
                   ))}
               </div>
-              <span className="text-[11px] text-stone-550 dark:text-stone-400">
-                Loved by 10,000+ CS students
+              <span className="text-[11px] text-stone-500 dark:text-stone-400">
+                Loved by 1000+ CS students
               </span>
             </div>
           </div>
         </div>
 
         {/* Right — Theme-Aware Laptop Mockup Images */}
-        <div className="flex-[2] flex items-center justify-center w-full min-h-[200px] sm:min-h-[300px] md:min-h-[380px] overflow-visible xl:justify-end xl:pl-12 lg:pl-10 lg:-mr-0 xl:-mr-16">
+        <div className="flex-[2] xl:flex-1 flex items-center justify-center w-full min-h-[200px] sm:min-h-[300px] md:min-h-[380px] overflow-visible xl:justify-end xl:pl-12 lg:pl-10 lg:-mr-0 xl:-mr-16">
           <div className="relative w-full">
             <img
               src="/light_theme_laptop.png"
@@ -1312,7 +1303,7 @@ function HomePage() {
       </section>
 
       {/* STATS SECTION */}
-      <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-1 -mt-15">
+      <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-1 -mt-[50px] sm:-mt-[90px] lg:-mt-[120px] relative z-20">
         <div className="grid grid-cols-1 min-[500px]:grid-cols-2 lg:grid-cols-4 gap-4">
           {statsData.map((s) => (
             <div key={s.label} className="flex items-center gap-4 px-6 py-5 rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/40">
@@ -1320,16 +1311,8 @@ function HomePage() {
                 <s.icon className="h-4.5 w-4.5 text-orange-500 dark:text-orange-400" />
               </div>
               <div>
-                <p className="text-lg font-extrabold text-stone-900 dark:text-white">
-                  {s.label === "Learning Assistant" ? (
-                    <TextMorph
-                      prefix=""
-                      words={["AI-Powered", "Real-Time", "Adaptive", "Instant"]}
-                      interval={2800}
-                    />
-                  ) : (
-                    s.value
-                  )}
+                <p className="text-lg font-extrabold text-stone-900 dark:text-white whitespace-nowrap">
+                  {s.value}
                 </p>
                 <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
                   {s.label}
@@ -1346,17 +1329,8 @@ function HomePage() {
           <div className="relative h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent mb-12" />
         </div>
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-extrabold tracking-tight text-stone-900 dark:text-white mb-4 flex items-center justify-center">
-            <TextMorph
-              prefix=""
-              words={[
-                "Features We Provide",
-                "Interactive AI Learning Tools",
-                "Real-Time Concept Visualizations",
-                "Comprehensive CS Practice Modes",
-              ]}
-              interval={3000}
-            />
+          <h2 className="text-3xl font-extrabold tracking-tight text-stone-900 dark:text-white mb-4">
+            Features We Provide
           </h2>
           <p className="text-lg text-stone-600 dark:text-stone-400 max-w-2xl mx-auto">
             Everything you need to master Computer Science with AI-powered tools
@@ -1501,17 +1475,8 @@ function HomePage() {
         <div id="blog" className="sr-only" aria-hidden="true" />
         <div id="students-love" className="sr-only" aria-hidden="true" />
         <div className="mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 dark:text-white mb-2 flex items-center">
-            <TextMorph
-              prefix=""
-              words={[
-                "What Students Love",
-                "Why Students Love Us",
-                "Real Student Stories",
-                "Proven Learning Impact",
-              ]}
-              interval={3200}
-            />
+          <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 dark:text-white mb-2">
+            Why Students Love Us
           </h2>
           <p className="text-sm text-stone-500 dark:text-stone-400">
             Join thousands of CS learners who've transformed their understanding
@@ -1688,16 +1653,8 @@ function HomePage() {
             <Sparkles className="h-7 w-7 text-orange-500 dark:text-orange-400" />
           </div>
           <div>
-            <h3 className="text-3xl md:text-4xl font-extrabold text-stone-900 dark:text-white mb-4 flex items-center justify-center">
-              <TextMorph
-                prefix=""
-                words={[
-                  "Ready to begin your learning journey?",
-                  "Master computer science concepts today",
-                  "Turn confusion into total clarity",
-                ]}
-                interval={3500}
-              />
+            <h3 className="text-3xl md:text-4xl font-extrabold text-stone-900 dark:text-white mb-4">
+              Ready to begin your learning journey?
             </h3>
             <p className="text-base text-stone-500 dark:text-stone-400 max-w-xl mx-auto">
               Join thousands of students and master computer science concepts
