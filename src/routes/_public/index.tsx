@@ -1278,8 +1278,8 @@ function HomePage() {
                     />
                   ))}
               </div>
-              <span className="text-[11px] text-stone-550 dark:text-stone-400">
-                Loved by 10,000+ CS students
+              <span className="text-[11px] text-stone-500 dark:text-stone-400">
+                Loved by 1000+ CS students
               </span>
             </div>
           </div>
