@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_public/")({
 type FeatureId = "ai" | "quiz" | "notes" | "sim" | "roadmap";
 
 const statsData = [
-  { icon: GraduationCap, value: "10,000+", label: "Active Learners" },
+  { icon: GraduationCap, value: "100+", label: "Active Learners" },
   { icon: BookOpen, value: "500+", label: "Topics Covered" },
   { icon: Zap, value: "Real-Time", label: "Learning Assistant" },
   { icon: Trophy, value: "95%", label: "Learner Satisfaction" },
