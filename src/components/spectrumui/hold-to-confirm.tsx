@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, Check, Loader2 } from "lucide-react";
+import { Trash2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface HoldToConfirmButtonProps

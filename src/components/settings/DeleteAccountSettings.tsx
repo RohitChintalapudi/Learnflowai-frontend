@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { SettingsCard, SettingsButton, SettingsInput } from './shared';
-import { AlertTriangle, Loader2, Eye, EyeOff } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SettingsAPI } from '../../lib/api';
 import toast from 'react-hot-toast';
