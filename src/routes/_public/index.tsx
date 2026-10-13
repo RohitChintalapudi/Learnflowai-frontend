@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_public/")({
 type FeatureId = "ai" | "quiz" | "notes" | "sim" | "roadmap";
 
 const statsData = [
-  { icon: GraduationCap, value: "10,000+", label: "Active Learners" },
+  { icon: GraduationCap, value: "100+", label: "Active Learners" },
   { icon: BookOpen, value: "500+", label: "Topics Covered" },
   { icon: Zap, value: "Real-Time", label: "Learning Assistant" },
   { icon: Trophy, value: "95%", label: "Learner Satisfaction" },
@@ -1102,6 +1102,95 @@ export function ScreenPDF({ highlightedKeyword, onKeywordClick }: ScreenPDFProps
 // Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡
 // MAIN PAGE
 // Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡Î“Ã¶Ã‡
+const studentReviews = [
+  {
+    name: "Aarav Sharma",
+    role: "CS Undergrad @ IIT Delhi",
+    text: "The dynamic programming breakdowns are unmatched. Instead of just giving the memoized recurrence relation, the AI walked through the subproblem decision tree step-by-step. Went from dreading DP in LeetCode to actually understanding the state transitions.",
+    rating: 5.0,
+  },
+  {
+    name: "Elena Rostova",
+    role: "Software Engineering Sophomore @ TU Munich",
+    text: "Operating Systems virtual memory was completely confusing until I used the memory paging simulator here. Seeing dirty bits and page faults animate in real-time made everything click. Rated 4.5 only because I'm eagerly waiting for cache hierarchy simulations!",
+    rating: 4.5,
+  },
+  {
+    name: "Marcus Vance",
+    role: "Junior @ Georgia Tech",
+    text: "Genuinely replaces scouring 40-minute YouTube lectures for a 2-minute concept. The doubt clarification is razor-sharp on Computer Networks—especially TCP sliding windows and CIDR subnetting calculations. Super solid study companion.",
+    rating: 4.0,
+  },
+  {
+    name: "Priya Sundaram",
+    role: "CS Senior @ BITS Pilani",
+    text: "I used the AI quiz generator right before my Database Systems end-semester exam. It generated tricky B+ Tree insertion edge cases and ACID isolation level scenarios that literally showed up on my test paper.",
+    rating: 5.0,
+  },
+  {
+    name: "Devon Miller",
+    role: "CS Student @ Oregon State",
+    text: "The step-by-step doubt resolution doesn't just vomit code—it forces you to think through time complexity and edge cases. It feels like having a patient university TA available at 2 AM the night before deadlines.",
+    rating: 4.5,
+  },
+  {
+    name: "Chloe Zhang",
+    role: "ECE & CS Junior @ UIUC",
+    text: "System design and distributed systems concepts like Raft consensus and consistent hashing were always abstract in lecture slides. LearnFlow's interactive walkthroughs broke down leader election effortlessly.",
+    rating: 5.0,
+  },
+  {
+    name: "Rohan Mukherjee",
+    role: "Pre-final Year @ NIT Trichy",
+    text: "Hands down the best tool for untangling Graph algorithms (Dijkstra vs Bellman-Ford negative cycles). The interactive visualization made edge relaxations visually intuitive. Looking forward to even more roadmap topics!",
+    rating: 4.0,
+  },
+  {
+    name: "Maya Patel",
+    role: "CS Senior @ University of Washington",
+    text: "Mock interview prep with the AI assistant felt so natural. It pointed out subtle memory leaks in my C++ pointer manipulation that standard linters didn't flag. Helped me land my summer SWE internship!",
+    rating: 5.0,
+  },
+];
+
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map((pos) => {
+          if (rating >= pos) {
+            return (
+              <Star
+                key={pos}
+                className="h-4 w-4 fill-orange-400 text-orange-400 shrink-0"
+              />
+            );
+          }
+          if (rating >= pos - 0.5) {
+            return (
+              <div key={pos} className="relative h-4 w-4 shrink-0">
+                <Star className="h-4 w-4 text-stone-300 dark:text-stone-700" />
+                <div className="absolute inset-0 overflow-hidden w-1/2">
+                  <Star className="h-4 w-4 fill-orange-400 text-orange-400" />
+                </div>
+              </div>
+            );
+          }
+          return (
+            <Star
+              key={pos}
+              className="h-4 w-4 text-stone-300 dark:text-stone-700 shrink-0"
+            />
+          );
+        })}
+      </div>
+      <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+        {rating.toFixed(1)}
+      </span>
+    </div>
+  );
+}
+
 function HomePage() {
   const [activeFeature, setActiveFeature] = useState<FeatureId | null>(null);
   const [highlightedKeyword, setHighlightedKeyword] = useState<string | null>(
@@ -1494,67 +1583,27 @@ function HomePage() {
         >
           {/* Track 1 */}
           <div className="flex animate-marquee shrink-0 min-w-full gap-5 pr-5 items-stretch">
-            {[
-              {
-                name: "Alex Chen",
-                role: "CS Student @ MIT",
-                text: "Finally understood networking concepts! The interactive simulations made TCP handshakes click.",
-                rating: 5,
-              },
-              {
-                name: "Jordan Lee",
-                role: "CS Student @ Stanford",
-                text: "The AI explanations are so clear. No more watching 10 different YouTube videos for one topic.",
-                rating: 5,
-              },
-              {
-                name: "Sam Patel",
-                role: "CS Student @ UC Berkeley",
-                text: "Quiz generation is insane. Covers exactly what I need to study, instantly from my notes.",
-                rating: 5,
-              },
-              {
-                name: "Taylor Kim",
-                role: "Bootcamp Graduate",
-                text: "Went from struggling with data structures to acing my technical interviews. Game changer!",
-                rating: 5,
-              },
-              {
-                name: "Casey Quinn",
-                role: "CS Student @ CMU",
-                text: "Loved the learning roadmap feature. Finally have a structured path through hard topics.",
-                rating: 5,
-              },
-            ].map((review, idx) => (
+            {studentReviews.map((review, idx) => (
               <div key={`review-1-${idx}`} className="flex-shrink-0 w-80">
-                <div className="relative rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/50 p-6 h-full overflow-hidden group/card hover:border-orange-400 dark:hover:border-orange-600 transition-all duration-300">
+                <div className="relative rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/50 p-6 h-full overflow-hidden group/card hover:border-orange-400 dark:hover:border-orange-600 transition-all duration-300 flex flex-col justify-between">
                   <div className="absolute inset-0 rounded-2xl blur-2xl transition-all duration-500 bg-orange-500/0 group-hover/card:bg-orange-500/10 opacity-0 group-hover/card:opacity-100" />
                   <div className="relative z-10 space-y-4">
-                    <div className="flex gap-1">
-                      {Array(review.rating)
-                        .fill(0)
-                        .map((_, i) => (
-                          <Star
-                            key={i}
-                            className="h-4 w-4 fill-orange-400 text-orange-400"
-                          />
-                        ))}
-                    </div>
+                    <StarRating rating={review.rating} />
                     <p className="text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
                       "{review.text}"
                     </p>
-                    <div className="flex items-center gap-3 pt-2 border-t border-stone-200 dark:border-stone-800">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
-                        {review.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-stone-900 dark:text-white">
-                          {review.name}
-                        </p>
-                        <p className="text-[10px] text-stone-500 dark:text-stone-400">
-                          {review.role}
-                        </p>
-                      </div>
+                  </div>
+                  <div className="relative z-10 flex items-center gap-3 pt-4 mt-4 border-t border-stone-200 dark:border-stone-800">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                      {review.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-stone-900 dark:text-white">
+                        {review.name}
+                      </p>
+                      <p className="text-[10px] text-stone-500 dark:text-stone-400">
+                        {review.role}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1567,67 +1616,27 @@ function HomePage() {
             className="flex animate-marquee shrink-0 min-w-full gap-5 pr-5 items-stretch"
             aria-hidden="true"
           >
-            {[
-              {
-                name: "Alex Chen",
-                role: "CS Student @ MIT",
-                text: "Finally understood networking concepts! The interactive simulations made TCP handshakes click.",
-                rating: 5,
-              },
-              {
-                name: "Jordan Lee",
-                role: "CS Student @ Stanford",
-                text: "The AI explanations are so clear. No more watching 10 different YouTube videos for one topic.",
-                rating: 5,
-              },
-              {
-                name: "Sam Patel",
-                role: "CS Student @ UC Berkeley",
-                text: "Quiz generation is insane. Covers exactly what I need to study, instantly from my notes.",
-                rating: 5,
-              },
-              {
-                name: "Taylor Kim",
-                role: "Bootcamp Graduate",
-                text: "Went from struggling with data structures to acing my technical interviews. Game changer!",
-                rating: 5,
-              },
-              {
-                name: "Casey Quinn",
-                role: "CS Student @ CMU",
-                text: "Loved the learning roadmap feature. Finally have a structured path through hard topics.",
-                rating: 5,
-              },
-            ].map((review, idx) => (
+            {studentReviews.map((review, idx) => (
               <div key={`review-2-${idx}`} className="flex-shrink-0 w-80">
-                <div className="relative rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/50 p-6 h-full overflow-hidden group/card hover:border-orange-400 dark:hover:border-orange-600 transition-all duration-300">
+                <div className="relative rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/50 p-6 h-full overflow-hidden group/card hover:border-orange-400 dark:hover:border-orange-600 transition-all duration-300 flex flex-col justify-between">
                   <div className="absolute inset-0 rounded-2xl blur-2xl transition-all duration-500 bg-orange-500/0 group-hover/card:bg-orange-500/10 opacity-0 group-hover/card:opacity-100" />
                   <div className="relative z-10 space-y-4">
-                    <div className="flex gap-1">
-                      {Array(review.rating)
-                        .fill(0)
-                        .map((_, i) => (
-                          <Star
-                            key={i}
-                            className="h-4 w-4 fill-orange-400 text-orange-400"
-                          />
-                        ))}
-                    </div>
+                    <StarRating rating={review.rating} />
                     <p className="text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
                       "{review.text}"
                     </p>
-                    <div className="flex items-center gap-3 pt-2 border-t border-stone-200 dark:border-stone-800">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
-                        {review.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-stone-900 dark:text-white">
-                          {review.name}
-                        </p>
-                        <p className="text-[10px] text-stone-500 dark:text-stone-400">
-                          {review.role}
-                        </p>
-                      </div>
+                  </div>
+                  <div className="relative z-10 flex items-center gap-3 pt-4 mt-4 border-t border-stone-200 dark:border-stone-800">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                      {review.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-stone-900 dark:text-white">
+                        {review.name}
+                      </p>
+                      <p className="text-[10px] text-stone-500 dark:text-stone-400">
+                        {review.role}
+                      </p>
                     </div>
                   </div>
                 </div>

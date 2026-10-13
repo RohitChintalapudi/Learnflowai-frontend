@@ -33,6 +33,7 @@ import { ProfileModal } from "./ProfileModal";
 import { authStore } from "../store/authStore";
 import { authClient } from "../lib/auth-client";
 import { useProductTour } from "../contexts/ProductTourContext";
+import { NotificationStack, type NotificationStackItem } from "./motion/notification-stack";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
@@ -96,6 +97,40 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
   });
 
   const unreadCount = alerts.filter(a => !a.read).length;
+
+  const notificationItems: NotificationStackItem[] = alerts.map((alert) => ({
+    id: alert.id,
+    title: (
+      <span className="flex items-center gap-2">
+        {!alert.read && <span className="h-1.5 w-1.5 rounded-full bg-orange-500 shrink-0 shadow-sm shadow-orange-500/50" />}
+        <span className="font-semibold text-stone-900 dark:text-stone-100 truncate">{alert.title}</span>
+      </span>
+    ),
+    description: (
+      <span className="text-stone-500 dark:text-stone-400 leading-snug line-clamp-2 block text-xs">
+        {alert.message}
+      </span>
+    ),
+    trailing: (
+      <span className="flex items-center gap-1.5 shrink-0">
+        <span className="text-[10px] text-stone-400 dark:text-stone-500 whitespace-nowrap">
+          {new Date(alert.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+        </span>
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={(e) => {
+            e.stopPropagation();
+            deleteAlertMutation.mutate(alert.id);
+          }}
+          className="p-1 rounded-md text-stone-400 hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer inline-flex items-center"
+          title="Delete notification"
+        >
+          <Trash2 className="h-3 w-3" />
+        </span>
+      </span>
+    ),
+  }));
 
   const markAllReadMutation = useMutation({
     mutationFn: AlertsAPI.markAllRead,
@@ -448,22 +483,22 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
                 </button>
 
                 {isAlertsOpen && (
-                  <div className="absolute right-0 mt-2 w-[340px] max-w-[calc(100vw-32px)] bg-white dark:bg-[#111] rounded-2xl border border-[var(--lf-border)] card-shadow-lg overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="absolute right-0 mt-2 w-[356px] max-w-[calc(100vw-24px)] bg-white/95 dark:bg-[#121212]/95 backdrop-blur-xl rounded-3xl border border-stone-200/80 dark:border-stone-800 card-shadow-lg p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     {/* Header */}
-                    <div className="px-4 py-3 border-b border-[var(--lf-border)] flex items-center justify-between bg-white/50 dark:bg-black/20 backdrop-blur-sm">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[13.5px] font-bold">Notifications</span>
+                    <div className="px-3 py-2 flex items-center justify-between border-b border-stone-100 dark:border-stone-800/80 mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-bold text-stone-900 dark:text-white">Notifications</span>
                         {unreadCount > 0 && (
-                          <span className="text-[10px] bg-orange-500/10 text-orange-500 font-bold px-1.5 py-0.5 rounded-full">
+                          <span className="text-[10px] bg-orange-500/15 text-orange-500 font-bold px-2 py-0.5 rounded-full">
                             {unreadCount} new
                           </span>
                         )}
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         {unreadCount > 0 && (
                           <button
                             onClick={() => markAllReadMutation.mutate()}
-                            className="text-[11px] font-medium text-orange-500 hover:text-orange-600 flex items-center gap-1"
+                            className="text-[11px] font-semibold text-orange-500 hover:text-orange-600 flex items-center gap-1 transition-colors"
                             title="Mark all as read"
                           >
                             <CheckCheck className="h-3 w-3" />
@@ -473,7 +508,7 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
                         {alerts.length === 0 && (
                           <button
                             onClick={() => seedAlertsMutation.mutate()}
-                            className="text-[11px] font-medium text-[var(--lf-text-secondary)] hover:text-[var(--lf-text-primary)]"
+                            className="text-[11px] font-medium text-stone-500 hover:text-orange-500 transition-colors"
                           >
                             Seed demo
                           </button>
@@ -481,62 +516,38 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
                       </div>
                     </div>
 
-                    {/* Content List */}
-                    <div className="max-h-[300px] overflow-y-auto divide-y divide-[var(--lf-border)] no-scrollbar">
-                      {alerts.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-                          <div className="w-10 h-10 rounded-full bg-[var(--lf-surface)] border border-[var(--lf-border)] flex items-center justify-center mb-2">
-                            <Inbox className="h-5 w-5 text-[var(--lf-text-secondary)]" />
-                          </div>
-                          <p className="text-xs font-semibold text-[var(--lf-text-primary)]">All caught up!</p>
-                          <p className="text-[11px] text-[var(--lf-text-secondary)] mt-1">No alerts or notifications yet.</p>
-                          <button
-                            onClick={() => seedAlertsMutation.mutate()}
-                            className="mt-3 px-3 py-1 text-[11px] font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg hover:shadow-md transition-all active:scale-95"
-                          >
-                            Seed Demo Alerts
-                          </button>
+                    {/* Stack Component */}
+                    {alerts.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                        <div className="w-10 h-10 rounded-full bg-stone-100 dark:bg-zinc-900 border border-stone-200 dark:border-stone-800 flex items-center justify-center mb-2">
+                          <Inbox className="h-5 w-5 text-stone-400" />
                         </div>
-                      ) : (
-                        alerts.map((alert) => (
-                          <div
-                            key={alert.id}
-                            className={`p-4 flex gap-3 transition-colors hover:bg-[var(--lf-surface)] relative group ${
-                              !alert.read ? "bg-orange-500/[0.015] dark:bg-orange-500/[0.03]" : ""
-                            }`}
-                          >
-                            {/* Type Indicator Dot */}
-                            {!alert.read && (
-                              <span className="absolute left-2.5 top-5.5 h-1.5 w-1.5 rounded-full bg-orange-500 shrink-0" />
-                            )}
-
-                            {/* Icon / Content */}
-                            <div className="flex-1 min-w-0 pl-1.5">
-                              <p className="text-[12.5px] font-semibold text-[var(--lf-text-primary)] truncate">
-                                {alert.title}
-                              </p>
-                              <p className="text-[11.5px] text-[var(--lf-text-secondary)] mt-0.5 leading-normal break-words">
-                                {alert.message}
-                              </p>
-                              <span className="text-[10px] text-[var(--lf-text-secondary)] mt-1 block">
-                                {new Date(alert.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-
-                            {/* Action Buttons (Dismiss/Delete) */}
-                            <div className="flex items-start shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={() => deleteAlertMutation.mutate(alert.id)}
-                                className="p-1 rounded hover:bg-red-500/10 text-[var(--lf-text-secondary)] hover:text-red-500 transition-colors"
-                                title="Delete notification"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
+                        <p className="text-xs font-semibold text-stone-800 dark:text-stone-200">All caught up!</p>
+                        <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">No alerts or notifications yet.</p>
+                        <button
+                          onClick={() => seedAlertsMutation.mutate()}
+                          className="mt-3 px-3.5 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl hover:shadow-md transition-all active:scale-95"
+                        >
+                          Seed Demo Alerts
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex justify-center">
+                        <NotificationStack
+                          items={notificationItems}
+                          maxVisible={4}
+                          direction="down"
+                          onViewAll={() => {
+                            if (unreadCount > 0) markAllReadMutation.mutate();
+                          }}
+                          className="w-full max-w-full"
+                          classNames={{
+                            card: "border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#1a1a1a] shadow-sm hover:border-orange-500/40 transition-colors",
+                            content: "py-3",
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

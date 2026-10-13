@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { SettingsCard, SettingsButton, SettingsInput } from './shared';
-import { AlertTriangle, Loader2, Eye, EyeOff } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SettingsAPI } from '../../lib/api';
 import toast from 'react-hot-toast';
@@ -8,6 +8,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { authClient } from '../../lib/auth-client';
 import { authStore } from '../../store/authStore';
+import { HoldToConfirmButton } from '../spectrumui/hold-to-confirm';
 
 export function DeleteAccountSettings() {
   const navigate = useNavigate();
@@ -155,28 +156,30 @@ export function DeleteAccountSettings() {
                 )}
               </div>
 
-              <div className="p-4 bg-stone-50 dark:bg-[#111] border-t border-orange-500/20 flex justify-end gap-3">
-                <SettingsButton 
-                  variant="outline" 
-                  onClick={() => setShowDeleteModal(false)}
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </SettingsButton>
-                <SettingsButton 
-                  variant="danger" 
-                  onClick={handleDeleteAccount}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    "Delete Forever"
-                  )}
-                </SettingsButton>
+              <div className="p-4 bg-stone-50 dark:bg-[#111] border-t border-orange-500/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p className="text-xs text-stone-500 dark:text-stone-400 text-center sm:text-left order-2 sm:order-1">
+                  Hold the button to delete forever
+                </p>
+                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end order-1 sm:order-2">
+                  <SettingsButton 
+                    variant="outline" 
+                    onClick={() => setShowDeleteModal(false)}
+                    disabled={isDeleting}
+                  >
+                    Cancel
+                  </SettingsButton>
+                  <HoldToConfirmButton 
+                    label="Delete Forever"
+                    holdingLabel="Keep holding..."
+                    confirmedLabel="Deleting..."
+                    duration={1500}
+                    onConfirm={handleDeleteAccount}
+                    disabled={isDeleting}
+                    variant="danger"
+                    size="md"
+                    className="font-bold min-w-[150px]"
+                  />
+                </div>
               </div>
             </motion.div>
           </motion.div>
