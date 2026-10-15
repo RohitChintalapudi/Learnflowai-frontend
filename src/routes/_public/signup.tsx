@@ -37,9 +37,9 @@ function SignupPage() {
     e.preventDefault();
     setError(null);
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      toast.error("Please fill in all fields.");
-      setError("Please fill in all fields.");
+    if (!firstName || !email || !password || !confirmPassword) {
+      toast.error("Please fill in all required fields.");
+      setError("Please fill in all required fields.");
       return;
     }
 
@@ -58,22 +58,26 @@ function SignupPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        `${BACKEND_URL}/api/auth/sign-up/email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          // IMPORTANT: This ensures the session cookie is saved in the browser!
-          credentials: "include",
-          body: JSON.stringify({
-            name: `${firstName} ${lastName}`,
-            email: email,
-            password: password,
-          }),
-        },
-      );
+          const fullName = lastName.trim()
+            ? `${firstName.trim()} ${lastName.trim()}`
+            : firstName.trim();
+
+          const response = await fetch(
+            `${BACKEND_URL}/api/auth/sign-up/email`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              // IMPORTANT: This ensures the session cookie is saved in the browser!
+              credentials: "include",
+              body: JSON.stringify({
+                name: fullName,
+                email: email,
+                password: password,
+              }),
+            },
+          );
 
       const data = await response.json();
 
@@ -157,7 +161,7 @@ function SignupPage() {
                 htmlFor="lastName"
                 className="block text-xs font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
               >
-                Last Name
+                Last Name <span className="text-stone-400 dark:text-stone-500 font-normal lowercase">(optional)</span>
               </label>
               <div className="relative mt-1.5">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -168,10 +172,9 @@ function SignupPage() {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Last name"
+                  placeholder="Last name (optional)"
                   autoComplete="family-name"
                   className="w-full pl-10 pr-3 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
-                  required
                 />
               </div>
             </div>
