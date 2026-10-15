@@ -82,7 +82,7 @@ function WorkspacePage() {
   const [activeFeature, setActiveFeature] = useState<FeatureType>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
+  const [menuPos, setMenuPos] = useState({ x: 0, y: 0, top: 0, bottom: 0 });
   const [highlightedText, setHighlightedText] = useState("");
   const [totalPages, setTotalPages] = useState(1);
   const [zoom, setZoom] = useState(1.0);
@@ -318,53 +318,97 @@ function WorkspacePage() {
     scrollToPage(Math.min(totalPages, currentPage + 1));
   };
 
-  // Handle text selection
-  const handleTextSelect = () => {
-    const selection = window.getSelection();
-    if (selection && selection.toString().trim().length > 0) {
+  // Handle text selection across all devices (mouse, touch, stylus, keyboard)
+  const handleTextSelect = useCallback(() => {
+    // Small timeout ensures browser finishes positioning selection range
+    window.setTimeout(() => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0 || selection.toString().trim().length === 0) {
+        setIsMenuOpen(false);
+        return;
+      }
+
       const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      
+      const rects = range.getClientRects();
+      let rect = range.getBoundingClientRect();
+      if ((rect.width === 0 || rect.height === 0) && rects.length > 0) {
+        rect = rects[0];
+      }
+
+      if (rect.width === 0 && rect.height === 0) {
+        return;
+      }
+
       setMenuPos({
         x: rect.left + rect.width / 2,
         y: rect.top - 10,
+        top: rect.top,
+        bottom: rect.bottom,
       });
       setHighlightedText(selection.toString());
       setIsMenuOpen(true);
-    } else {
-      setIsMenuOpen(false);
-    }
-  };
+    }, 20);
+  }, []);
 
-  // Listen to selectionchange on mobile/tablet to support native touch selection
+  // Listen to selectionchange across all devices (touch, stylus, trackpad, keyboard)
   useEffect(() => {
-    if (!isMobileOrTablet) return;
+    let timeoutId: number | null = null;
 
     const handleSelectionChange = () => {
-      const selection = window.getSelection();
-      if (selection && selection.toString().trim().length > 0) {
-        const container = scrollContainerRef?.current;
-        if (container && selection.anchorNode && container.contains(selection.anchorNode)) {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0 && selection.toString().trim().length > 0) {
+          const container = scrollContainerRef?.current;
+          const anchor = selection.anchorNode;
+          const focus = selection.focusNode;
           const range = selection.getRangeAt(0);
-          const rect = range.getBoundingClientRect();
-          
-          setMenuPos({
-            x: rect.left + rect.width / 2,
-            y: rect.top - 10,
-          });
-          setHighlightedText(selection.toString());
-          setIsMenuOpen(true);
-          return;
+
+          const isInside =
+            container &&
+            ((anchor &&
+              container.contains(
+                anchor.nodeType === Node.TEXT_NODE
+                  ? anchor.parentElement
+                  : anchor,
+              )) ||
+              (focus &&
+                container.contains(
+                  focus.nodeType === Node.TEXT_NODE
+                    ? focus.parentElement
+                    : focus,
+                )) ||
+              (range && container.contains(range.commonAncestorContainer)));
+
+          if (isInside) {
+            const rects = range.getClientRects();
+            let rect = range.getBoundingClientRect();
+            if ((rect.width === 0 || rect.height === 0) && rects.length > 0) {
+              rect = rects[0];
+            }
+
+            if (rect.width > 0 || rect.height > 0) {
+              setMenuPos({
+                x: rect.left + rect.width / 2,
+                y: rect.top - 10,
+                top: rect.top,
+                bottom: rect.bottom,
+              });
+              setHighlightedText(selection.toString());
+              setIsMenuOpen(true);
+              return;
+            }
+          }
         }
-      }
-      setIsMenuOpen(false);
+      }, 150);
     };
 
     document.addEventListener("selectionchange", handleSelectionChange);
     return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
       document.removeEventListener("selectionchange", handleSelectionChange);
     };
-  }, [isMobileOrTablet, scrollContainerRef]);
+  }, [scrollContainerRef]);
 
   const [explanationContent, setExplanationContent] = useState<string>("");
   const [analogyContent, setAnalogyContent] = useState<any | null>(null);
@@ -554,22 +598,49 @@ function WorkspacePage() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               style={(() => {
-                if (isMobileOrTablet) {
-                  const menuWidth = 170; // estimated width of mobile vertical menu
-                  const leftPos = Math.max(16, Math.min(window.innerWidth - 16 - menuWidth, menuPos.x - menuWidth / 2));
+                const isMobile = isMobileOrTablet;
+                const menuWidth = isMobile ? 180 : 650;
+                const menuHeight = isMobile ? 320 : 80;
+
+                // Dynamically flip below selection if too close to top of viewport
+                const showBelow = (menuPos.top || menuPos.y) - menuHeight < 64;
+                const topPos = showBelow
+                  ? (menuPos.bottom || menuPos.y) + 12
+                  : menuPos.y;
+
+                const minLeft = 16;
+                const maxLeft =
+                  typeof window !== "undefined"
+                    ? window.innerWidth - 16
+                    : 1000;
+
+                if (isMobile) {
+                  const leftPos = Math.max(
+                    minLeft,
+                    Math.min(maxLeft - menuWidth, menuPos.x - menuWidth / 2),
+                  );
                   return {
-                    position: 'fixed',
+                    position: "fixed",
                     left: `${leftPos}px`,
-                    top: `${menuPos.y}px`,
-                    transform: 'translate(0, -100%)',
+                    top: `${topPos}px`,
+                    transform: showBelow
+                      ? "translate(0, 0)"
+                      : "translate(0, -100%)",
                     zIndex: 100,
                   };
                 }
+
+                const clampedX = Math.max(
+                  minLeft + menuWidth / 2,
+                  Math.min(maxLeft - menuWidth / 2, menuPos.x),
+                );
                 return {
-                  position: 'fixed',
-                  left: menuPos.x,
-                  top: menuPos.y,
-                  transform: 'translate(-50%, -100%)',
+                  position: "fixed",
+                  left: `${clampedX}px`,
+                  top: `${topPos}px`,
+                  transform: showBelow
+                    ? "translate(-50%, 0)"
+                    : "translate(-50%, -100%)",
                   zIndex: 100,
                 };
               })()}
@@ -584,8 +655,14 @@ function WorkspacePage() {
               {/* Top glow accent */}
               <div className="absolute -top-px left-4 right-4 h-px bg-gradient-to-r from-transparent via-orange-500/50 to-transparent" />
               
-              {/* Bottom arrow */}
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-white/95 dark:bg-black/95 border-r border-b border-orange-500/20" />
+              {/* Responsive arrow */}
+              <div
+                className={`absolute left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-white/95 dark:bg-black/95 ${
+                  (menuPos.top || menuPos.y) - (isMobileOrTablet ? 320 : 80) < 64
+                    ? "-top-1.5 border-l border-t border-orange-500/20"
+                    : "-bottom-1.5 border-r border-b border-orange-500/20"
+                }`}
+              />
               
               {features.map((feature) => (
                 <button
@@ -645,6 +722,8 @@ function WorkspacePage() {
           transition={{ type: "tween", ease: "easeInOut", duration: 0.25 }}
           className="border-r border-[var(--lf-border)] flex flex-col bg-[#F3F4F6] dark:bg-[#0c0a09] relative z-10 shrink-0" 
           onMouseUp={handleTextSelect}
+          onTouchEnd={handleTextSelect}
+          onKeyUp={handleTextSelect}
         >
           {/* Document Toolbar */}
           {(!documentMetadata || ["pdf", "docx", "txt", "ppt", "pptx"].includes(documentMetadata.fileType)) && (
@@ -702,6 +781,9 @@ function WorkspacePage() {
           <div
             ref={combinedRef}
             className="flex-1 relative bg-stone-100 dark:bg-stone-900 overflow-y-auto overflow-x-auto no-scrollbar flex flex-col items-center py-8 select-text"
+            onMouseUp={handleTextSelect}
+            onTouchEnd={handleTextSelect}
+            onKeyUp={handleTextSelect}
           >
             {!documentMetadata && !isMetadataError ? (
               <div className="flex items-center justify-center h-full text-stone-500">

@@ -30,50 +30,93 @@ function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState<{ password?: string; confirm?: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const getPasswordStrength = () => {
+    if (!password) return null;
+    if (password.length < 8) return "Weak";
+
+    const hasLetters = /[a-zA-Z]/.test(password);
+    const hasNumbers = /[0-9]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+    if (password.length >= 8 && hasUpper && hasLower && hasNumbers && hasSpecial) {
+      return "Strong";
+    }
+
+    if (password.length >= 8 && hasLetters && hasNumbers) {
+      return "Medium";
+    }
+
+    return "Weak";
+  };
+
+  const strength = getPasswordStrength();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setPasswordErrors({});
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      toast.error("Please fill in all fields.");
-      setError("Please fill in all fields.");
+    if (!firstName || !email || !password || !confirmPassword) {
+      toast.error("Please fill in all required fields.");
+      setError("Please fill in all required fields.");
       return;
+    }
+
+    const newPasswordErrors: { password?: string; confirm?: string } = {};
+
+    if (password.length < 8) {
+      newPasswordErrors.password = "Password must be at least 8 characters long.";
+    } else if (password.length > 64) {
+      newPasswordErrors.password = "Password cannot exceed 64 characters.";
+    } else if (!/[A-Z]/.test(password)) {
+      newPasswordErrors.password = "Password must contain at least one uppercase letter.";
+    } else if (!/[a-z]/.test(password)) {
+      newPasswordErrors.password = "Password must contain at least one lowercase letter.";
+    } else if (!/[0-9]/.test(password)) {
+      newPasswordErrors.password = "Password must contain at least one number.";
     }
 
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match.");
-      setError("Passwords do not match.");
-      return;
+      newPasswordErrors.confirm = "Passwords do not match.";
     }
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
-      setError("Password must be at least 6 characters.");
+    if (newPasswordErrors.password || newPasswordErrors.confirm) {
+      setPasswordErrors(newPasswordErrors);
+      const firstError = newPasswordErrors.password || newPasswordErrors.confirm;
+      toast.error(firstError!);
+      setError(firstError!);
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        `${BACKEND_URL}/api/auth/sign-up/email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          // IMPORTANT: This ensures the session cookie is saved in the browser!
-          credentials: "include",
-          body: JSON.stringify({
-            name: `${firstName} ${lastName}`,
-            email: email,
-            password: password,
-          }),
-        },
-      );
+          const fullName = lastName.trim()
+            ? `${firstName.trim()} ${lastName.trim()}`
+            : firstName.trim();
+
+          const response = await fetch(
+            `${BACKEND_URL}/api/auth/sign-up/email`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              // IMPORTANT: This ensures the session cookie is saved in the browser!
+              credentials: "include",
+              body: JSON.stringify({
+                name: fullName,
+                email: email,
+                password: password,
+              }),
+            },
+          );
 
       const data = await response.json();
 
@@ -100,15 +143,15 @@ function SignupPage() {
   };
 
   return (
-    <div className="flex-grow flex items-center justify-center min-h-[calc(100vh-64px)] px-4 py-8 sm:px-6 lg:px-8 relative">
+    <div className="flex-grow flex items-center justify-center min-h-[calc(100vh-64px)] px-4 py-3 sm:py-5 relative">
       {/* Container Card with light/dark glassmorphism */}
-      <div className="w-full max-w-[480px] bg-white/95 dark:bg-stone-950/95 backdrop-blur-md rounded-2xl border border-brown-200/60 dark:border-stone-800/60 p-5 sm:p-8 lg:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.10)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] hover:shadow-[0_30px_80px_rgba(0,0,0,0.12)] transition-all duration-300 transform hover:-translate-y-0.5">
+      <div className="w-full max-w-[415px] sm:max-w-[425px] bg-white/95 dark:bg-stone-950/95 backdrop-blur-md rounded-2xl border border-brown-200/60 dark:border-stone-800/60 p-5 sm:p-6 shadow-[0_15px_35px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.7)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)] transition-all duration-300 transform hover:-translate-y-0.5">
         {/* Header */}
-        <div className="text-center mb-6">
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 dark:text-white">
+        <div className="text-center mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900 dark:text-white">
             Create Your Account
           </h2>
-          <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
+          <p className="mt-1 text-xs sm:text-sm text-stone-500 dark:text-stone-400">
             Join{" "}
             <span className="font-semibold text-orange-500 dark:text-orange-400">
               LearnFlow AI
@@ -119,23 +162,23 @@ function SignupPage() {
 
         {/* Error Message banner if any */}
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 text-xs border border-red-100 dark:border-red-900/30">
+          <div className="mb-3 p-2.5 rounded-lg bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 text-xs border border-red-100 dark:border-red-900/30">
             {error}
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* First Name & Last Name (Side by Side) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label
                 htmlFor="firstName"
-                className="block text-xs font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
+                className="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
               >
                 First Name
               </label>
-              <div className="relative mt-1.5">
+              <div className="relative mt-1">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="h-4 w-4 text-stone-400 dark:text-stone-500" />
                 </div>
@@ -146,7 +189,7 @@ function SignupPage() {
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="First name"
                   autoComplete="given-name"
-                  className="w-full pl-10 pr-3 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
+                  className="w-full pl-9 pr-3 py-2 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-xs sm:text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                   required
                 />
               </div>
@@ -155,11 +198,11 @@ function SignupPage() {
             <div>
               <label
                 htmlFor="lastName"
-                className="block text-xs font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
+                className="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
               >
-                Last Name
+                Last Name <span className="text-stone-400 dark:text-stone-500 font-normal lowercase">(optional)</span>
               </label>
-              <div className="relative mt-1.5">
+              <div className="relative mt-1">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="h-4 w-4 text-stone-400 dark:text-stone-500" />
                 </div>
@@ -170,8 +213,7 @@ function SignupPage() {
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Last name"
                   autoComplete="family-name"
-                  className="w-full pl-10 pr-3 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
-                  required
+                  className="w-full pl-9 pr-3 py-2 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-xs sm:text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                 />
               </div>
             </div>
@@ -181,11 +223,11 @@ function SignupPage() {
           <div>
             <label
               htmlFor="email"
-              className="block text-xs font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
+              className="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
             >
               Email
             </label>
-            <div className="relative mt-1.5">
+            <div className="relative mt-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Mail className="h-4 w-4 text-stone-400 dark:text-stone-500" />
               </div>
@@ -196,7 +238,7 @@ function SignupPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 autoComplete="username"
-                className="w-full pl-10 pr-4 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
+                className="w-full pl-9 pr-4 py-2 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-xs sm:text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                 required
               />
             </div>
@@ -206,11 +248,11 @@ function SignupPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-xs font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
+              className="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
             >
               Password
             </label>
-            <div className="relative mt-1.5">
+            <div className="relative mt-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Lock className="h-4 w-4 text-stone-400 dark:text-stone-500" />
               </div>
@@ -218,10 +260,18 @@ function SignupPage() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordErrors.password) setPasswordErrors((prev) => ({ ...prev, password: undefined }));
+                  if (error) setError(null);
+                }}
                 placeholder="Create a password"
                 autoComplete="new-password"
-                className="w-full pl-10 pr-10 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
+                className={`w-full pl-9 pr-9 py-2 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border ${
+                  passwordErrors.password
+                    ? "border-red-400 dark:border-red-500 focus:border-red-500 focus:ring-red-500/15"
+                    : "border-stone-200 dark:border-stone-800/80 focus:border-orange-500 dark:focus:border-orange-500 focus:ring-orange-500/15 dark:focus:ring-orange-500/15"
+                } focus:bg-white dark:focus:bg-stone-950 rounded-lg text-xs sm:text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:ring-2 transition-all duration-200`}
                 required
               />
               <button
@@ -236,17 +286,129 @@ function SignupPage() {
                 )}
               </button>
             </div>
+            {passwordErrors.password && (
+              <p className="text-xs text-red-500 dark:text-red-400 mt-1">{passwordErrors.password}</p>
+            )}
+
+            {/* Password Strength Meter */}
+            {password && (
+              <div className="pt-1.5">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[11px] font-medium text-stone-500 dark:text-stone-400">
+                    Password Strength:{" "}
+                    <strong
+                      className={
+                        strength === "Strong"
+                          ? "text-emerald-500"
+                          : strength === "Medium"
+                          ? "text-orange-500"
+                          : "text-red-500"
+                      }
+                    >
+                      {strength}
+                    </strong>
+                  </span>
+                </div>
+                <div className="flex gap-1 h-1 w-full rounded-full overflow-hidden bg-stone-100 dark:bg-[#2A2A2A]">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      strength === "Strong"
+                        ? "bg-emerald-500 w-1/3"
+                        : strength === "Medium"
+                        ? "bg-orange-500 w-1/3"
+                        : "bg-red-500 w-1/3"
+                    }`}
+                  />
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      strength === "Strong"
+                        ? "bg-emerald-500 w-1/3"
+                        : strength === "Medium"
+                        ? "bg-orange-500 w-1/3 opacity-50"
+                        : "bg-stone-200 dark:bg-[#333] w-1/3"
+                    }`}
+                  />
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      strength === "Strong"
+                        ? "bg-emerald-500 w-1/3"
+                        : "bg-stone-200 dark:bg-[#333] w-1/3"
+                    }`}
+                  />
+                </div>
+
+                {/* Requirements Checklist */}
+                <div className="grid grid-cols-2 gap-1 mt-2 text-[10.5px]">
+                  <span
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      password.length >= 8
+                        ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                        : "text-stone-400 dark:text-stone-500"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block w-1.5 h-1.5 rounded-full transition-colors ${
+                        password.length >= 8 ? "bg-emerald-500" : "bg-stone-300 dark:bg-stone-700"
+                      }`}
+                    />
+                    8+ characters
+                  </span>
+                  <span
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      /[A-Z]/.test(password)
+                        ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                        : "text-stone-400 dark:text-stone-500"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block w-1.5 h-1.5 rounded-full transition-colors ${
+                        /[A-Z]/.test(password) ? "bg-emerald-500" : "bg-stone-300 dark:bg-stone-700"
+                      }`}
+                    />
+                    1 uppercase letter
+                  </span>
+                  <span
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      /[a-z]/.test(password)
+                        ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                        : "text-stone-400 dark:text-stone-500"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block w-1.5 h-1.5 rounded-full transition-colors ${
+                        /[a-z]/.test(password) ? "bg-emerald-500" : "bg-stone-300 dark:bg-stone-700"
+                      }`}
+                    />
+                    1 lowercase letter
+                  </span>
+                  <span
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      /[0-9]/.test(password)
+                        ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                        : "text-stone-400 dark:text-stone-500"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block w-1.5 h-1.5 rounded-full transition-colors ${
+                        /[0-9]/.test(password) ? "bg-emerald-500" : "bg-stone-300 dark:bg-stone-700"
+                      }`}
+                    />
+                    1 number
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Confirm Password field */}
           <div>
             <label
               htmlFor="confirmPassword"
-              className="block text-xs font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
+              className="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
             >
               Confirm Password
             </label>
-            <div className="relative mt-1.5">
+            <div className="relative mt-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Lock className="h-4 w-4 text-stone-400 dark:text-stone-500" />
               </div>
@@ -254,10 +416,18 @@ function SignupPage() {
                 id="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (passwordErrors.confirm) setPasswordErrors((prev) => ({ ...prev, confirm: undefined }));
+                  if (error) setError(null);
+                }}
                 placeholder="Confirm your password"
                 autoComplete="new-password"
-                className="w-full pl-10 pr-10 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
+                className={`w-full pl-9 pr-9 py-2 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border ${
+                  passwordErrors.confirm
+                    ? "border-red-400 dark:border-red-500 focus:border-red-500 focus:ring-red-500/15"
+                    : "border-stone-200 dark:border-stone-800/80 focus:border-orange-500 dark:focus:border-orange-500 focus:ring-orange-500/15 dark:focus:ring-orange-500/15"
+                } focus:bg-white dark:focus:bg-stone-950 rounded-lg text-xs sm:text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:ring-2 transition-all duration-200`}
                 required
               />
               <button
@@ -272,18 +442,27 @@ function SignupPage() {
                 )}
               </button>
             </div>
+            {passwordErrors.confirm ? (
+              <p className="text-xs text-red-500 dark:text-red-400 mt-1">{passwordErrors.confirm}</p>
+            ) : confirmPassword && password ? (
+              confirmPassword === password ? (
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium">✓ Passwords match</p>
+              ) : (
+                <p className="text-xs text-red-500 dark:text-red-400 mt-1">Passwords do not match</p>
+              )
+            ) : null}
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2.5 px-4 mt-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-500 dark:to-orange-600 dark:hover:from-orange-400 dark:hover:to-orange-600 text-white font-semibold rounded-lg text-sm transition-all duration-200 shadow-sm shadow-orange-500/25 hover:shadow-md hover:shadow-orange-500/35 active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-2 px-4 mt-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-500 dark:to-orange-600 dark:hover:from-orange-400 dark:hover:to-orange-600 text-white font-semibold rounded-lg text-xs sm:text-sm transition-all duration-200 shadow-sm shadow-orange-500/25 hover:shadow-md hover:shadow-orange-500/35 active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
                 <svg
-                  className="animate-spin h-5 w-5 text-white"
+                  className="animate-spin h-4 w-4 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -310,7 +489,7 @@ function SignupPage() {
         </form>
 
         {/* Footer */}
-        <div className="mt-6 text-center text-sm text-stone-500 dark:text-stone-400">
+        <div className="mt-4 text-center text-xs sm:text-sm text-stone-500 dark:text-stone-400">
           Already have an account?{" "}
           <Link
             to="/login"
