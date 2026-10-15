@@ -17,6 +17,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { TextMorph } from "../../components/TextMorph";
+import { PricingSection } from "../../components/PricingSection";
 
 export const Route = createFileRoute("/_public/")({
   component: HomePage,
@@ -536,6 +537,14 @@ function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* SEPARATOR LINE */}
+      <div className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-12">
+        <div className="relative h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
+      </div>
+
+      {/* PRICING SECTION */}
+      <PricingSection />
 
       {/* SEPARATOR LINE */}
       <div className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-12">
