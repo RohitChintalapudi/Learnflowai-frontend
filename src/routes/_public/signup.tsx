@@ -30,12 +30,37 @@ function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState<{ password?: string; confirm?: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const getPasswordStrength = () => {
+    if (!password) return null;
+    if (password.length < 8) return "Weak";
+
+    const hasLetters = /[a-zA-Z]/.test(password);
+    const hasNumbers = /[0-9]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+    if (password.length >= 8 && hasUpper && hasLower && hasNumbers && hasSpecial) {
+      return "Strong";
+    }
+
+    if (password.length >= 8 && hasLetters && hasNumbers) {
+      return "Medium";
+    }
+
+    return "Weak";
+  };
+
+  const strength = getPasswordStrength();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setPasswordErrors({});
 
     if (!firstName || !email || !password || !confirmPassword) {
       toast.error("Please fill in all required fields.");
@@ -43,15 +68,29 @@ function SignupPage() {
       return;
     }
 
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match.");
-      setError("Passwords do not match.");
-      return;
+    const newPasswordErrors: { password?: string; confirm?: string } = {};
+
+    if (password.length < 8) {
+      newPasswordErrors.password = "Password must be at least 8 characters long.";
+    } else if (password.length > 64) {
+      newPasswordErrors.password = "Password cannot exceed 64 characters.";
+    } else if (!/[A-Z]/.test(password)) {
+      newPasswordErrors.password = "Password must contain at least one uppercase letter.";
+    } else if (!/[a-z]/.test(password)) {
+      newPasswordErrors.password = "Password must contain at least one lowercase letter.";
+    } else if (!/[0-9]/.test(password)) {
+      newPasswordErrors.password = "Password must contain at least one number.";
     }
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
-      setError("Password must be at least 6 characters.");
+    if (password !== confirmPassword) {
+      newPasswordErrors.confirm = "Passwords do not match.";
+    }
+
+    if (newPasswordErrors.password || newPasswordErrors.confirm) {
+      setPasswordErrors(newPasswordErrors);
+      const firstError = newPasswordErrors.password || newPasswordErrors.confirm;
+      toast.error(firstError!);
+      setError(firstError!);
       return;
     }
 
@@ -221,10 +260,18 @@ function SignupPage() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordErrors.password) setPasswordErrors((prev) => ({ ...prev, password: undefined }));
+                  if (error) setError(null);
+                }}
                 placeholder="Create a password"
                 autoComplete="new-password"
-                className="w-full pl-10 pr-10 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
+                className={`w-full pl-10 pr-10 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border ${
+                  passwordErrors.password
+                    ? "border-red-400 dark:border-red-500 focus:border-red-500 focus:ring-red-500/15"
+                    : "border-stone-200 dark:border-stone-800/80 focus:border-orange-500 dark:focus:border-orange-500 focus:ring-orange-500/15 dark:focus:ring-orange-500/15"
+                } focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:ring-2 transition-all duration-200`}
                 required
               />
               <button
@@ -239,6 +286,118 @@ function SignupPage() {
                 )}
               </button>
             </div>
+            {passwordErrors.password && (
+              <p className="text-xs text-red-500 dark:text-red-400 mt-1">{passwordErrors.password}</p>
+            )}
+
+            {/* Password Strength Meter */}
+            {password && (
+              <div className="pt-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-medium text-stone-500 dark:text-stone-400">
+                    Password Strength:{" "}
+                    <strong
+                      className={
+                        strength === "Strong"
+                          ? "text-emerald-500"
+                          : strength === "Medium"
+                          ? "text-orange-500"
+                          : "text-red-500"
+                      }
+                    >
+                      {strength}
+                    </strong>
+                  </span>
+                </div>
+                <div className="flex gap-1 h-1.5 w-full rounded-full overflow-hidden bg-stone-100 dark:bg-[#2A2A2A]">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      strength === "Strong"
+                        ? "bg-emerald-500 w-1/3"
+                        : strength === "Medium"
+                        ? "bg-orange-500 w-1/3"
+                        : "bg-red-500 w-1/3"
+                    }`}
+                  />
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      strength === "Strong"
+                        ? "bg-emerald-500 w-1/3"
+                        : strength === "Medium"
+                        ? "bg-orange-500 w-1/3 opacity-50"
+                        : "bg-stone-200 dark:bg-[#333] w-1/3"
+                    }`}
+                  />
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      strength === "Strong"
+                        ? "bg-emerald-500 w-1/3"
+                        : "bg-stone-200 dark:bg-[#333] w-1/3"
+                    }`}
+                  />
+                </div>
+
+                {/* Requirements Checklist */}
+                <div className="grid grid-cols-2 gap-1.5 mt-2.5 text-[11px]">
+                  <span
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      password.length >= 8
+                        ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                        : "text-stone-400 dark:text-stone-500"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block w-1.5 h-1.5 rounded-full transition-colors ${
+                        password.length >= 8 ? "bg-emerald-500" : "bg-stone-300 dark:bg-stone-700"
+                      }`}
+                    />
+                    8+ characters
+                  </span>
+                  <span
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      /[A-Z]/.test(password)
+                        ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                        : "text-stone-400 dark:text-stone-500"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block w-1.5 h-1.5 rounded-full transition-colors ${
+                        /[A-Z]/.test(password) ? "bg-emerald-500" : "bg-stone-300 dark:bg-stone-700"
+                      }`}
+                    />
+                    1 uppercase letter
+                  </span>
+                  <span
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      /[a-z]/.test(password)
+                        ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                        : "text-stone-400 dark:text-stone-500"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block w-1.5 h-1.5 rounded-full transition-colors ${
+                        /[a-z]/.test(password) ? "bg-emerald-500" : "bg-stone-300 dark:bg-stone-700"
+                      }`}
+                    />
+                    1 lowercase letter
+                  </span>
+                  <span
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      /[0-9]/.test(password)
+                        ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                        : "text-stone-400 dark:text-stone-500"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block w-1.5 h-1.5 rounded-full transition-colors ${
+                        /[0-9]/.test(password) ? "bg-emerald-500" : "bg-stone-300 dark:bg-stone-700"
+                      }`}
+                    />
+                    1 number
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Confirm Password field */}
@@ -257,10 +416,18 @@ function SignupPage() {
                 id="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (passwordErrors.confirm) setPasswordErrors((prev) => ({ ...prev, confirm: undefined }));
+                  if (error) setError(null);
+                }}
                 placeholder="Confirm your password"
                 autoComplete="new-password"
-                className="w-full pl-10 pr-10 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
+                className={`w-full pl-10 pr-10 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border ${
+                  passwordErrors.confirm
+                    ? "border-red-400 dark:border-red-500 focus:border-red-500 focus:ring-red-500/15"
+                    : "border-stone-200 dark:border-stone-800/80 focus:border-orange-500 dark:focus:border-orange-500 focus:ring-orange-500/15 dark:focus:ring-orange-500/15"
+                } focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:ring-2 transition-all duration-200`}
                 required
               />
               <button
@@ -275,6 +442,15 @@ function SignupPage() {
                 )}
               </button>
             </div>
+            {passwordErrors.confirm ? (
+              <p className="text-xs text-red-500 dark:text-red-400 mt-1">{passwordErrors.confirm}</p>
+            ) : confirmPassword && password ? (
+              confirmPassword === password ? (
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium">✓ Passwords match</p>
+              ) : (
+                <p className="text-xs text-red-500 dark:text-red-400 mt-1">Passwords do not match</p>
+              )
+            ) : null}
           </div>
 
           {/* Submit Button */}
