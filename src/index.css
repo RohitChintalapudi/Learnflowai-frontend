@@ -302,10 +302,29 @@
     animation: toastSlideInLeft 0.4s cubic-bezier(0.22, 1, 0.36, 1) both !important;
 }
 
-/* ── Custom PDF Text Selection Styles ── */
-.react-pdf__Page__textContent ::selection {
-  background: rgba(249, 115, 22, 0.5) !important;
+/* ── Custom PDF & Document Text Selection Styles ── */
+.select-text,
+.react-pdf__Page__textContent,
+.textLayer {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default !important;
+}
+
+.textLayer ::selection,
+.react-pdf__Page__textContent ::selection,
+.textLayer span::selection {
+  background: rgba(249, 115, 22, 0.45) !important;
   color: transparent !important;
+}
+
+.react-pdf__Page__annotationLayer {
+  pointer-events: none;
+}
+.react-pdf__Page__annotationLayer a,
+.react-pdf__Page__annotationLayer input,
+.react-pdf__Page__annotationLayer button {
+  pointer-events: auto;
 }
 
 /* ── Custom Shimmer & Dash Animations ── */
