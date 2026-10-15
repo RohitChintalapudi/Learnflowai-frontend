@@ -6,6 +6,7 @@
     <link rel="icon" type="image/png" sizes="512x512" href="/favicon_dark.png?v=4" />
     <link rel="apple-touch-icon" sizes="512x512" href="/favicon_dark.png?v=4" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preload" as="image" href="/light_theme_laptop.png" />
     <title>LearnFlow AI</title>
     <script>
       (function() {
@@ -13,6 +14,8 @@
           var savedTheme = localStorage.getItem("theme");
           if (savedTheme === "dark") {
             document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
           }
         } catch (e) {}
       })();

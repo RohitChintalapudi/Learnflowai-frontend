@@ -31,16 +31,6 @@ export const Route = createFileRoute("/_public")({
 
 function PublicLayout() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(() => {
-    if (typeof window !== "undefined") {
-      // Only show splash on root path and if they haven't seen it yet
-      if (window.location.pathname === "/") {
-        return !sessionStorage.getItem("hasSeenSplash");
-      }
-      return false;
-    }
-    return false;
-  });
 
   // Check session in the background asynchronously
   useEffect(() => {
@@ -57,23 +47,6 @@ function PublicLayout() {
         });
     }
   }, [navigate]);
-
-  const handleVideoEnd = () => {
-    if (isLoading) {
-      setIsLoading(false);
-      sessionStorage.setItem("hasSeenSplash", "true");
-    }
-  };
-
-  useEffect(() => {
-    if (isLoading) {
-      // Fallback timer in case video fails to load or play
-      const timer = setTimeout(() => {
-        handleVideoEnd();
-      }, 8000); // 8 seconds maximum loading fallback
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading]);
 
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof document !== "undefined") {
@@ -205,23 +178,6 @@ function PublicLayout() {
     { label: "Why Students Love Us", id: "why-students-love-us" },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-black z-50 fixed inset-0">
-        <video
-          autoPlay
-          muted
-          playsInline
-          onEnded={handleVideoEnd}
-          onError={handleVideoEnd}
-          className="w-full h-full object-cover"
-        >
-          <source src="/loading.mp4" type="video/mp4" />
-          {/* Fallback if video fails to load */}
-        </video>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -513,29 +469,10 @@ function PageTransitionWrapper({ children }: { children: React.ReactNode }) {
   return <AnimatedPage key={location.pathname}>{children}</AnimatedPage>;
 }
 
-// Separate component so useEffect fires on every remount (key change)
+// Separate component so pageSlideIn triggers smoothly
 function AnimatedPage({ children }: { children: React.ReactNode }) {
-  React.useEffect(() => {
-    // Lock scrolling for exactly the animation duration so the
-    // translateY slide-up never triggers a scrollbar flash
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-
-    const t = setTimeout(() => {
-      document.body.style.overflow = prev;
-      document.documentElement.style.overflow = "";
-    }, 220); // slightly longer than the 200ms animation
-
-    return () => {
-      clearTimeout(t);
-      document.body.style.overflow = prev;
-      document.documentElement.style.overflow = "";
-    };
-  }, []);
-
   return (
-    <div className="page-enter flex-grow flex flex-col overflow-hidden">
+    <div className="page-enter flex-grow flex flex-col">
       {children}
     </div>
   );
