@@ -5,13 +5,56 @@ import toast from "react-hot-toast";
 import PeekRating from "./PeekRating";
 import { FeedbackAPI } from "../lib/api";
 
+const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
+const FEEDBACK_STORAGE_KEY = "lf_feedback_submitted_at";
+
 export function FeedbackWidget() {
+  const [isCooldown, setIsCooldown] = useState(() => {
+    try {
+      const saved = localStorage.getItem(FEEDBACK_STORAGE_KEY);
+      if (!saved) return false;
+      const elapsed = Date.now() - Number(saved);
+      return elapsed >= 0 && elapsed < TWO_WEEKS_MS;
+    } catch {
+      return false;
+    }
+  });
+
   const [isOpen, setIsOpen] = useState(false);
   const [rating, setRating] = useState(4);
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const widgetRef = useRef<HTMLDivElement>(null);
+
+  // Sync cooldown from server in case user switches devices or clears storage
+  useEffect(() => {
+    let isMounted = true;
+    async function checkServerFeedback() {
+      try {
+        const res = await FeedbackAPI.getMyFeedback();
+        if (!isMounted) return;
+        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          const latest = res.data[0];
+          if (latest?.createdAt) {
+            const submittedAt = new Date(latest.createdAt).getTime();
+            const elapsed = Date.now() - submittedAt;
+            if (elapsed >= 0 && elapsed < TWO_WEEKS_MS) {
+              setIsCooldown(true);
+              localStorage.setItem(FEEDBACK_STORAGE_KEY, submittedAt.toString());
+            }
+          }
+        }
+      } catch {
+        // Silently keep localStorage state
+      }
+    }
+
+    checkServerFeedback();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Close when clicking outside
   useEffect(() => {
@@ -38,12 +81,16 @@ export function FeedbackWidget() {
         comment: comment.trim() || undefined,
       });
 
+      const submittedAt = Date.now();
+      localStorage.setItem(FEEDBACK_STORAGE_KEY, submittedAt.toString());
+
       setIsSuccess(true);
       toast.success("Thank you for your feedback!");
 
       setTimeout(() => {
         setIsOpen(false);
         setIsSuccess(false);
+        setIsCooldown(true);
         setComment("");
         setRating(4);
       }, 1800);
@@ -54,6 +101,11 @@ export function FeedbackWidget() {
       setIsSubmitting(false);
     }
   };
+
+  // If user has submitted feedback in the last 2 weeks, do not render the widget
+  if (isCooldown) {
+    return null;
+  }
 
   return (
     <aside

@@ -146,7 +146,7 @@ function PublicLayout() {
       return;
     }
 
-    const sectionIds = ["about-us", "features", "why-students-love-us"];
+    const sectionIds = ["about-us", "features", "why-students-love-us", "pricing"];
     const handleScroll = () => {
       // Ignore scroll-spy while smoothly traveling to a clicked section
       if (isAutoScrollingRef.current) return;
@@ -176,6 +176,7 @@ function PublicLayout() {
     { label: "Overview", id: "about-us" },
     { label: "Features", id: "features" },
     { label: "Why Students Love Us", id: "why-students-love-us" },
+    { label: "Pricing", id: "pricing" },
   ];
 
 
