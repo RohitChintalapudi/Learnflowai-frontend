@@ -1,9 +1,47 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { Check, Sparkles, Zap } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Check, Sparkles, Zap, ShieldCheck, CreditCard, Lock, X, Loader2 } from "lucide-react";
+import { authClient } from "../lib/auth-client";
+import toast from "react-hot-toast";
 
 export function PricingSection() {
   const [yearly, setYearly] = useState(true);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { data: session } = authClient.useSession();
+  const navigate = useNavigate();
+
+  const handleUpgradeClick = () => {
+    // Before purchase the user needs to get authenticated
+    if (!session?.user) {
+      toast.error("Please sign in or create an account to upgrade to Pro", {
+        icon: "🔐",
+      });
+      navigate({
+        to: "/login",
+        search: { redirect: "/#pricing" },
+      });
+      return;
+    }
+
+    // Authenticated user -> open Mock Gateway checkout
+    setIsCheckoutOpen(true);
+  };
+
+  const handleSimulatePayment = () => {
+    setIsProcessing(true);
+    // Simulate Mock Gateway payment processing
+    setTimeout(() => {
+      setIsProcessing(false);
+      setIsCheckoutOpen(false);
+      localStorage.setItem("lf_is_pro", "true");
+      localStorage.setItem("lf_pro_plan", yearly ? "yearly" : "monthly");
+      toast.success("Payment successful! Welcome to LearnFlow Pro 🎉", {
+        duration: 4000,
+      });
+      navigate({ to: "/dashboard" });
+    }, 1500);
+  };
 
   const freeFeatures = [
     "Up to 5 document uploads / month",
@@ -29,11 +67,6 @@ export function PricingSection() {
     <section id="pricing" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pb-20 scroll-mt-20">
       {/* Header Container */}
       <div className="flex flex-col items-center text-center max-w-2xl mx-auto mb-12">
-        {/* Eyebrow badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-orange-200 dark:border-orange-900/60 bg-orange-50/70 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-semibold tracking-wide uppercase mb-4">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Plans & Pricing</span>
-        </div>
 
         {/* Heading */}
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-stone-900 dark:text-white mb-4">
@@ -136,10 +169,10 @@ export function PricingSection() {
           </div>
 
           <Link
-            to="/signup"
+            to={session?.user ? "/dashboard" : "/signup"}
             className="w-full text-center py-3 px-4 rounded-xl border border-stone-300 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-600 bg-stone-50 hover:bg-stone-100 dark:bg-stone-800/60 dark:hover:bg-stone-800 text-stone-900 dark:text-white text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer"
           >
-            Get Started Free
+            {session?.user ? "Go to Dashboard" : "Get Started Free"}
           </Link>
         </div>
 
@@ -204,30 +237,138 @@ export function PricingSection() {
             </div>
           </div>
 
-          <Link
-            to="/signup"
-            className="w-full text-center py-3.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs sm:text-sm font-bold shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+          <button
+            type="button"
+            onClick={handleUpgradeClick}
+            className="w-full text-center py-3.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs sm:text-sm font-bold shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
           >
+            <Lock className="w-4 h-4 opacity-80" />
             Upgrade to Pro
-          </Link>
+          </button>
         </div>
       </div>
 
-      {/* Guarantee & Trust Footer */}
+      {/* Trust Footer */}
       <div className="mt-12 text-center text-xs text-stone-500 dark:text-stone-400 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-        <span className="inline-flex items-center gap-1.5">
-          🔒 7-day money-back guarantee
-        </span>
         <span className="inline-flex items-center gap-1.5">
           ⚡ Instant plan activation
         </span>
         <span className="inline-flex items-center gap-1.5">
           💳 Secure UPI, Cards & NetBanking
         </span>
-        <span className="inline-flex items-center gap-1.5">
-          ❌ Cancel anytime with 1 click
-        </span>
       </div>
+
+      {/* Mock Gateway Checkout Modal */}
+      {isCheckoutOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-2xl p-6 sm:p-7 overflow-hidden">
+            {/* Ambient header glow */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600" />
+
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setIsCheckoutOpen(false)}
+              disabled={isProcessing}
+              className="absolute top-4 right-4 p-1.5 rounded-full text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Modal Header */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-100 dark:bg-orange-950/70 text-orange-600 dark:text-orange-400">
+                <CreditCard className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-stone-900 dark:text-white">
+                  Mock Gateway Checkout
+                </h3>
+                <p className="text-xs text-stone-500 dark:text-stone-400 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  Authenticated Student Sandbox
+                </p>
+              </div>
+            </div>
+
+            {/* Student Info Box */}
+            <div className="rounded-2xl bg-stone-50 dark:bg-stone-800/60 p-4 border border-stone-200/80 dark:border-stone-700/60 mb-5 text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-stone-400 dark:text-stone-500">Logged In As</span>
+                <span className="font-semibold text-stone-800 dark:text-stone-200">
+                  {session?.user?.name || "Student"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-stone-400 dark:text-stone-500">Email</span>
+                <span className="font-medium text-stone-700 dark:text-stone-300">
+                  {session?.user?.email}
+                </span>
+              </div>
+              <div className="flex justify-between pt-1 border-t border-stone-200/60 dark:border-stone-700/60">
+                <span className="text-stone-400 dark:text-stone-500">Plan Selected</span>
+                <span className="font-bold text-orange-600 dark:text-orange-400">
+                  LearnFlow Pro ({yearly ? "Yearly" : "Monthly"})
+                </span>
+              </div>
+            </div>
+
+            {/* Gateway Key Badge */}
+            <div className="rounded-xl bg-orange-50/60 dark:bg-orange-950/20 p-3 border border-orange-200/60 dark:border-orange-900/40 text-[11px] text-stone-600 dark:text-stone-300 mb-6 flex items-start gap-2">
+              <Lock className="w-3.5 h-3.5 text-orange-500 mt-0.5 shrink-0" />
+              <div>
+                <p className="font-semibold text-orange-700 dark:text-orange-400 mb-0.5">
+                  Sandbox Active:
+                </p>
+                <code className="text-[10px] font-mono text-stone-500 dark:text-stone-400 break-all">
+                  sk_test_2RcSwmVFs6g...JDl
+                </code>
+              </div>
+            </div>
+
+            {/* Amount Summary */}
+            <div className="flex items-center justify-between py-3 mb-6 border-y border-stone-100 dark:border-stone-800">
+              <span className="text-sm font-medium text-stone-600 dark:text-stone-300">
+                Amount to charge
+              </span>
+              <span className="text-2xl font-extrabold text-stone-900 dark:text-white">
+                {yearly ? "₹948" : "₹99"}
+              </span>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2.5">
+              <button
+                type="button"
+                onClick={handleSimulatePayment}
+                disabled={isProcessing}
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs sm:text-sm font-bold shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Processing Mock Payment...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 fill-current" />
+                    <span>Complete Test Payment ({yearly ? "₹948" : "₹99"})</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsCheckoutOpen(false)}
+                disabled={isProcessing}
+                className="w-full py-2.5 text-xs font-semibold text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
