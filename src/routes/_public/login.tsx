@@ -108,15 +108,15 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex-grow flex items-center justify-center min-h-[calc(100vh-64px)] px-4 py-8 sm:px-6 lg:px-8 relative">
+    <div className="flex-grow flex items-center justify-center min-h-[calc(100vh-64px)] px-4 py-4 sm:py-6 relative">
       {/* Container Card with light/dark glassmorphism */}
-      <div className="w-full max-w-[480px] bg-white/95 dark:bg-stone-950/95 backdrop-blur-md rounded-2xl border border-brown-200/60 dark:border-stone-800/60 p-5 sm:p-8 lg:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.10)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] hover:shadow-[0_30px_80px_rgba(0,0,0,0.12)] transition-all duration-300 transform hover:-translate-y-0.5">
+      <div className="w-full max-w-[390px] sm:max-w-[400px] bg-white/95 dark:bg-stone-950/95 backdrop-blur-md rounded-2xl border border-brown-200/60 dark:border-stone-800/60 p-5 sm:p-6 shadow-[0_15px_35px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.7)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)] transition-all duration-300 transform hover:-translate-y-0.5">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 dark:text-white">
+        <div className="text-center mb-5">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900 dark:text-white">
             Welcome Back
           </h2>
-          <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
+          <p className="mt-1 text-xs sm:text-sm text-stone-500 dark:text-stone-400">
             Enter your credentials to access{" "}
             <span className="font-semibold text-orange-500 dark:text-orange-400">
               Learnflow AI
@@ -127,22 +127,22 @@ function LoginPage() {
 
         {/* Error Message banner if any */}
         {error && (
-          <div className="mb-5 p-3 rounded-lg bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 text-xs border border-red-100 dark:border-red-900/30">
+          <div className="mb-4 p-2.5 rounded-lg bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 text-xs border border-red-100 dark:border-red-900/30">
             {error}
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           {/* Email field */}
           <div>
             <label
               htmlFor="email"
-              className="block text-xs font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
+              className="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
             >
               Email
             </label>
-            <div className="relative mt-1.5">
+            <div className="relative mt-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Mail className="h-4 w-4 text-stone-400 dark:text-stone-500" />
               </div>
@@ -153,7 +153,7 @@ function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 autoComplete="username"
-                className="w-full pl-10 pr-4 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
+                className="w-full pl-10 pr-4 py-2 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-xs sm:text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                 required
               />
             </div>
@@ -164,18 +164,18 @@ function LoginPage() {
             <div className="flex justify-between items-center">
               <label
                 htmlFor="password"
-                className="block text-xs font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
+                className="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wider"
               >
                 Password
               </label>
               <a
                 href="#"
-                className="text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-300 transition-colors"
+                className="text-[11px] font-medium text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-300 transition-colors"
               >
                 Forgot password?
               </a>
             </div>
-            <div className="relative mt-1.5">
+            <div className="relative mt-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Lock className="h-4 w-4 text-stone-400 dark:text-stone-500" />
               </div>
@@ -186,7 +186,7 @@ function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 autoComplete="current-password"
-                className="w-full pl-10 pr-10 py-2.5 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
+                className="w-full pl-10 pr-10 py-2 bg-stone-50/50 dark:bg-stone-900/50 hover:bg-stone-50 dark:hover:bg-stone-900 border border-stone-200 dark:border-stone-800/80 focus:bg-white dark:focus:bg-stone-950 rounded-lg text-xs sm:text-sm text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 dark:focus:ring-orange-500/15 transition-all duration-200"
                 required
               />
               <button
@@ -208,11 +208,11 @@ function LoginPage() {
             <input
               id="remember-me"
               type="checkbox"
-              className="h-4 w-4 rounded border-brown-300 cursor-pointer accent-brown-600 dark:accent-orange-400"
+              className="h-3.5 w-3.5 rounded border-brown-300 cursor-pointer accent-brown-600 dark:accent-orange-400"
             />
             <label
               htmlFor="remember-me"
-              className="ml-2 block text-sm text-stone-600 dark:text-stone-400 cursor-pointer select-none"
+              className="ml-2 block text-xs text-stone-600 dark:text-stone-400 cursor-pointer select-none"
             >
               Remember this device
             </label>
@@ -222,12 +222,12 @@ function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2.5 px-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-500 dark:to-orange-600 dark:hover:from-orange-400 dark:hover:to-orange-600 text-white font-semibold rounded-lg text-sm transition-all duration-200 shadow-sm shadow-orange-500/25 hover:shadow-md hover:shadow-orange-500/35 active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-500 dark:to-orange-600 dark:hover:from-orange-400 dark:hover:to-orange-600 text-white font-semibold rounded-lg text-xs sm:text-sm transition-all duration-200 shadow-sm shadow-orange-500/25 hover:shadow-md hover:shadow-orange-500/35 active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
                 <svg
-                  className="animate-spin h-5 w-5 text-white"
+                  className="animate-spin h-4 w-4 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -252,27 +252,27 @@ function LoginPage() {
             )}
           </button>
 
-{/* OR Divider */}
-<div className="flex items-center my-5">
-  <div className="flex-1 border-t border-stone-200 dark:border-stone-700" />
-  <span className="px-4 text-xs font-medium text-stone-500 dark:text-stone-400">
-    OR
-  </span>
-  <div className="flex-1 border-t border-stone-200 dark:border-stone-700" />
-</div>
+          {/* OR Divider */}
+          <div className="flex items-center my-3.5">
+            <div className="flex-1 border-t border-stone-200 dark:border-stone-700" />
+            <span className="px-3 text-[11px] font-medium text-stone-500 dark:text-stone-400">
+              OR
+            </span>
+            <div className="flex-1 border-t border-stone-200 dark:border-stone-700" />
+          </div>
 
-{/* Google Sign In */}
-<GoogleSignInButton
-  onClick={handleGoogleSignIn}
-  isLoading={isGoogleLoading}
-  disabled={isLoading}
-  label="Sign in with Google"
-/>
+          {/* Google Sign In */}
+          <GoogleSignInButton
+            onClick={handleGoogleSignIn}
+            isLoading={isGoogleLoading}
+            disabled={isLoading}
+            label="Sign in with Google"
+          />
 
-</form>
+        </form>
 
         {/* Footer */}
-        <div className="mt-8 text-center text-sm text-stone-500 dark:text-stone-400">
+        <div className="mt-5 text-center text-xs sm:text-sm text-stone-500 dark:text-stone-400">
           Don't have an account?{" "}
           <Link
             to="/signup"
