@@ -1063,16 +1063,24 @@ export const AlertsAPI = {
 
 export const FeedbackAPI = {
   async submitFeedback(data: { rating: number; comment?: string }): Promise<{ success: boolean; message: string }> {
+    const payload: { rating: number; comment?: string } = {
+      rating: Math.max(1, Math.min(5, Math.round(Number(data.rating) || 5))),
+    };
+
+    if (data.comment && typeof data.comment === "string" && data.comment.trim()) {
+      payload.comment = data.comment.trim();
+    }
+
     const response = await fetch(`${API_BASE_URL}/feedback`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Failed to submit feedback");
+      throw new Error(errorData.message || `Failed to submit feedback (${response.status})`);
     }
 
     return response.json();

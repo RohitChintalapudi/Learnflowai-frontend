@@ -29,15 +29,12 @@ export function FeedbackWidget() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (rating === 0) {
-      toast.error("Please select a star rating first");
-      return;
-    }
+    const finalRating = Math.max(1, Math.min(5, Math.round(Number(rating) || 5)));
 
     setIsSubmitting(true);
     try {
       await FeedbackAPI.submitFeedback({
-        rating,
+        rating: finalRating,
         comment: comment.trim() || undefined,
       });
 
@@ -121,7 +118,8 @@ export function FeedbackWidget() {
                 {/* PeekRating Interactive Row */}
                 <div className="flex flex-col items-center justify-center py-2 bg-stone-50/80 dark:bg-stone-950/50 rounded-xl border border-stone-200/50 dark:border-stone-800/50">
                   <PeekRating
-                    defaultValue={rating}
+                    value={rating}
+                    defaultValue={4}
                     count={5}
                     shape="star"
                     labels={["Poor", "Fair", "Good", "Great", "Superb"]}
@@ -135,8 +133,8 @@ export function FeedbackWidget() {
                     riseDuration={320}
                     popScale={1.3}
                     showTip
-                    allowClear
-                    onChange={(value) => setRating(value)}
+                    allowClear={false}
+                    onChange={(value) => setRating(value || 1)}
                     showLabels
                     readOnly={false}
                   />
@@ -164,7 +162,7 @@ export function FeedbackWidget() {
                   </button>
                   <button
                     type="submit"
-                    disabled={isSubmitting || rating === 0}
+                    disabled={isSubmitting}
                     className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 text-white text-xs font-semibold shadow-sm shadow-orange-500/20 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     {isSubmitting ? (
