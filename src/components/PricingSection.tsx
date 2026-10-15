@@ -67,11 +67,11 @@ export function PricingSection() {
             aria-checked={!yearly}
             aria-label="Toggle billing frequency"
             onClick={() => setYearly((prev) => !prev)}
-            className="relative inline-flex h-7 w-13 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-stone-200 dark:bg-stone-800 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:focus:ring-offset-stone-950"
+            className="relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-stone-200 dark:bg-stone-800 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:focus:ring-offset-stone-950"
           >
             <span
               className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-gradient-to-r from-orange-500 to-orange-600 shadow-md ring-0 transition duration-200 ease-in-out ${
-                !yearly ? "translate-x-6" : "translate-x-0"
+                !yearly ? "translate-x-5" : "translate-x-0"
               }`}
             />
           </button>
