@@ -746,6 +746,45 @@ export const AnalyticsAPI = {
   }
 };
 
+export interface PlanStatus {
+  plan: "free" | "pro";
+  interval: "monthly" | "yearly" | null;
+  startedAt: string | null;
+  expiresAt: string | null;
+  isActive: boolean;
+}
+
+export const PlanAPI = {
+  async getPlan(): Promise<PlanStatus> {
+    const response = await fetch(`${API_BASE_URL}/plan`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch plan");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
+  },
+
+  async upgradeToPro(interval: "monthly" | "yearly"): Promise<PlanStatus> {
+    const response = await fetch(`${API_BASE_URL}/plan/upgrade`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ interval }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to upgrade plan");
+    }
+    const res = await response.json();
+    return res.data !== undefined ? res.data : res;
+  }
+};
+
 export interface HistoryQueryOptions {
   page?: number;
   limit?: number;

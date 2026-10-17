@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '../DashboardLayout';
+import { PlanSettings } from './PlanSettings';
 import { AccountSettings } from './AccountSettings';
 import { SecuritySettings } from './SecuritySettings';
 import { StorageSettings } from './StorageSettings';
@@ -8,14 +9,16 @@ import { DeleteAccountSettings } from './DeleteAccountSettings';
 import { SettingsAPI } from '../../lib/api';
 import { motion } from 'framer-motion';
 
-export type SettingsTab = 
-  | 'account' 
-  | 'security' 
-  | 'storage' 
+export type SettingsTab =
+  | 'account'
+  | 'plan'
+  | 'security'
+  | 'storage'
   | 'delete-account';
 
 const ALL_TABS: { id: SettingsTab; label: string }[] = [
   { id: 'account', label: 'Account' },
+  { id: 'plan', label: 'Plan' },
   { id: 'storage', label: 'Storage' },
   { id: 'security', label: 'Change Password' },
   { id: 'delete-account', label: 'Delete Account' },
@@ -40,6 +43,7 @@ export function SettingsLayout() {
   const renderContent = () => {
     switch (activeTab) {
       case 'account': return <AccountSettings />;
+      case 'plan': return <PlanSettings />;
       case 'storage': return <StorageSettings />;
       case 'security': return <SecuritySettings />;
       case 'delete-account': return <DeleteAccountSettings />;
