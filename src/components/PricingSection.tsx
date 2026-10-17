@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Check, Sparkles, Zap, ShieldCheck, CreditCard, Lock, X, Loader2 } from "lucide-react";
 import { authClient } from "../lib/auth-client";
-import { getIsPro, getProPlan } from "../lib/plan";
+import { usePlan, useUpgradePlan, formatPlanExpiry } from "../lib/plan";
 import toast from "react-hot-toast";
 
 export function PricingSection({ embedded = false }: { embedded?: boolean }) {
@@ -11,9 +11,11 @@ export function PricingSection({ embedded = false }: { embedded?: boolean }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const { data: session } = authClient.useSession();
   const navigate = useNavigate();
+  const upgradePlan = useUpgradePlan();
+  const { plan } = usePlan(!!session?.user);
 
-  const isPro = getIsPro();
-  const currentPlan = getProPlan();
+  const isPro = plan.isActive;
+  const currentPlan = plan.interval;
 
   const handleUpgradeClick = () => {
     // Before purchase the user needs to get authenticated
@@ -32,19 +34,25 @@ export function PricingSection({ embedded = false }: { embedded?: boolean }) {
     setIsCheckoutOpen(true);
   };
 
-  const handleSimulatePayment = () => {
+  const handleSimulatePayment = async () => {
     setIsProcessing(true);
-    // Simulate Mock Gateway payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
+    // Simulate Mock Gateway payment processing, then persist the plan with dates
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const updatedPlan = await upgradePlan(yearly ? "yearly" : "monthly");
       setIsCheckoutOpen(false);
-      localStorage.setItem("lf_is_pro", "true");
-      localStorage.setItem("lf_pro_plan", yearly ? "yearly" : "monthly");
-      toast.success("Payment successful! Welcome to LearnFlow Pro 🎉", {
-        duration: 4000,
-      });
+      toast.success(
+        updatedPlan.isActive && updatedPlan.expiresAt
+          ? `Payment successful! LearnFlow Pro active until ${formatPlanExpiry(updatedPlan.expiresAt)} 🎉`
+          : "Payment successful! Welcome to LearnFlow Pro 🎉",
+        { duration: 4000 },
+      );
       navigate({ to: "/dashboard" });
-    }, 1500);
+    } catch (error: any) {
+      toast.error(error.message || "Payment failed. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const freeFeatures = [
@@ -139,10 +147,11 @@ export function PricingSection({ embedded = false }: { embedded?: boolean }) {
 
       {/* Current Plan Status Banner */}
       {isPro && (
-        <div className="max-w-4xl mx-auto mb-8 flex items-center justify-center gap-2 rounded-2xl border border-orange-200/70 dark:border-orange-900/50 bg-orange-50/70 dark:bg-orange-950/20 px-4 py-3 text-xs sm:text-sm font-semibold text-orange-700 dark:text-orange-300">
+        <div className="max-w-4xl mx-auto mb-8 flex items-center justify-center gap-2 rounded-2xl border border-orange-200/70 dark:border-orange-900/50 bg-orange-50/70 dark:bg-orange-950/20 px-4 py-3 text-xs sm:text-sm font-semibold text-orange-700 dark:text-orange-300 flex-wrap">
           <Check className="h-4 w-4 shrink-0" />
           <span>
             You're currently on LearnFlow Pro ({currentPlan === "yearly" ? "Yearly" : "Monthly"})
+            {plan.expiresAt && ` — active until ${formatPlanExpiry(plan.expiresAt)}, then reverts to Free`}
           </span>
         </div>
       )}

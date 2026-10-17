@@ -1,12 +1,43 @@
-export type ProPlanInterval = "monthly" | "yearly";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { PlanAPI, type PlanStatus } from "./api";
 
-export function getIsPro(): boolean {
-  if (typeof localStorage === "undefined") return false;
-  return localStorage.getItem("lf_is_pro") === "true";
+const FREE_PLAN: PlanStatus = {
+  plan: "free",
+  interval: null,
+  startedAt: null,
+  expiresAt: null,
+  isActive: false,
+};
+
+export function usePlan(enabled = true) {
+  const query = useQuery({
+    queryKey: ["plan"],
+    queryFn: PlanAPI.getPlan,
+    enabled,
+    retry: false,
+    staleTime: 30_000,
+  });
+
+  return {
+    plan: query.data ?? FREE_PLAN,
+    isLoading: query.isLoading,
+  };
 }
 
-export function getProPlan(): ProPlanInterval | null {
-  if (typeof localStorage === "undefined") return null;
-  const plan = localStorage.getItem("lf_pro_plan");
-  return plan === "monthly" || plan === "yearly" ? plan : null;
+export function useUpgradePlan() {
+  const queryClient = useQueryClient();
+
+  return async (interval: "monthly" | "yearly"): Promise<PlanStatus> => {
+    const plan = await PlanAPI.upgradeToPro(interval);
+    queryClient.setQueryData(["plan"], plan);
+    return plan;
+  };
+}
+
+export function formatPlanExpiry(expiresAt: string): string {
+  return new Date(expiresAt).toLocaleDateString([], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }

@@ -17,7 +17,7 @@ import toast from "react-hot-toast";
 import { ProfileAPI } from "../lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, isValidAvatarUrl } from "./Avatar";
-import { getIsPro } from "../lib/plan";
+import { usePlan, formatPlanExpiry } from "../lib/plan";
 
 
 interface ProfileModalProps {
@@ -44,6 +44,7 @@ interface ProfileStats {
 
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const queryClient = useQueryClient();
+  const { plan } = usePlan(isOpen);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -175,7 +176,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   const hasCustomAvatar = [profile?.profileImage, profile?.image].some(isValidAvatarUrl);
   const activeAvatar = [profile?.profileImage, profile?.image].find(isValidAvatarUrl) || "";
-  const isPro = getIsPro();
+  const isPro = plan.isActive;
 
   if (!isOpen) return null;
 
@@ -278,9 +279,11 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       isPro
                         ? "bg-orange-100 dark:bg-orange-950/70 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-900"
                         : "text-[var(--lf-text-secondary)] dark:text-zinc-500 bg-[var(--lf-surface)] dark:bg-zinc-800/50 border-[var(--lf-border)] dark:border-zinc-700"
-                    }`}>
+                    }`}
+                    title={isPro && plan.expiresAt ? `Active until ${formatPlanExpiry(plan.expiresAt)}` : undefined}
+                    >
                       <Check className={`h-3.5 w-3.5 ${isPro ? "text-orange-500" : "text-emerald-500"}`} />
-                      {isPro ? "Pro Plan" : "Free Plan"}
+                      {isPro ? `Pro Plan${plan.expiresAt ? ` · till ${formatPlanExpiry(plan.expiresAt)}` : ""}` : "Free Plan"}
                     </p>
                   </div>
 
