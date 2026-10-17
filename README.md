@@ -1,4 +1,4 @@
-# 🧠 Learnflow AI — Next-Gen Learning Intelligence Platform
+# 🧠 Learnflow AI —Context Aware Learning Intelligence Platform
 
 <p align="center">
   <img src="./public/logo.png" alt="LearnFlow AI Logo" width="110" height="110" />
@@ -20,6 +20,9 @@
   <img src="https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
   <img src="https://img.shields.io/badge/Better_Auth-1.6-4F46E5?style=for-the-badge&logo=auth0&logoColor=white" alt="Better Auth" />
 </p>
+
+<img width="1917" height="898" alt="image" src="https://github.com/user-attachments/assets/658b8796-d778-4b56-b17a-94a61366edd3" />
+
 
 ---
 
