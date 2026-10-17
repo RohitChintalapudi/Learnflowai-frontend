@@ -16,6 +16,7 @@ import {
 import toast from "react-hot-toast";
 import { ProfileAPI } from "../lib/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { Avatar, isValidAvatarUrl } from "./Avatar";
 
 
 interface ProfileModalProps {
@@ -171,14 +172,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     }
   };
 
-  const isValidAvatarUrl = (url?: string | null) => {
-    if (!url) return false;
-    if (url.includes("/undefined") || url.includes("/null")) return false;
-    return true;
-  };
-
   const hasCustomAvatar = [profile?.profileImage, profile?.image].some(isValidAvatarUrl);
-  const activeAvatar = [profile?.profileImage, profile?.image].find(isValidAvatarUrl) || "/default-avatar.svg";
+  const activeAvatar = [profile?.profileImage, profile?.image].find(isValidAvatarUrl) || "";
 
   if (!isOpen) return null;
 
@@ -232,10 +227,11 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     
                     <div className="relative mb-4">
                       <div className="w-32 h-32 rounded-full border-4 border-[var(--lf-border)] dark:border-zinc-800/80 overflow-hidden bg-[var(--lf-surface)] dark:bg-zinc-900 shadow-xl relative group-hover:border-orange-500/30 transition-colors flex items-center justify-center">
-                        <img 
-                          src={activeAvatar} 
-                          alt="Profile" 
-                          className={`w-full h-full object-cover transition-opacity duration-300 ${isUploading ? 'opacity-30' : 'opacity-100'}`} 
+                        <Avatar
+                          src={activeAvatar}
+                          name={name || profile?.name}
+                          className={`w-full h-full object-cover transition-opacity duration-300 ${isUploading ? 'opacity-30' : 'opacity-100'}`}
+                          initialClassName="text-5xl"
                         />
                         
                         {/* Hover Overlay */}

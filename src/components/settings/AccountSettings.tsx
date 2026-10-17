@@ -3,6 +3,7 @@ import { Mail, ShieldCheck, Clock } from 'lucide-react';
 import { SettingsCard, SettingsSectionHeader, SettingsButton } from './shared';
 import { useQuery } from '@tanstack/react-query';
 import { SettingsAPI, ProfileAPI } from '../../lib/api';
+import { Avatar, isValidAvatarUrl } from '../Avatar';
 
 import { ProfileModal } from '../ProfileModal';
 
@@ -51,13 +52,7 @@ export function AccountSettings() {
       ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) 
       : "";
 
-  const isValidAvatarUrl = (url?: string | null) => {
-    if (!url) return false;
-    if (url.includes("/undefined") || url.includes("/null")) return false;
-    return true;
-  };
-
-  const activeAvatar = [account?.avatarUrl, profile?.profileImage, profile?.image].find(isValidAvatarUrl) || "/default-avatar.svg";
+  const activeAvatar = [account?.avatarUrl, profile?.profileImage, profile?.image].find(isValidAvatarUrl) || "";
 
   return (
     <div className="w-full">
@@ -69,10 +64,11 @@ export function AccountSettings() {
         
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-8 p-6 bg-stone-50/50 dark:bg-[#1A1A1A] rounded-2xl border border-stone-100 dark:border-[#2A2A2A]">
           <div className="w-24 h-24 rounded-full border-4 border-white dark:border-[#2A2A2A] overflow-hidden shadow-xl shrink-0 bg-stone-200 dark:bg-[#333] flex items-center justify-center">
-            <img 
-              src={activeAvatar} 
-              alt="Profile" 
+            <Avatar
+              src={activeAvatar}
+              name={name}
               className="w-full h-full object-cover"
+              initialClassName="text-3xl"
             />
           </div>
           <div className="flex-1">
