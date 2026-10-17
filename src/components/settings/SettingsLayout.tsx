@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '../DashboardLayout';
-import { PricingSection } from '../PricingSection';
+import { PlanSettings } from './PlanSettings';
 import { AccountSettings } from './AccountSettings';
 import { SecuritySettings } from './SecuritySettings';
 import { StorageSettings } from './StorageSettings';
@@ -43,7 +43,7 @@ export function SettingsLayout() {
   const renderContent = () => {
     switch (activeTab) {
       case 'account': return <AccountSettings />;
-      case 'plan': return <PricingSection />;
+      case 'plan': return <PlanSettings />;
       case 'storage': return <StorageSettings />;
       case 'security': return <SecuritySettings />;
       case 'delete-account': return <DeleteAccountSettings />;

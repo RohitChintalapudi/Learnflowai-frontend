@@ -2,14 +2,18 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Check, Sparkles, Zap, ShieldCheck, CreditCard, Lock, X, Loader2 } from "lucide-react";
 import { authClient } from "../lib/auth-client";
+import { getIsPro, getProPlan } from "../lib/plan";
 import toast from "react-hot-toast";
 
-export function PricingSection() {
+export function PricingSection({ embedded = false }: { embedded?: boolean }) {
   const [yearly, setYearly] = useState(true);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const { data: session } = authClient.useSession();
   const navigate = useNavigate();
+
+  const isPro = getIsPro();
+  const currentPlan = getProPlan();
 
   const handleUpgradeClick = () => {
     // Before purchase the user needs to get authenticated
@@ -64,22 +68,33 @@ export function PricingSection() {
   ];
 
   return (
-    <section id="pricing" className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pb-20 scroll-mt-20">
+    <section
+      id="pricing"
+      className={
+        embedded
+          ? "w-full"
+          : "w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pb-20 scroll-mt-20"
+      }
+    >
       {/* Header Container */}
-      <div className="flex flex-col items-center text-center max-w-2xl mx-auto mb-12">
+      <div className={`flex flex-col items-center text-center max-w-2xl mx-auto ${embedded ? "mb-8" : "mb-12"}`}>
 
-        {/* Heading */}
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-stone-900 dark:text-white mb-4">
-          Simple, transparent student pricing
-        </h2>
+        {/* Heading (landing page only) */}
+        {!embedded && (
+          <>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-stone-900 dark:text-white mb-4">
+              Simple, transparent student pricing
+            </h2>
 
-        {/* Subtitle */}
-        <p className="text-sm sm:text-base text-stone-500 dark:text-stone-400 leading-relaxed">
-          Invest in your learning clarity. Start completely free and upgrade to Pro whenever you need unlimited simulations and deep mastery tools.
-        </p>
+            {/* Subtitle */}
+            <p className="text-sm sm:text-base text-stone-500 dark:text-stone-400 leading-relaxed">
+              Invest in your learning clarity. Start completely free and upgrade to Pro whenever you need unlimited simulations and deep mastery tools.
+            </p>
+          </>
+        )}
 
         {/* Billing Switcher (Yearly / Monthly) */}
-        <div className="mt-8 flex items-center justify-center gap-3 select-none">
+        <div className={`${embedded ? "mt-0" : "mt-8"} flex items-center justify-center gap-3 select-none`}>
           <span
             onClick={() => setYearly(true)}
             className={`text-xs sm:text-sm font-semibold cursor-pointer transition-colors ${
@@ -121,6 +136,16 @@ export function PricingSection() {
           </span>
         </div>
       </div>
+
+      {/* Current Plan Status Banner */}
+      {isPro && (
+        <div className="max-w-4xl mx-auto mb-8 flex items-center justify-center gap-2 rounded-2xl border border-orange-200/70 dark:border-orange-900/50 bg-orange-50/70 dark:bg-orange-950/20 px-4 py-3 text-xs sm:text-sm font-semibold text-orange-700 dark:text-orange-300">
+          <Check className="h-4 w-4 shrink-0" />
+          <span>
+            You're currently on LearnFlow Pro ({currentPlan === "yearly" ? "Yearly" : "Monthly"})
+          </span>
+        </div>
+      )}
 
       {/* 2-Tier Pricing Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
@@ -172,7 +197,7 @@ export function PricingSection() {
             to={session?.user ? "/dashboard" : "/signup"}
             className="w-full text-center py-3 px-4 rounded-xl border border-stone-300 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-600 bg-stone-50 hover:bg-stone-100 dark:bg-stone-800/60 dark:hover:bg-stone-800 text-stone-900 dark:text-white text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer"
           >
-            {session?.user ? "Go to Dashboard" : "Get Started Free"}
+            {session?.user ? (isPro ? "Go to Dashboard" : "Current Plan") : "Get Started Free"}
           </Link>
         </div>
 
@@ -237,14 +262,25 @@ export function PricingSection() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleUpgradeClick}
-            className="w-full text-center py-3.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs sm:text-sm font-bold shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
-          >
-            <Lock className="w-4 h-4 opacity-80" />
-            Upgrade to Pro
-          </button>
+          {isPro ? (
+            <button
+              type="button"
+              disabled
+              className="w-full text-center py-3.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs sm:text-sm font-bold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 cursor-default"
+            >
+              <Check className="w-4 h-4" />
+              Current Plan — Active
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleUpgradeClick}
+              className="w-full text-center py-3.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs sm:text-sm font-bold shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Lock className="w-4 h-4 opacity-80" />
+              Upgrade to Pro
+            </button>
+          )}
         </div>
       </div>
 

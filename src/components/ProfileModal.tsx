@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 import { ProfileAPI } from "../lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, isValidAvatarUrl } from "./Avatar";
+import { getIsPro } from "../lib/plan";
 
 
 interface ProfileModalProps {
@@ -174,6 +175,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   const hasCustomAvatar = [profile?.profileImage, profile?.image].some(isValidAvatarUrl);
   const activeAvatar = [profile?.profileImage, profile?.image].find(isValidAvatarUrl) || "";
+  const isPro = getIsPro();
 
   if (!isOpen) return null;
 
@@ -272,9 +274,13 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     />
 
                     <h3 className="text-lg font-bold text-[var(--lf-text-primary)] dark:text-white mb-1">{profile?.name}</h3>
-                    <p className="text-xs text-[var(--lf-text-secondary)] dark:text-zinc-500 font-medium bg-[var(--lf-surface)] dark:bg-zinc-800/50 px-3 py-1 rounded-full flex items-center gap-1.5 inline-flex border border-[var(--lf-border)] dark:border-zinc-700">
-                      <Check className="h-3.5 w-3.5 text-emerald-500" />
-                      Free Plan
+                    <p className={`text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5 inline-flex border ${
+                      isPro
+                        ? "bg-orange-100 dark:bg-orange-950/70 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-900"
+                        : "text-[var(--lf-text-secondary)] dark:text-zinc-500 bg-[var(--lf-surface)] dark:bg-zinc-800/50 border-[var(--lf-border)] dark:border-zinc-700"
+                    }`}>
+                      <Check className={`h-3.5 w-3.5 ${isPro ? "text-orange-500" : "text-emerald-500"}`} />
+                      {isPro ? "Pro Plan" : "Free Plan"}
                     </p>
                   </div>
 
