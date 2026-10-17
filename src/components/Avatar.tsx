@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 export function isValidAvatarUrl(url?: string | null) {
   if (!url) return false;
   if (url.includes("/undefined") || url.includes("/null")) return false;
@@ -12,12 +14,15 @@ interface AvatarProps {
 }
 
 export function Avatar({ src, name, className = "", initialClassName = "" }: AvatarProps) {
-  if (isValidAvatarUrl(src)) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+
+  if (isValidAvatarUrl(src) && src !== failedSrc) {
     return (
       <img
         src={src ?? ""}
         alt={name || "Profile"}
         className={className}
+        onError={() => setFailedSrc(src ?? null)}
       />
     );
   }
