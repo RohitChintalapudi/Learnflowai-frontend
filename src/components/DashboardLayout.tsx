@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { ProfileModal } from "./ProfileModal";
+import { Avatar, isValidAvatarUrl } from "./Avatar";
 import { authStore } from "../store/authStore";
 import { authClient } from "../lib/auth-client";
 import { useProductTour } from "../contexts/ProductTourContext";
@@ -181,20 +182,15 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
   const cachedName = typeof window !== "undefined" ? localStorage.getItem("lf_user_name") || "" : "";
   const cachedImage = typeof window !== "undefined" ? localStorage.getItem("lf_user_image") || "" : "";
 
-  const isValidAvatarUrl = (url?: string | null) => {
-    if (!url) return false;
-    if (url.includes("/undefined") || url.includes("/null")) return false;
-    return true;
-  };
-
   const displayName = sessionUser?.name || profile?.name || cachedName || "User";
-  const displayImage = isValidAvatarUrl(profile?.profileImage)
-    ? (profile?.profileImage ?? "")
-    : isValidAvatarUrl(sessionUser?.image)
-      ? (sessionUser?.image ?? "")
-      : isValidAvatarUrl(cachedImage)
-        ? cachedImage
-        : "/default-avatar.svg";
+  const avatarUrl =
+    isValidAvatarUrl(profile?.profileImage)
+      ? (profile?.profileImage ?? "")
+      : isValidAvatarUrl(sessionUser?.image)
+        ? (sessionUser?.image ?? "")
+        : isValidAvatarUrl(cachedImage)
+          ? cachedImage
+          : "";
 
   const toggleSidebar = () => {
     setIsCollapsed(prev => {
@@ -380,10 +376,11 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
               className="w-full flex items-center justify-center p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/50 group transition-all card-shadow" 
               title="Profile"
             >
-              <img
-                src={displayImage}
-                alt="Profile"
+              <Avatar
+                src={avatarUrl}
+                name={displayName}
                 className="h-6 w-6 rounded-full object-cover"
+                initialClassName="text-[11px]"
               />
             </button>
           ) : (
@@ -392,10 +389,11 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
               className="w-full flex items-center gap-3 p-3 rounded-xl bg-[var(--lf-surface)] border border-[var(--lf-border)] hover:border-orange-500/30 card-shadow hover:shadow-[0_0_15px_rgba(255,122,24,0.15)] transition-all duration-300 group"
             >
               <div className="h-9 w-9 rounded-full border border-[var(--lf-border)] overflow-hidden shrink-0 group-hover:ring-2 ring-orange-500/50 transition-all flex items-center justify-center bg-stone-100 dark:bg-stone-900">
-                <img
-                  src={displayImage}
-                  alt="Profile"
+                <Avatar
+                  src={avatarUrl}
+                  name={displayName}
                   className="h-full w-full object-cover"
+                  initialClassName="text-lg"
                 />
               </div>
               <div className="flex-1 text-left">
@@ -556,10 +554,11 @@ export function DashboardLayout({ children, headerTitle, hideHeader = false }: {
                 onClick={() => setIsProfileModalOpen(true)}
                 className="h-7 w-7 sm:h-8 sm:w-8 rounded-full border border-[var(--lf-border)] overflow-hidden cursor-pointer hover:ring-2 ring-orange-500/50 transition-all shrink-0 flex items-center justify-center bg-stone-100 dark:bg-stone-900"
               >
-                <img
-                  src={displayImage}
-                  alt="Profile"
+                <Avatar
+                  src={avatarUrl}
+                  name={displayName}
                   className="h-full w-full object-cover"
+                  initialClassName="text-sm"
                 />
               </button>
 
